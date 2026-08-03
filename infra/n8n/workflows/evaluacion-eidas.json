@@ -1,0 +1,215 @@
+{
+    "updatedAt": "2026-08-03T13:14:58.534Z",
+    "createdAt": "2026-08-03T12:28:02.060Z",
+    "id": "BJln5lzSPgeDmpmS",
+    "name": "Evaluacion EIDAS",
+    "description": null,
+    "active": false,
+    "isArchived": false,
+    "nodes": [
+        {
+            "parameters": {},
+            "type": "n8n-nodes-base.manualTrigger",
+            "typeVersion": 1,
+            "position": [
+                0,
+                0
+            ],
+            "id": "4212e508-4d40-461a-9f57-050c05640e74",
+            "name": "Manual Trigger"
+        },
+        {
+            "parameters": {
+                "assignments": {
+                    "assignments": [
+                        {
+                            "id": "19cebc59-3c29-4b6a-aab3-b05cb7aa1492",
+                            "name": "nombre_grupo",
+                            "value": "grupo-01-prueba",
+                            "type": "string"
+                        },
+                        {
+                            "id": "622e4c5b-6374-4a68-80fb-417949e77c56",
+                            "name": "contenido",
+                            "value": "algo que se le devuelve al grupo 01",
+                            "type": "string"
+                        },
+                        {
+                            "id": "272785e6-9f2a-4f0e-8c91-19f3e9282dbd",
+                            "name": "email_destino",
+                            "value": "pedernera.pablo@terciariourquiza.edu.ar",
+                            "type": "string"
+                        }
+                    ]
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.set",
+            "typeVersion": 3.5,
+            "position": [
+                208,
+                0
+            ],
+            "id": "f2bb5c08-9fb7-4c74-95ef-b79a3e1f93af",
+            "name": "Edit Fields"
+        },
+        {
+            "parameters": {
+                "operation": "toText",
+                "sourceProperty": "contenido",
+                "options": {
+                    "fileName": "={{ $json.nombre_grupo }}.md"
+                }
+            },
+            "type": "n8n-nodes-base.convertToFile",
+            "typeVersion": 1.1,
+            "position": [
+                416,
+                0
+            ],
+            "id": "3152dedf-fef2-409b-b457-997d9e26b132",
+            "name": "Convert to File"
+        },
+        {
+            "parameters": {
+                "driveId": {
+                    "__rl": true,
+                    "mode": "list",
+                    "value": "My Drive"
+                },
+                "folderId": {
+                    "__rl": true,
+                    "value": "1JlEkxF75ECL4KctwV48BGKL2sP8bYRQI",
+                    "mode": "list",
+                    "cachedResultName": "Devoluciones EIDAS",
+                    "cachedResultUrl": "https://drive.google.com/drive/folders/1JlEkxF75ECL4KctwV48BGKL2sP8bYRQI"
+                },
+                "options": {}
+            },
+            "type": "n8n-nodes-base.googleDrive",
+            "typeVersion": 3,
+            "position": [
+                576,
+                -16
+            ],
+            "id": "30b841ab-77ab-4bff-b3d8-4130d7e2163f",
+            "name": "Upload file",
+            "credentials": {
+                "googleDriveOAuth2Api": {
+                    "id": "wdskuh13GGRn5W5D",
+                    "name": "Google Drive account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "sendTo": "={{ $('Edit Fields').item.json.email_destino }}",
+                "subject": "=Devoluci\u00f3n disponible \u2014 {{ $('Edit Fields').item.json.nombre_grupo }}",
+                "message": "=Hola,\n\nLa devoluci\u00f3n del {{ $('Edit Fields').item.json.nombre_grupo }} ya est\u00e1 disponible.\n\nSaludos,\nSistema EIDAS",
+                "options": {}
+            },
+            "type": "n8n-nodes-base.gmail",
+            "typeVersion": 2.2,
+            "position": [
+                784,
+                -16
+            ],
+            "id": "ae3c2311-6e53-4d47-9b12-babef0cca866",
+            "name": "Send a message",
+            "webhookId": "efbb1c5e-c13b-4a9b-9546-435149d7bef5",
+            "credentials": {
+                "gmailOAuth2": {
+                    "id": "nSmmvvTuyfhocfq4",
+                    "name": "Gmail account"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Edit Fields": {
+            "main": [
+                [
+                    {
+                        "node": "Convert to File",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Convert to File": {
+            "main": [
+                [
+                    {
+                        "node": "Upload file",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Upload file": {
+            "main": [
+                [
+                    {
+                        "node": "Send a message",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Manual Trigger": {
+            "main": [
+                [
+                    {
+                        "node": "Edit Fields",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    },
+    "settings": {
+        "executionOrder": "v1",
+        "binaryMode": "separate",
+        "availableInMCP": false
+    },
+    "staticData": null,
+    "meta": {
+        "templateCredsSetupCompleted": true
+    },
+    "nodeGroups": [],
+    "pinData": {},
+    "versionId": "173857c8-79bb-4c34-b1a8-9f819d1db33a",
+    "activeVersionId": null,
+    "versionCounter": 65,
+    "triggerCount": 0,
+    "sourceWorkflowId": null,
+    "tags": [],
+    "shared": [
+        {
+            "updatedAt": "2026-08-03T12:28:02.063Z",
+            "createdAt": "2026-08-03T12:28:02.063Z",
+            "role": "workflow:owner",
+            "workflowId": "BJln5lzSPgeDmpmS",
+            "projectId": "yzN7kTXVBFcku4Ve",
+            "project": {
+                "updatedAt": "2026-08-03T12:06:31.887Z",
+                "createdAt": "2026-08-03T12:04:25.263Z",
+                "id": "yzN7kTXVBFcku4Ve",
+                "name": "Pablo Pedernera <pedernera.pablo@terciariourquiza.edu.ar>",
+                "type": "personal",
+                "icon": null,
+                "description": null,
+                "customTelemetryTags": [],
+                "creatorId": "acb9bba6-ba8e-4d45-99e8-c3375b37bfe4"
+            }
+        }
+    ],
+    "versionMetadata": {
+        "name": null,
+        "description": null
+    }
+}

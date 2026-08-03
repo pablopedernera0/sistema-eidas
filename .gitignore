@@ -1,0 +1,17 @@
+# template/ es su propio repo git (pusheado a eidas-template), no se anida acá
+template/
+
+# repos clonados de cada grupo — son sus propios repos, no se versionan acá
+grupos/
+
+# tooling local
+.idea/
+.claude/
+
+# n8n: datos/credenciales locales (infra/n8n/.gitignore ya cubre .env y el json de OAuth)
+infra/n8n/.env
+infra/n8n/google-oauth-client.json
+
+# python
+__pycache__/
+*.pyc
