@@ -14,6 +14,7 @@ services:
       - WEBHOOK_URL=${WEBHOOK_URL:-http://localhost:5678/}
       - GENERIC_TIMEZONE=America/Argentina/Buenos_Aires
       - TZ=America/Argentina/Buenos_Aires
+      - N8N_RESTRICT_FILE_ACCESS_TO=~/.n8n-files;/home/node/data
       - HTTP_PROXY=${HTTP_PROXY:-}
       - HTTPS_PROXY=${HTTPS_PROXY:-}
       - http_proxy=${HTTP_PROXY:-}
@@ -22,7 +23,7 @@ services:
       - no_proxy=localhost,127.0.0.1
     volumes:
       - n8n_data:/home/node/.n8n
-      - ../../:/data:ro
+      - ../../:/home/node/data:ro
 
 volumes:
   n8n_data:

@@ -15,7 +15,7 @@
 | Marco teórico | `marco-teorico-fundamentacion.md`, `marco-teorico-resumen.md` | Completo (pendiente confirmar 2 citas) |
 | Repos clonados de cada grupo | `grupos/grupo-XX-nombre/` (local, se puebla en el cuatrimestre) | — |
 | Borradores de devolución | `feedback/grupo-XX.md` (local, generados por Claude) | — |
-| Automatización N8N | `infra/n8n/` (Docker local) | Probado con datos de prueba, no conectado a devoluciones reales, no desplegado en Linode |
+| Automatización N8N | `infra/n8n/` (Docker local) | Activo — conectado a los archivos reales, trigger manual, no desplegado en Linode |
 
 ---
 
@@ -24,9 +24,11 @@
 1. Cada grupo entra a https://github.com/pablopedernera0/eidas-template y usa el botón **"Use this template"** para crear su propio repo (pueden elegirlo público o privado).
 2. El grupo completa `integrantes.md` y va documentando en `docs/` a medida que avanza.
 3. **El grupo te agrega como colaborador con permiso de escritura** en su repo (Settings → Collaborators). Es imprescindible: sin esto, el paso de publicar la devolución (`git push`) va a fallar.
-4. Agregás el grupo a `grupos.json`, en la raíz de `sistema-eidas/`:
+4. Agregás el grupo a `grupos.json`, en la raíz de `sistema-eidas/` (el campo `email` es el
+   destinatario de la notificación — puede ser el de un representante del grupo, o varios
+   separados por coma):
    ```json
-   { "id": "grupo-01-nombre", "repo": "https://github.com/<usuario-del-grupo>/<repo>.git" }
+   { "id": "grupo-01-nombre", "repo": "https://github.com/<usuario-del-grupo>/<repo>.git", "email": "grupo01@ejemplo.com" }
    ```
 5. Corrés el script para clonarlo:
    ```
@@ -67,14 +69,17 @@ antes de tiempo.
    Te pide confirmación antes de hacer el merge y el push (podés saltearla con `--yes` si
    ya estás seguro). Revisá la branch `feedback` con `git diff main feedback` **antes** de
    correr esto — el script no te muestra el diff, asume que ya lo revisaste vos.
-5. **Notificar al grupo — hoy esto es manual:**
+5. **Notificar al grupo — el disparo es manual, el resto es automático:**
    - Abrís N8N local (`docker compose up -d` en `infra/n8n/`, luego http://localhost:5678).
    - Abrís el workflow **"Evaluacion EIDAS"**.
-   - En el nodo **"Edit Fields"**, reemplazás los valores de prueba (`nombre_grupo`, `contenido`, `email_destino`) por los datos reales de esta devolución.
-   - Ejecutás el workflow manualmente ("Test workflow"). Esto sube el archivo a la carpeta **"Devoluciones EIDAS"** en Drive y manda el mail de aviso.
+   - En el nodo **"Datos de la devolución"**, poné el `grupo_id` (tal como está en `grupos.json`)
+     y la `fecha` del archivo que acabás de publicar (formato `AAAA-MM-DD`, sin extensión).
+   - Click en **"Test workflow"**. A partir de ahí es automático: busca el email del grupo en
+     `grupos.json`, lee `grupos/grupo-XX/feedback/AAAA-MM-DD.md` directamente del repo del
+     grupo, lo sube a la carpeta "Devoluciones EIDAS" en Drive, y manda el mail con el link.
 
-   *(El nodo "Edit Fields" todavía no lee `feedback/AAAA-MM-DD.md` automáticamente — hay que
-   pegar los datos a mano por ahora. Ver "Pendientes" más abajo.)*
+   Requisito para que esto funcione: el grupo tiene que tener un campo `"email"` cargado en
+   su entrada de `grupos.json` (ver sección 1).
 
 ---
 
@@ -86,10 +91,11 @@ Vía Google Classroom/Forms — activo, sin cambios pendientes de este lado. La 
 
 ## 4. Pendientes para completar la automatización
 
-En orden de lo que más impacto tiene:
+- **Apps Script en Google Forms** — evaluado y descartado (ver `CLAUDE.md`, sección de
+  pendientes): el cuestionario ya se autocalifica y es individual, no vale la pena meterlo
+  en el repo grupal.
 
-1. **Conectar el workflow a los archivos reales:** que el nodo "Edit Fields" lea `grupos/grupo-XX/feedback/AAAA-MM-DD.md` en vez de tener datos de prueba hardcodeados.
-2. **Apps Script en Google Forms** para copiar las respuestas del cuestionario individual al repo o a algún lugar donde el pipeline las pueda leer.
+Con esto, no queda ningún pendiente de automatización sin resolver o decidir explícitamente.
 
 **Decisión ya tomada — no son pendientes:**
 - *El trigger es manual, y así se queda.* Vos pusheás `main` cuando aprobás, y después disparás N8N a mano. Encaja con la idea de que el docente controla cuándo se publica una devolución, sin necesitar webhooks.

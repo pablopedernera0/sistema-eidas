@@ -55,7 +55,7 @@ sistema-eidas/
 ├── marco-teorico-resumen.md            ← resumen de 2 hojas
 ├── infra/
 │   └── n8n/                   ← docker-compose de N8N (local; base para el Linode)
-├── grupos.json                ← config: id + url de repo de cada grupo
+├── grupos.json                ← config: id + url de repo + email de cada grupo
 ├── scripts/
 │   └── grupos.py               ← sync (clonar/pull) y publicar (merge feedback→main + push)
 ├── grupos/                    ← repos clonados de cada grupo (se puebla en el cuatrimestre)
@@ -196,7 +196,7 @@ Cada archivo de devolución sigue esta estructura, tanto la copia de trabajo en
 - [~] Apps Script en Google Forms → repo — **decisión: no se hace.** El cuestionario ya se autocalifica en Forms, y como es individual (no grupal), meterlo en el repo del grupo expondría la nota de cada estudiante al resto del equipo. Buscar el puntaje a mano una vez por estudiante al cerrar la nota final no justifica automatizarlo.
 - [~] Levantar N8N en el Linode — **decisión: no es necesario por ahora.** Todo el pipeline es local y el disparo de notificación es manual, así que N8N puede seguir corriendo en la PC del docente indefinidamente. El Linode solo pasaría a ser necesario si en el futuro se necesita que un servicio externo (webhook de GitHub, Apps Script) le llegue a N8N desde internet — evaluar entonces, no antes.
 - [x] Armar lógica del flow N8N en local: genera archivo → sube a "Devoluciones EIDAS" en Drive → notifica por Gmail (workflow `Evaluacion EIDAS`, probado end-to-end con Manual Trigger; exportado a `infra/n8n/workflows/evaluacion-eidas.json`)
-- [ ] Conectar el nodo "Edit Fields" del workflow a los archivos reales de `grupos/grupo-XX/feedback/AAAA-MM-DD.md` en vez de datos de prueba (el disparo sigue siendo manual — el profe lo ejecuta después de pushear `main` — no requiere webhook ni Linode, ver discusión de diseño en este archivo)
+- [x] Workflow de N8N conectado a los archivos reales: el nodo "Datos de la devolución" solo pide `grupo_id` + `fecha`; el resto (buscar email en `grupos.json`, leer `grupos/grupo-XX/feedback/AAAA-MM-DD.md`, subir a Drive, mandar el mail) es automático. Requiere `N8N_RESTRICT_FILE_ACCESS_TO` seteado en `docker-compose.yml` (N8N por defecto solo deja leer `~/.n8n-files`) y el bind mount del proyecto en `/home/node/data`. El disparo sigue siendo manual.
 - [x] Escribir marco teórico del Sistema EIDAS (`marco-teorico-fundamentacion.md` y `marco-teorico-resumen.md`) — pendiente confirmar datos de edición de Achilli/Ander-Egg y ampliar referencia al seminario de Placci sobre IA
 
 ---
@@ -208,7 +208,7 @@ Cada archivo de devolución sigue esta estructura, tanto la copia de trabajo en
 | Repos de grupos | GitHub (template repository) | Activo |
 | Cuestionarios | Google Classroom + Forms | Activo |
 | Conexión Forms → repo | — | Descartado — no aporta valor suficiente (ver pendientes) |
-| Automatización | N8N en Docker (`infra/n8n/`), corre local en la PC del docente | Activo (trigger manual; falta conectar a los archivos reales de devolución) |
+| Automatización | N8N en Docker (`infra/n8n/`), corre local en la PC del docente | Activo — conectado a archivos reales, trigger manual |
 | Servidor | Linode propio de Profe Pablo | Disponible, no se usa por ahora (ver pendientes — N8N se queda local) |
 | Evaluación asistida | Claude Code (local) | Activo |
 
