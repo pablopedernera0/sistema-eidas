@@ -50,6 +50,7 @@ sistema-eidas/
 ├── rubrica.md                 ← rúbrica de evaluación
 ├── guia-de-uso.md                      ← guía operativa paso a paso (estado real: qué es manual, qué está automatizado)
 ├── guia-docente-clase-git.md           ← plan de clase práctica de git (solo docente, no se sube al template)
+├── guia-prueba-circuito-completo.md    ← runbook para probar el sistema de punta a punta (solo docente)
 ├── marco-teorico.md                    ← notas y bibliografía fuente
 ├── marco-teorico-fundamentacion.md     ← fundamentación teórica completa
 ├── marco-teorico-resumen.md            ← resumen de 2 hojas
