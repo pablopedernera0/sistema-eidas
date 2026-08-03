@@ -40,13 +40,14 @@ Todo lo que sigue es con tu cuenta real y en tu terminal, dentro de `sistema-eid
 
 ## 3. Generar la devolución con Claude Code
 
-1. Abrí Claude Code en `sistema-eidas/` y pedile explícitamente:
-   - Que trabaje dentro de `grupos/grupo-prueba/`.
-   - Que cree la branch local `feedback` (si no existe).
-   - Que aplique `rubrica.md` sobre lo que hay en el repo de prueba.
-   - Que commitee el archivo en `grupos/grupo-prueba/feedback/AAAA-MM-DD.md` (fecha de hoy),
-     siguiendo el formato de `CLAUDE.md`.
-   - Que deje también la copia de trabajo en `sistema-eidas/feedback/grupo-prueba_AAAA-MM-DD.md`.
+1. Abrí Claude Code en `sistema-eidas/` y corré:
+   ```
+   /evaluar-grupo grupo-prueba
+   ```
+   Este comando (definido en `.claude/commands/evaluar-grupo.md`) hace todo el trabajo:
+   crea la branch local `feedback` si no existe, aplica `rubrica.md`, escribe el archivo de
+   devolución en `grupos/grupo-prueba/feedback/AAAA-MM-DD.md` y la copia de trabajo en
+   `sistema-eidas/feedback/`, y lo commitea en esa branch — sin pushear nada.
 2. Verificá que la branch `feedback` es local y no se pusheó sola:
    ```
    cd grupos/grupo-prueba && git branch -a

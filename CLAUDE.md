@@ -51,6 +51,9 @@ sistema-eidas/
 ├── guia-de-uso.md                      ← guía operativa paso a paso (estado real: qué es manual, qué está automatizado)
 ├── guia-docente-clase-git.md           ← plan de clase práctica de git (solo docente, no se sube al template)
 ├── guia-prueba-circuito-completo.md    ← runbook para probar el sistema de punta a punta (solo docente)
+├── .claude/
+│   └── commands/
+│       └── evaluar-grupo.md            ← comando /evaluar-grupo <id>: automatiza el paso de Claude Code
 ├── marco-teorico.md                    ← notas y bibliografía fuente
 ├── marco-teorico-fundamentacion.md     ← fundamentación teórica completa
 ├── marco-teorico-resumen.md            ← resumen de 2 hojas

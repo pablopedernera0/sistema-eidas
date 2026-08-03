@@ -52,9 +52,10 @@ antes de tiempo.
    python3 scripts/grupos.py sync
    ```
    (o `cd grupos/grupo-01-nombre && git pull` si solo querés actualizar ese grupo puntual)
-2. **Generar el borrador con Claude Code:** abrís Claude Code en `sistema-eidas/` y le pedís
-   que, dentro de `grupos/grupo-01-nombre/`, cree (o actualice) una branch local `feedback`,
-   lea el repo del grupo, aplique `rubrica.md`, y commitee ahí
+2. **Generar el borrador con Claude Code:** abrís Claude Code en `sistema-eidas/` y corrés
+   `/evaluar-grupo grupo-01-nombre`. Ese comando (definido en
+   `.claude/commands/evaluar-grupo.md`) crea (o actualiza) la branch local `feedback` dentro
+   de `grupos/grupo-01-nombre/`, aplica `rubrica.md`, y commitea ahí
    `feedback/AAAA-MM-DD.md` con el formato definido en `CLAUDE.md`. De paso, deja una copia
    de trabajo en `sistema-eidas/feedback/grupo-01-nombre_AAAA-MM-DD.md` (esta sí es tuya,
    no se pushea a ningún lado, es solo para que tengas todas las devoluciones juntas).

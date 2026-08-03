@@ -4,9 +4,9 @@ template/
 # repos clonados de cada grupo — son sus propios repos, no se versionan acá
 grupos/
 
-# tooling local
+# tooling local (los comandos personalizados en .claude/commands/ sí se versionan)
 .idea/
-.claude/
+.claude/settings.local.json
 
 # n8n: datos/credenciales locales (infra/n8n/.gitignore ya cubre .env y el json de OAuth)
 infra/n8n/.env
