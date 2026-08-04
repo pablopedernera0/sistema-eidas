@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Gestión de repos de grupos del Sistema EIDAS. Ver guia-de-uso.md."""
+"""Gestión de repos de grupos del Sistema EIDAS, por materia. Ver guia-de-uso.md."""
 
 import json
 import re
@@ -10,15 +10,25 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-CONFIG_PATH = ROOT / "grupos.json"
-GRUPOS_DIR = ROOT / "grupos"
+MATERIAS_DIR = ROOT / "materias"
 N8N_WEBHOOK_URL = "http://localhost:5678/webhook/evaluar-grupo"
 FECHA_RE = re.compile(r"feedback/(\d{4}-\d{2}-\d{2})\.md$")
 
 
-def load_config():
-    with open(CONFIG_PATH) as f:
-        return {g["id"]: g for g in json.load(f)["grupos"]}
+def materia_dir(materia):
+    path = MATERIAS_DIR / materia
+    if not path.exists():
+        raise SystemExit(
+            f"No existe {path}. Materias disponibles: "
+            + ", ".join(p.name for p in MATERIAS_DIR.iterdir() if p.is_dir())
+        )
+    return path
+
+
+def load_config(materia):
+    config_path = materia_dir(materia) / "grupos.json"
+    with open(config_path) as f:
+        return {g["id"]: g for g in json.load(f)["grupos"]}, config_path
 
 
 def run(cmd, cwd=None, check=True):
@@ -29,10 +39,12 @@ def run(cmd, cwd=None, check=True):
     return result
 
 
-def sync():
-    GRUPOS_DIR.mkdir(exist_ok=True)
-    for grupo_id, g in load_config().items():
-        path = GRUPOS_DIR / grupo_id
+def sync(materia):
+    grupos_dir = materia_dir(materia) / "grupos"
+    grupos_dir.mkdir(exist_ok=True)
+    config, _ = load_config(materia)
+    for grupo_id, g in config.items():
+        path = grupos_dir / grupo_id
         if path.exists():
             print(f"\n== {grupo_id}: ya clonado, actualizando main ==")
             run(["git", "checkout", "main"], cwd=path)
@@ -42,14 +54,14 @@ def sync():
             run(["git", "clone", g["repo"], str(path)])
 
 
-def publicar(grupo_id, skip_confirm=False):
-    config = load_config()
+def publicar(materia, grupo_id, skip_confirm=False):
+    config, config_path = load_config(materia)
     if grupo_id not in config:
-        raise SystemExit(f"'{grupo_id}' no está en {CONFIG_PATH.name}")
+        raise SystemExit(f"'{grupo_id}' no está en {config_path}")
 
-    path = GRUPOS_DIR / grupo_id
+    path = materia_dir(materia) / "grupos" / grupo_id
     if not path.exists():
-        raise SystemExit(f"{path} no existe todavía — corré 'sync' primero")
+        raise SystemExit(f"{path} no existe todavía — corré 'sync {materia}' primero")
 
     branches = subprocess.run(
         ["git", "branch", "--list", "feedback"], cwd=path, capture_output=True, text=True
@@ -59,7 +71,7 @@ def publicar(grupo_id, skip_confirm=False):
 
     if not skip_confirm:
         resp = input(
-            f"¿Confirmás publicar la devolución de '{grupo_id}' "
+            f"¿Confirmás publicar la devolución de '{materia}/{grupo_id}' "
             f"(merge feedback → main, y push)? [s/N] "
         )
         if resp.strip().lower() != "s":
@@ -74,7 +86,7 @@ def publicar(grupo_id, skip_confirm=False):
     run(["git", "merge", "feedback", "--no-edit"], cwd=path)
     fechas = marcar_publicado(path, pre_merge_sha)
     run(["git", "push", "origin", "main"], cwd=path)
-    print(f"\n{grupo_id}: devolución publicada.")
+    print(f"\n{materia}/{grupo_id}: devolución publicada.")
 
     if not fechas:
         print(
@@ -82,7 +94,7 @@ def publicar(grupo_id, skip_confirm=False):
             "disparó la notificación. Si hace falta, corré 'notificar' a mano."
         )
     for fecha in fechas:
-        notificar(grupo_id, fecha)
+        notificar(materia, grupo_id, fecha)
 
 
 def marcar_publicado(path, pre_merge_sha):
@@ -116,16 +128,16 @@ def marcar_publicado(path, pre_merge_sha):
     return fechas
 
 
-def notificar(grupo_id, fecha):
+def notificar(materia, grupo_id, fecha):
     """Dispara el workflow de N8N (webhook local) para subir a Drive y avisar por Gmail."""
-    payload = json.dumps({"grupo_id": grupo_id, "fecha": fecha}).encode()
+    payload = json.dumps({"materia": materia, "grupo_id": grupo_id, "fecha": fecha}).encode()
     req = urllib.request.Request(
         N8N_WEBHOOK_URL,
         data=payload,
         headers={"Content-Type": "application/json"},
         method="POST",
     )
-    print(f"$ POST {N8N_WEBHOOK_URL}  (grupo_id={grupo_id}, fecha={fecha})")
+    print(f"$ POST {N8N_WEBHOOK_URL}  (materia={materia}, grupo_id={grupo_id}, fecha={fecha})")
     try:
         with urllib.request.urlopen(req, timeout=60) as resp:
             body = resp.read().decode()
@@ -134,16 +146,17 @@ def notificar(grupo_id, fecha):
         print(
             f"AVISO: no se pudo notificar a N8N ({e}). ¿Está corriendo "
             f"'docker compose up -d' en infra/n8n/? Podés reintentar con:\n"
-            f"  python3 scripts/grupos.py notificar {grupo_id} {fecha}"
+            f"  python3 scripts/grupos.py notificar {materia} {grupo_id} {fecha}"
         )
 
 
 def main():
     uso = (
         "Uso:\n"
-        "  grupos.py sync\n"
-        "  grupos.py publicar <grupo-id> [--yes]\n"
-        "  grupos.py notificar <grupo-id> <AAAA-MM-DD>"
+        "  grupos.py sync <materia>\n"
+        "  grupos.py publicar <materia> <grupo-id> [--yes]\n"
+        "  grupos.py notificar <materia> <grupo-id> <AAAA-MM-DD>\n\n"
+        "<materia> es el nombre de carpeta en materias/, ej: af-diseno-sistemas-web-31"
     )
     if len(sys.argv) < 2:
         print(uso)
@@ -151,17 +164,19 @@ def main():
 
     cmd = sys.argv[1]
     if cmd == "sync":
-        sync()
-    elif cmd == "publicar":
         if len(sys.argv) < 3:
-            raise SystemExit("Uso: grupos.py publicar <grupo-id> [--yes]")
-        grupo_id = sys.argv[2]
-        skip_confirm = "--yes" in sys.argv[3:]
-        publicar(grupo_id, skip_confirm)
-    elif cmd == "notificar":
+            raise SystemExit("Uso: grupos.py sync <materia>")
+        sync(sys.argv[2])
+    elif cmd == "publicar":
         if len(sys.argv) < 4:
-            raise SystemExit("Uso: grupos.py notificar <grupo-id> <AAAA-MM-DD>")
-        notificar(sys.argv[2], sys.argv[3])
+            raise SystemExit("Uso: grupos.py publicar <materia> <grupo-id> [--yes]")
+        materia, grupo_id = sys.argv[2], sys.argv[3]
+        skip_confirm = "--yes" in sys.argv[4:]
+        publicar(materia, grupo_id, skip_confirm)
+    elif cmd == "notificar":
+        if len(sys.argv) < 5:
+            raise SystemExit("Uso: grupos.py notificar <materia> <grupo-id> <AAAA-MM-DD>")
+        notificar(sys.argv[2], sys.argv[3], sys.argv[4])
     else:
         raise SystemExit(f"Comando desconocido: {cmd}\n\n{uso}")
 

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-04T11:42:07.000Z",
+  "updatedAt": "2026-08-04T12:00:07.000Z",
   "createdAt": "2026-08-03T12:28:02.060Z",
   "id": "BJln5lzSPgeDmpmS",
   "name": "Evaluacion EIDAS",
@@ -29,6 +29,12 @@
         "assignments": {
           "assignments": [
             {
+              "id": "ce98fc25-88af-40df-b7a0-4be75a4c0860",
+              "name": "materia",
+              "value": "={{ $json.body.materia }}",
+              "type": "string"
+            },
+            {
               "id": "df66dcfe-b58a-41bd-b4d8-4050ce9a82d5",
               "name": "grupo_id",
               "value": "={{ $json.body.grupo_id }}",
@@ -56,7 +62,7 @@
     {
       "parameters": {
         "operation": "read",
-        "fileSelector": "/home/node/data/grupos.json",
+        "fileSelector": "=/home/node/data/materias/{{ $json.materia }}/grupos.json",
         "options": {
           "dataPropertyName": "data"
         }
@@ -90,7 +96,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const grupoId = $('Datos de la devolución').item.json.grupo_id;\nconst fecha = $('Datos de la devolución').item.json.fecha;\nconst grupos = $input.all()[0].json.parsed.grupos;\nconst found = grupos.find(g => g.id === grupoId);\nif (!found) {\n  throw new Error(`Grupo '${grupoId}' no está en grupos.json`);\n}\nif (!found.email) {\n  throw new Error(`Grupo '${grupoId}' no tiene email cargado en grupos.json`);\n}\nreturn [{ json: { grupo_id: grupoId, fecha: fecha, email_destino: found.email } }];"
+        "jsCode": "const materia = $('Datos de la devolución').item.json.materia;\nconst grupoId = $('Datos de la devolución').item.json.grupo_id;\nconst fecha = $('Datos de la devolución').item.json.fecha;\nconst grupos = $input.all()[0].json.parsed.grupos;\nconst found = grupos.find(g => g.id === grupoId);\nif (!found) {\n  throw new Error(`Grupo '${grupoId}' no está en materias/${materia}/grupos.json`);\n}\nif (!found.email) {\n  throw new Error(`Grupo '${grupoId}' no tiene email cargado en grupos.json`);\n}\nreturn [{ json: { materia: materia, grupo_id: grupoId, fecha: fecha, email_destino: found.email } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -104,7 +110,7 @@
     {
       "parameters": {
         "operation": "read",
-        "fileSelector": "=/home/node/data/grupos/{{ $json.grupo_id }}/feedback/{{ $json.fecha }}.md",
+        "fileSelector": "=/home/node/data/materias/{{ $json.materia }}/grupos/{{ $json.grupo_id }}/feedback/{{ $json.fecha }}.md",
         "options": {
           "dataPropertyName": "data"
         }
@@ -123,7 +129,7 @@
         "resource": "file",
         "operation": "upload",
         "inputDataFieldName": "data",
-        "name": "={{ $('Buscar datos del grupo').item.json.grupo_id }}_{{ $('Buscar datos del grupo').item.json.fecha }}.md",
+        "name": "={{ $('Buscar datos del grupo').item.json.materia }}_{{ $('Buscar datos del grupo').item.json.grupo_id }}_{{ $('Buscar datos del grupo').item.json.fecha }}.md",
         "driveId": {
           "__rl": true,
           "mode": "list",
@@ -156,7 +162,7 @@
     {
       "parameters": {
         "sendTo": "={{ $('Buscar datos del grupo').item.json.email_destino }}",
-        "subject": "=Devolución disponible — {{ $('Buscar datos del grupo').item.json.grupo_id }}",
+        "subject": "=Devolución disponible — {{ $('Buscar datos del grupo').item.json.materia }} / {{ $('Buscar datos del grupo').item.json.grupo_id }}",
         "message": "=Hola,\n\nLa devolución del {{ $('Buscar datos del grupo').item.json.grupo_id }} ya está disponible.\n\nPodés verla acá: {{ $json.webViewLink }}\n\nSaludos,\nSistema EIDAS",
         "options": {}
       },
@@ -267,9 +273,9 @@
   },
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "50e6a5a4-c0b1-45c7-8fc8-f87ae13c549b",
-  "activeVersionId": "50e6a5a4-c0b1-45c7-8fc8-f87ae13c549b",
-  "versionCounter": 69,
+  "versionId": "871b4186-f44b-4793-8687-88082942932a",
+  "activeVersionId": "871b4186-f44b-4793-8687-88082942932a",
+  "versionCounter": 70,
   "triggerCount": 1,
   "sourceWorkflowId": null,
   "tags": [],

@@ -1,7 +1,8 @@
 # Guía docente — Clase práctica de Git y GitHub
 
-> Material solo para el docente. No se comparte con los estudiantes — lo que ellos
-> reciben es `template/RECURSOS.md`, que además les compartís por Classroom.
+> Material solo para el docente, reusable para cualquier materia. No se comparte con los
+> estudiantes — lo que ellos reciben es `materias/<materia>/template/RECURSOS.md`, que
+> además les compartís por Classroom.
 
 ---
 
@@ -22,7 +23,7 @@ git — es que pierdan el miedo y salgan con el flujo mínimo internalizado: `pu
   antes de la clase — pedirlo como tarea previa, para no perder tiempo de clase en eso.
 - Que cada estudiante tenga git instalado y cuenta de GitHub creada (avisar con
   antelación, verificar al inicio de la clase).
-- Repartir `template/RECURSOS.md` antes o al comienzo de la clase.
+- Repartir `materias/<materia>/template/RECURSOS.md` antes o al comienzo de la clase.
 
 ## Estructura sugerida
 

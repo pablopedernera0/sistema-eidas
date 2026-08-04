@@ -1,8 +1,8 @@
-# template/ es su propio repo git (pusheado a eidas-template), no se anida acá
-template/
+# template/ de cada materia es su propio repo git, no se anida acá
+materias/*/template/
 
 # repos clonados de cada grupo — son sus propios repos, no se versionan acá
-grupos/
+materias/*/grupos/
 
 # tooling local (los comandos personalizados en .claude/commands/ sí se versionan)
 .idea/

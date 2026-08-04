@@ -1,21 +1,26 @@
 # Guía de prueba — circuito completo del Sistema EIDAS
 
 > Runbook para probar el sistema de punta a punta con una cuenta de estudiante de prueba.
-> Solo para el docente — no se sube al template. Pensada para reusarse cada vez que se
-> quiera validar el circuito completo, no solo para la primera prueba.
+> Solo para el docente — no se sube a ningún template. Pensada para reusarse cada vez que se
+> quiera validar el circuito completo, no solo para la primera prueba. Usá siempre una
+> materia real que ya exista en `materias/` (ej. `af-diseno-sistemas-web-31`) para probar —
+> no hace falta crear una materia de prueba aparte.
 
 ---
 
 ## 0. Qué se prueba
 
-Todo el camino: un grupo crea su repo desde el template → sube trabajo → vos generás la
-devolución con Claude → la revisás → la publicás → el grupo la recibe por Drive + Gmail.
+Todo el camino: un grupo crea su repo desde el template de una materia → sube trabajo →
+vos generás la devolución con Claude → la revisás → la publicás → el grupo la recibe por
+Drive + Gmail.
 
 ## 1. Preparar la cuenta de estudiante de prueba
 
 1. Logueate en GitHub con la cuenta de prueba (no la de `pablopedernera0`).
-2. Entrá a https://github.com/pablopedernera0/eidas-template → **"Use this template" →
-   "Create a new repository"**. Nombre sugerido: `eidas-prueba-circuito`.
+2. Entrá al repo template de la materia que vayas a usar para probar (el link está en la
+   tabla de `CLAUDE.md`, ej. https://github.com/pablopedernera0/eidas-template) →
+   **"Use this template" → "Create a new repository"**. Nombre sugerido:
+   `eidas-prueba-circuito`.
 3. Cloná ese repo con la cuenta de prueba y completá algo mínimo para simular trabajo real:
    - `integrantes.md` con un nombre de prueba.
    - Alguna línea en `docs/requisitos.md` (para que Claude tenga algo real que evaluar).
@@ -26,31 +31,33 @@ devolución con Claude → la revisás → la publicás → el grupo la recibe p
 
 ## 2. Volver a tu cuenta de docente
 
-Todo lo que sigue es con tu cuenta real y en tu terminal, dentro de `sistema-eidas/`.
+Todo lo que sigue es con tu cuenta real y en tu terminal, dentro de `sistema-eidas/`. Vas a
+necesitar el nombre de la materia (`<materia>`) que estés usando para la prueba.
 
-1. Agregá el grupo de prueba a `grupos.json`:
+1. Agregá el grupo de prueba a `materias/<materia>/grupos.json`:
    ```json
    { "id": "grupo-prueba", "repo": "https://github.com/<cuenta-de-prueba>/eidas-prueba-circuito.git", "email": "<tu email real, para poder verificar>" }
    ```
 2. Cloná el repo:
    ```
-   python3 scripts/grupos.py sync
+   python3 scripts/grupos.py sync <materia>
    ```
-   Verificá que aparezca `grupos/grupo-prueba/` con lo que subiste en el paso 1.
+   Verificá que aparezca `materias/<materia>/grupos/grupo-prueba/` con lo que subiste en el paso 1.
 
 ## 3. Generar la devolución con Claude Code
 
 1. Abrí Claude Code en `sistema-eidas/` y corré:
    ```
-   /evaluar-grupo grupo-prueba
+   /evaluar-grupo <materia> grupo-prueba
    ```
    Este comando (definido en `.claude/commands/evaluar-grupo.md`) hace todo el trabajo:
-   crea la branch local `feedback` si no existe, aplica `rubrica.md`, escribe el archivo de
-   devolución en `grupos/grupo-prueba/feedback/AAAA-MM-DD.md` y la copia de trabajo en
-   `sistema-eidas/feedback/`, y lo commitea en esa branch — sin pushear nada.
+   crea la branch local `feedback` si no existe, aplica `materias/<materia>/rubrica.md`,
+   escribe el archivo de devolución en
+   `materias/<materia>/grupos/grupo-prueba/feedback/AAAA-MM-DD.md` y la copia de trabajo en
+   `materias/<materia>/feedback/`, y lo commitea en esa branch — sin pushear nada.
 2. Verificá que la branch `feedback` es local y no se pusheó sola:
    ```
-   cd grupos/grupo-prueba && git branch -a
+   cd materias/<materia>/grupos/grupo-prueba && git branch -a
    ```
    No debería aparecer `feedback` en el listado de `origin/*`.
 
@@ -58,33 +65,34 @@ Todo lo que sigue es con tu cuenta real y en tu terminal, dentro de `sistema-eid
 
 1. Revisá el contenido:
    ```
-   git diff main feedback
+   git diff main..feedback
    ```
 2. Ajustá lo que haga falta directamente en el archivo (esto simula tu revisión real).
 3. Asegurate de que N8N esté corriendo (`cd infra/n8n && docker compose up -d`, si no lo
    estaba) y publicá — esto también dispara la notificación solo, no hace falta nada más:
    ```
-   cd ../..    # volver a sistema-eidas/
-   python3 scripts/grupos.py publicar grupo-prueba
+   cd ../../../..    # volver a sistema-eidas/
+   python3 scripts/grupos.py publicar <materia> grupo-prueba
    ```
 4. **Verificación cruzada:**
    - Volvé a loguearte como la cuenta de estudiante de prueba (o mirá el repo sin sesión, si
      es público) y confirmá que el archivo de devolución apareció en `feedback/AAAA-MM-DD.md`
      del repo de prueba, en la rama `main`.
-   - Confirmá que apareció el archivo `grupo-prueba_AAAA-MM-DD.md` en la carpeta
-     **"Devoluciones EIDAS"** de Drive.
+   - Confirmá que apareció el archivo `<materia>_grupo-prueba_AAAA-MM-DD.md` en la carpeta
+     **"Devoluciones EIDAS"** de Drive (el nombre lleva la materia como prefijo).
    - Confirmá que llegó el mail al email que pusiste en `grupos.json` para este grupo, con
-     el link correcto al archivo.
+     el link correcto al archivo y la materia en el asunto.
    - Si la notificación no salió sola (por ejemplo, N8N no estaba corriendo cuando publicaste),
      el push ya se hizo igual — reintentá con
-     `python3 scripts/grupos.py notificar grupo-prueba AAAA-MM-DD`.
+     `python3 scripts/grupos.py notificar <materia> grupo-prueba AAAA-MM-DD`.
 
 ## 5. Limpieza — dejar todo como estaba
 
 No te olvides de este paso, para no dejar basura de prueba en el sistema real:
 
-1. Sacá la entrada `grupo-prueba` de `grupos.json`.
-2. `rm -rf grupos/grupo-prueba` y `rm sistema-eidas/feedback/grupo-prueba_*.md`.
+1. Sacá la entrada `grupo-prueba` de `materias/<materia>/grupos.json`.
+2. `rm -rf materias/<materia>/grupos/grupo-prueba` y
+   `rm materias/<materia>/feedback/grupo-prueba_*.md`.
 3. Borrá el archivo de prueba subido a Drive (carpeta "Devoluciones EIDAS").
 4. Opcional: borrá el repo `eidas-prueba-circuito` desde la cuenta de estudiante de prueba
    (Settings → General → Delete this repository), si no lo vas a reusar en la próxima prueba.
@@ -97,6 +105,9 @@ Cosas que ya nos mordieron una vez armando esto — si algo se rompe, empezar po
 
 - **`git push` falla al publicar:** casi siempre es que te olvidaste de agregarte como
   colaborador con permiso de escritura en el repo del grupo (paso 1.4).
+- **`materia no encontrada` / `No existe materias/...`:** revisá el nombre exacto de la
+  carpeta en `materias/` (`ls materias/`) — tiene que coincidir letra por letra con lo que
+  le pasás a `scripts/grupos.py` y a `/evaluar-grupo`.
 - **N8N tira error de DNS (`EAI_AGAIN`) al conectar con Google:** el contenedor no heredó
   las variables de proxy del host. Revisar que `HTTP_PROXY`/`HTTPS_PROXY` estén seteadas en
   el shell antes de `docker compose up`, y que `infra/n8n/docker-compose.yml` las pase al
@@ -106,13 +117,13 @@ Cosas que ya nos mordieron una vez armando esto — si algo se rompe, empezar po
   el `docker-compose.yml`, o el path no coincide con `/home/node/data/...`. Ya está
   configurado en el compose actual — si aparece este error, algo se rompió en esa config.
 - **El mail llega con datos vacíos o `undefined`, o el archivo sube a Drive con nombre
-  `_.md`:** algún nodo de N8N está usando `$json` en vez de
-  `$('Nombre del nodo').item.json` para referenciar un campo que viene de pasos atrás.
+  raro (ej. `_grupo_fecha.md` sin materia):** algún nodo de N8N está usando `$json` en vez
+  de `$('Nombre del nodo').item.json` para referenciar un campo que viene de pasos atrás.
   Varios nodos (Google Drive, "Extract from File", "Read/Write File From Disk") no
   garantizan pasar el `$json` de entrada tal cual — pisan o vacían campos según el caso. Ya
-  nos pasó tanto en el nodo Gmail (mensaje) como en el nombre de archivo del nodo Drive —
-  si agregás o editás un nodo, referenciá el nodo de origen explícitamente en vez de confiar
-  en que `$json` va a traer lo que esperás.
+  nos pasó en el nodo Gmail (mensaje) y en el nombre de archivo del nodo Drive — si agregás
+  o editás un nodo (por ejemplo al sumar un campo nuevo como `materia`), referenciá el nodo
+  de origen explícitamente en vez de confiar en que `$json` va a traer lo que esperás.
 - **`git merge feedback` tira conflicto al publicar:** si reusaste el mismo repo de prueba
   varias veces sin limpiar entre corridas, las branches locales quedan con historiales
   divergentes. No es un bug del script — se resuelve como cualquier conflicto de git. Para

@@ -1,5 +1,5 @@
 # Rúbrica de Evaluación — Sistema EIDAS
-## Diseño de Sistemas Web — Analista Funcional de Sistemas
+## Diseño de Sistemas Web — Analista Funcional de Sistemas — Comisión 31
 ### Terciario Urquiza — Rosario | 2.° Cuatrimestre 2026
 ### Docente: Pedernera Pablo
 
