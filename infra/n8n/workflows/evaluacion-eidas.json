@@ -1,37 +1,43 @@
 {
-  "updatedAt": "2026-08-03T13:14:58.534Z",
+  "updatedAt": "2026-08-04T11:24:29.000Z",
   "createdAt": "2026-08-03T12:28:02.060Z",
   "id": "BJln5lzSPgeDmpmS",
   "name": "Evaluacion EIDAS",
   "description": null,
-  "active": false,
+  "active": true,
   "isArchived": false,
   "nodes": [
     {
-      "parameters": {},
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "evaluar-grupo",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
       "position": [
         0,
         0
       ],
-      "id": "51946522-0092-4d1f-b6b8-3be7d7c2de62",
-      "name": "Manual Trigger"
+      "id": "6e5f0f9f-c950-4dfc-853a-a4f3f5b08e94",
+      "name": "Webhook",
+      "webhookId": "40bf8d9c-202d-4584-9ee9-68112ea1ed92"
     },
     {
       "parameters": {
         "assignments": {
           "assignments": [
             {
-              "id": "16295257-1cb9-4554-9e02-8e5859e99d04",
+              "id": "df66dcfe-b58a-41bd-b4d8-4050ce9a82d5",
               "name": "grupo_id",
-              "value": "grupo-01-nombre",
+              "value": "={{ $json.body.grupo_id }}",
               "type": "string"
             },
             {
-              "id": "69d9124e-11a4-45b8-99e1-d611a6f19e1a",
+              "id": "030e2772-5c7c-4641-8c6f-79ee76e875f6",
               "name": "fecha",
-              "value": "2026-08-03",
+              "value": "={{ $json.body.fecha }}",
               "type": "string"
             }
           ]
@@ -172,17 +178,6 @@
     }
   ],
   "connections": {
-    "Manual Trigger": {
-      "main": [
-        [
-          {
-            "node": "Datos de la devolución",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Datos de la devolución": {
       "main": [
         [
@@ -248,6 +243,17 @@
           }
         ]
       ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Datos de la devolución",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
@@ -261,10 +267,10 @@
   },
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "ee93deab-a42d-4ed2-8b06-34943f527697",
-  "activeVersionId": null,
+  "versionId": "18fce1ad-c91a-4ed7-a958-ba3b186041a0",
+  "activeVersionId": "18fce1ad-c91a-4ed7-a958-ba3b186041a0",
   "versionCounter": 68,
-  "triggerCount": 0,
+  "triggerCount": 1,
   "sourceWorkflowId": null,
   "tags": [],
   "shared": [

@@ -61,28 +61,25 @@ Todo lo que sigue es con tu cuenta real y en tu terminal, dentro de `sistema-eid
    git diff main feedback
    ```
 2. Ajustá lo que haga falta directamente en el archivo (esto simula tu revisión real).
-3. Publicá:
+3. Asegurate de que N8N esté corriendo (`cd infra/n8n && docker compose up -d`, si no lo
+   estaba) y publicá — esto también dispara la notificación solo, no hace falta nada más:
    ```
    cd ../..    # volver a sistema-eidas/
    python3 scripts/grupos.py publicar grupo-prueba
    ```
-4. **Verificación cruzada:** volvé a loguearte como la cuenta de estudiante de prueba (o
-   mirá el repo sin sesión, si es público) y confirmá que el archivo de devolución
-   apareció en `feedback/AAAA-MM-DD.md` del repo de prueba, en la rama `main`.
+4. **Verificación cruzada:**
+   - Volvé a loguearte como la cuenta de estudiante de prueba (o mirá el repo sin sesión, si
+     es público) y confirmá que el archivo de devolución apareció en `feedback/AAAA-MM-DD.md`
+     del repo de prueba, en la rama `main`.
+   - Confirmá que apareció el archivo `grupo-prueba_AAAA-MM-DD.md` en la carpeta
+     **"Devoluciones EIDAS"** de Drive.
+   - Confirmá que llegó el mail al email que pusiste en `grupos.json` para este grupo, con
+     el link correcto al archivo.
+   - Si la notificación no salió sola (por ejemplo, N8N no estaba corriendo cuando publicaste),
+     el push ya se hizo igual — reintentá con
+     `python3 scripts/grupos.py notificar grupo-prueba AAAA-MM-DD`.
 
-## 5. Notificar por N8N
-
-1. `cd infra/n8n && docker compose up -d` (si no estaba corriendo).
-2. Entrá a http://localhost:5678, abrí el workflow **"Evaluacion EIDAS"**.
-3. En **"Datos de la devolución"**: `grupo_id = grupo-prueba`, `fecha = AAAA-MM-DD` (la de hoy).
-4. **Test workflow**.
-5. Verificá:
-   - Que apareció el archivo `grupo-prueba_AAAA-MM-DD.md` en la carpeta **"Devoluciones
-     EIDAS"** de Drive.
-   - Que llegó el mail al email que pusiste en `grupos.json` para este grupo, con el link
-     correcto al archivo.
-
-## 6. Limpieza — dejar todo como estaba
+## 5. Limpieza — dejar todo como estaba
 
 No te olvides de este paso, para no dejar basura de prueba en el sistema real:
 
@@ -111,6 +108,14 @@ Cosas que ya nos mordieron una vez armando esto — si algo se rompe, empezar po
 - **El mail llega con datos vacíos o `undefined`:** algún nodo de N8N está usando `$json`
   en vez de `$('Nombre del nodo').item.json` para referenciar un campo que viene de dos
   pasos atrás (Google Drive y "Extract from File" pisan el `$json` con su propia salida).
+- **`git merge feedback` tira conflicto al publicar:** si reusaste el mismo repo de prueba
+  varias veces sin limpiar entre corridas, las branches locales quedan con historiales
+  divergentes. No es un bug del script — se resuelve como cualquier conflicto de git. Para
+  evitarlo, hacé la limpieza (paso 5) entre una prueba y la siguiente.
+- **La notificación no se disparó al publicar:** revisá que N8N esté corriendo
+  (`docker compose ps` en `infra/n8n/`) y que el workflow **"Evaluacion EIDAS"** esté
+  **activo** (toggle "Active" en la UI) — el webhook de producción solo escucha si el
+  workflow está activado, a diferencia del viejo Manual Trigger.
 
 ---
 

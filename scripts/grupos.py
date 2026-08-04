@@ -2,13 +2,18 @@
 """Gestión de repos de grupos del Sistema EIDAS. Ver guia-de-uso.md."""
 
 import json
+import re
 import subprocess
 import sys
+import urllib.error
+import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 CONFIG_PATH = ROOT / "grupos.json"
 GRUPOS_DIR = ROOT / "grupos"
+N8N_WEBHOOK_URL = "http://localhost:5678/webhook/evaluar-grupo"
+FECHA_RE = re.compile(r"feedback/(\d{4}-\d{2}-\d{2})\.md$")
 
 
 def load_config():
@@ -67,20 +72,34 @@ def publicar(grupo_id, skip_confirm=False):
         ["git", "rev-parse", "HEAD"], cwd=path, capture_output=True, text=True
     ).stdout.strip()
     run(["git", "merge", "feedback", "--no-edit"], cwd=path)
-    marcar_publicado(path, pre_merge_sha)
+    fechas = marcar_publicado(path, pre_merge_sha)
     run(["git", "push", "origin", "main"], cwd=path)
     print(f"\n{grupo_id}: devolución publicada.")
 
+    if not fechas:
+        print(
+            "Aviso: no se detectó ningún feedback/AAAA-MM-DD.md en el merge — no se "
+            "disparó la notificación. Si hace falta, corré 'notificar' a mano."
+        )
+    for fecha in fechas:
+        notificar(grupo_id, fecha)
+
 
 def marcar_publicado(path, pre_merge_sha):
-    """Tilda '- [ ] Publicado al grupo' en los archivos de feedback que trajo el merge."""
+    """Tilda '- [ ] Publicado al grupo' en los archivos que trajo el merge y devuelve
+    la lista de fechas (AAAA-MM-DD) detectadas en sus nombres."""
     changed = subprocess.run(
         ["git", "diff", "--name-only", pre_merge_sha, "HEAD", "--", "feedback/"],
         cwd=path, capture_output=True, text=True
     ).stdout.split()
 
     updated = []
+    fechas = []
     for rel_path in changed:
+        m = FECHA_RE.search(rel_path)
+        if m:
+            fechas.append(m.group(1))
+
         file_path = path / rel_path
         if not file_path.exists():
             continue
@@ -94,10 +113,40 @@ def marcar_publicado(path, pre_merge_sha):
         run(["git", "add", *updated], cwd=path)
         run(["git", "commit", "-m", "Marcar devolución como publicada"], cwd=path)
 
+    return fechas
+
+
+def notificar(grupo_id, fecha):
+    """Dispara el workflow de N8N (webhook local) para subir a Drive y avisar por Gmail."""
+    payload = json.dumps({"grupo_id": grupo_id, "fecha": fecha}).encode()
+    req = urllib.request.Request(
+        N8N_WEBHOOK_URL,
+        data=payload,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    print(f"$ POST {N8N_WEBHOOK_URL}  (grupo_id={grupo_id}, fecha={fecha})")
+    try:
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            body = resp.read().decode()
+            print(f"N8N respondió {resp.status}: {body[:300]}")
+    except (urllib.error.URLError, TimeoutError) as e:
+        print(
+            f"AVISO: no se pudo notificar a N8N ({e}). ¿Está corriendo "
+            f"'docker compose up -d' en infra/n8n/? Podés reintentar con:\n"
+            f"  python3 scripts/grupos.py notificar {grupo_id} {fecha}"
+        )
+
 
 def main():
+    uso = (
+        "Uso:\n"
+        "  grupos.py sync\n"
+        "  grupos.py publicar <grupo-id> [--yes]\n"
+        "  grupos.py notificar <grupo-id> <AAAA-MM-DD>"
+    )
     if len(sys.argv) < 2:
-        print("Uso:\n  grupos.py sync\n  grupos.py publicar <grupo-id> [--yes]")
+        print(uso)
         sys.exit(1)
 
     cmd = sys.argv[1]
@@ -109,8 +158,12 @@ def main():
         grupo_id = sys.argv[2]
         skip_confirm = "--yes" in sys.argv[3:]
         publicar(grupo_id, skip_confirm)
+    elif cmd == "notificar":
+        if len(sys.argv) < 4:
+            raise SystemExit("Uso: grupos.py notificar <grupo-id> <AAAA-MM-DD>")
+        notificar(sys.argv[2], sys.argv[3])
     else:
-        raise SystemExit(f"Comando desconocido: {cmd}")
+        raise SystemExit(f"Comando desconocido: {cmd}\n\n{uso}")
 
 
 if __name__ == "__main__":
