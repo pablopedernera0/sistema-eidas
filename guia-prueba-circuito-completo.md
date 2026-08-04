@@ -105,9 +105,14 @@ Cosas que ya nos mordieron una vez armando esto — si algo se rompe, empezar po
 - **N8N tira "Access to the file is not allowed":** falta `N8N_RESTRICT_FILE_ACCESS_TO` en
   el `docker-compose.yml`, o el path no coincide con `/home/node/data/...`. Ya está
   configurado en el compose actual — si aparece este error, algo se rompió en esa config.
-- **El mail llega con datos vacíos o `undefined`:** algún nodo de N8N está usando `$json`
-  en vez de `$('Nombre del nodo').item.json` para referenciar un campo que viene de dos
-  pasos atrás (Google Drive y "Extract from File" pisan el `$json` con su propia salida).
+- **El mail llega con datos vacíos o `undefined`, o el archivo sube a Drive con nombre
+  `_.md`:** algún nodo de N8N está usando `$json` en vez de
+  `$('Nombre del nodo').item.json` para referenciar un campo que viene de pasos atrás.
+  Varios nodos (Google Drive, "Extract from File", "Read/Write File From Disk") no
+  garantizan pasar el `$json` de entrada tal cual — pisan o vacían campos según el caso. Ya
+  nos pasó tanto en el nodo Gmail (mensaje) como en el nombre de archivo del nodo Drive —
+  si agregás o editás un nodo, referenciá el nodo de origen explícitamente en vez de confiar
+  en que `$json` va a traer lo que esperás.
 - **`git merge feedback` tira conflicto al publicar:** si reusaste el mismo repo de prueba
   varias veces sin limpiar entre corridas, las branches locales quedan con historiales
   divergentes. No es un bug del script — se resuelve como cualquier conflicto de git. Para

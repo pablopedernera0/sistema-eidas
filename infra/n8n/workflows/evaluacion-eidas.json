@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-08-04T11:24:29.000Z",
+  "updatedAt": "2026-08-04T11:42:07.000Z",
   "createdAt": "2026-08-03T12:28:02.060Z",
   "id": "BJln5lzSPgeDmpmS",
   "name": "Evaluacion EIDAS",
@@ -123,7 +123,7 @@
         "resource": "file",
         "operation": "upload",
         "inputDataFieldName": "data",
-        "name": "={{ $json.grupo_id }}_{{ $json.fecha }}.md",
+        "name": "={{ $('Buscar datos del grupo').item.json.grupo_id }}_{{ $('Buscar datos del grupo').item.json.fecha }}.md",
         "driveId": {
           "__rl": true,
           "mode": "list",
@@ -267,9 +267,9 @@
   },
   "nodeGroups": [],
   "pinData": {},
-  "versionId": "18fce1ad-c91a-4ed7-a958-ba3b186041a0",
-  "activeVersionId": "18fce1ad-c91a-4ed7-a958-ba3b186041a0",
-  "versionCounter": 68,
+  "versionId": "50e6a5a4-c0b1-45c7-8fc8-f87ae13c549b",
+  "activeVersionId": "50e6a5a4-c0b1-45c7-8fc8-f87ae13c549b",
+  "versionCounter": 69,
   "triggerCount": 1,
   "sourceWorkflowId": null,
   "tags": [],
