@@ -1,6 +1,3 @@
 {
-  "grupos": [
-    { "id": "grupo-01-nombre", "repo": "https://github.com/usuario/repo-grupo-01.git", "email": "grupo01@ejemplo.com" },
-    { "id": "grupo-02-nombre", "repo": "https://github.com/usuario/repo-grupo-02.git", "email": "grupo02@ejemplo.com" }
-  ]
+  "grupos": []
 }

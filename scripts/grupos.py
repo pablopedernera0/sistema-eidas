@@ -63,9 +63,36 @@ def publicar(grupo_id, skip_confirm=False):
 
     run(["git", "checkout", "main"], cwd=path)
     run(["git", "pull", "origin", "main"], cwd=path)
+    pre_merge_sha = subprocess.run(
+        ["git", "rev-parse", "HEAD"], cwd=path, capture_output=True, text=True
+    ).stdout.strip()
     run(["git", "merge", "feedback", "--no-edit"], cwd=path)
+    marcar_publicado(path, pre_merge_sha)
     run(["git", "push", "origin", "main"], cwd=path)
     print(f"\n{grupo_id}: devolución publicada.")
+
+
+def marcar_publicado(path, pre_merge_sha):
+    """Tilda '- [ ] Publicado al grupo' en los archivos de feedback que trajo el merge."""
+    changed = subprocess.run(
+        ["git", "diff", "--name-only", pre_merge_sha, "HEAD", "--", "feedback/"],
+        cwd=path, capture_output=True, text=True
+    ).stdout.split()
+
+    updated = []
+    for rel_path in changed:
+        file_path = path / rel_path
+        if not file_path.exists():
+            continue
+        text = file_path.read_text()
+        marked = text.replace("- [ ] Publicado al grupo", "- [x] Publicado al grupo")
+        if marked != text:
+            file_path.write_text(marked)
+            updated.append(rel_path)
+
+    if updated:
+        run(["git", "add", *updated], cwd=path)
+        run(["git", "commit", "-m", "Marcar devolución como publicada"], cwd=path)
 
 
 def main():

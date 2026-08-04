@@ -189,6 +189,11 @@ Cada archivo de devolución sigue esta estructura, tanto la copia de trabajo en
 - [ ] Publicado al grupo
 ```
 
+`/evaluar-grupo` tilda la primera casilla al generar el borrador. La segunda la tildás vos a
+mano durante la revisión. La tercera **no la toques manualmente** — `scripts/grupos.py
+publicar` la tilda solo, como parte del mismo commit que hace el push, así el archivo queda
+consistente con la realidad sin pasos extra.
+
 ---
 
 ### Pendientes del sistema

@@ -68,8 +68,10 @@ antes de tiempo.
    python3 scripts/grupos.py publicar grupo-01-nombre
    ```
    Te pide confirmación antes de hacer el merge y el push (podés saltearla con `--yes` si
-   ya estás seguro). Revisá la branch `feedback` con `git diff main feedback` **antes** de
-   correr esto — el script no te muestra el diff, asume que ya lo revisaste vos.
+   ya estás seguro). Revisá la branch `feedback` con `git diff main..feedback` **antes** de
+   correr esto — el script no te muestra el diff, asume que ya lo revisaste vos. También
+   tilda solo la casilla "Publicado al grupo" del archivo de devolución, como parte del
+   mismo push — no hace falta que la marques a mano.
 5. **Notificar al grupo — el disparo es manual, el resto es automático:**
    - Abrís N8N local (`docker compose up -d` en `infra/n8n/`, luego http://localhost:5678).
    - Abrís el workflow **"Evaluacion EIDAS"**.
