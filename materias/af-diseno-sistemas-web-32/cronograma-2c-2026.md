@@ -1,0 +1,66 @@
+# Cronograma — Diseño de Sistemas Web (AF 3°2°), 2do cuatrimestre 2026
+
+Cruce entre el Sistema EIDAS (rúbrica + template ya definidos en esta carpeta) y el programa oficial de la materia. **La estructura la define la rúbrica de EIDAS** (`rubrica.md`).
+
+## Punto de partida real (corregido)
+
+La teoría de RF/RNF, Stakeholders, Historias de Usuario y Casos de Uso ya se dio en el 1er cuatrimestre (confirmado en la planilla: "Repaso Identificación de Stakeholders", "Ejercicio Análisis rápido de requisitos", etc., abril-mayo 2026). La presentación de Diseño de Interfaces que armaste (usabilidad, accesibilidad, coherencia visual, diseño de formularios) también está dada. Los grupos ya hicieron una presentación de avances a fin del 1er cuatrimestre, con nivel dispar — algunos dejaron los casos de uso solo como títulos, sin desarrollar.
+
+**Esto cambia el rol del 2do cuatrimestre por completo: no es una serie de clases nuevas, es el proceso de volcar y completar lo ya presentado dentro de la estructura de EIDAS.** Casi no hace falta contenido nuevo, salvo lo estrictamente necesario para operar el sistema (git, estructura del repo, PlantUML) — eso es lo único que realmente arranca de cero.
+
+## Hallazgo importante: el examen ya existe
+
+El "examen escrito de 10 preguntas sobre el proceso" que pediste ya es el **Cuestionario individual** de `rubrica.md` (30 pts, Google Forms, autocalificado). La presentación final grupal es la Parte A del parcial; el Cuestionario individual ya es la Parte B. No hace falta crear nada nuevo, salvo confirmar que el Form tenga 10 preguntas.
+
+## Patrón de modalidad (comisión 3°2°)
+
+Martes y miércoles alternan modalidad opuesta cada semana. Asumo virtual = con computadora, presencial = sin computadora (pizarrón/proyector) — no confirmado explícitamente para esta comisión.
+
+## Punto de partida
+
+- **Martes 04/08** — Presentación del Sistema EIDAS (ya dado)
+- **Miércoles 05/08** — sin clase (confirmado)
+- **Martes 11/08** — Demo en vivo de clonación del template (ya en la planilla)
+- A partir de acá, temario vacío en la planilla.
+
+## Cronograma propuesto
+
+**Virtual = trabajo en grupo, volcando y ampliando lo que ya presentaron.**
+**Presencial = revisión en vivo con proyector de lo volcado (feedback puntual, no clase nueva), más lo mínimo indispensable de EIDAS como herramienta.**
+
+| Fecha | Modalidad | Sección de la rúbrica | Actividad |
+|---|---|---|---|
+| Mié 12/08 | Virtual | Onboarding EIDAS | Alta del repo desde el template, agregar al profesor como colaborador, primer commit con lo que cada grupo ya tiene (aunque sea solo títulos) — arranca el volcado |
+| Mar 18/08 | Virtual | Stakeholders + Requisitos | Trabajo en grupo: volcar stakeholders y requisitos ya presentados a `docs/stakeholders.md` y `docs/requisitos.md`, completando lo que falte |
+| Mié 19/08 | Presencial | Stakeholders + Requisitos | Revisión en vivo (proyector) de 2-3 grupos: feedback puntual, no clase nueva — recordatorio breve de qué diferencia un RF observable de uno genérico |
+| Mar 25/08 | Presencial | Historias de usuario | Revisión en vivo de HU volcadas — repaso breve de INVEST solo si hace falta |
+| Mié 26/08 | Virtual | Requisitos + HU | Trabajo en grupo: cierre de Requisitos y HU, arranque de Casos de Uso — foco en los grupos que solo dejaron títulos |
+| Mar 01/09 | Virtual | Requisitos + HU | Consulta 1 a 1 — **entrega sugerida de estas dos secciones** |
+| Mié 02/09 | Presencial | Casos de uso | Revisión en vivo del diagrama general de 2-3 grupos: actores, include/extend |
+| Mar 08/09 | Presencial | Casos de uso | Revisión en vivo de CUs desarrollados — foco en excepciones reales, no solo camino feliz |
+| Mié 09/09 | Virtual | Casos de uso (20 pts) | Trabajo en grupo: expandir títulos a diagrama general completo |
+| Mar 15/09 | Virtual | Casos de uso (20 pts) | Trabajo en grupo: CUs desarrollados (precondiciones, postcondiciones, secuencia, excepciones) — cierre de la sección más pesada |
+| Mié 16/09 | Presencial | Modelo ER | Revisión en vivo + repaso breve de cardinalidades/PK/FK si hace falta (nivel de cobertura previa incierto, calibrar en clase) |
+| Mar 22/09 | Presencial | Diseño UI | Revisión en vivo de wireframes contra los criterios ya vistos en la presentación de interfaces (agrupación, jerarquía, accesibilidad) |
+| Mié 23/09 | Virtual | Modelo ER (10 pts) | Trabajo en grupo: diagrama entidad-relación |
+| Mar 29/09 | Virtual | Diseño UI (10 pts) | Trabajo en grupo: wireframes |
+| Mié 30/09 | Presencial | — | Consulta general y repaso, sin contenido nuevo |
+| Mar 06/10 | Presencial | — | Consulta final del repo + repaso para el cuestionario individual |
+| Mié 07/10 | Virtual | README (5 pts) | Últimos ajustes: README, `integrantes.md`, estructura del repo completa |
+| **Mar 13/10** | Virtual | — | **Presentación final grupal = Parcial, Parte A** (última semana de clases) |
+| Mié 14/10 | Presencial | — | Cierre del cuatrimestre + repaso general para el Cuestionario individual |
+
+**Entrega sugerida del repo:** antes del martes 13/10 (ej. domingo 11/10 o lunes 12/10).
+
+## Parcial (fecha exacta a confirmar)
+
+- **Parte A — Presentación virtual (grupal):** la del martes 13/10, o una instancia equivalente dentro del período de parciales.
+- **Parte B — Cuestionario individual (30 pts, Google Forms):** ya existe en `rubrica.md`, no es un examen nuevo. Sugerencia: rendirlo presencial por consistencia institucional, a confirmar.
+
+## Riesgo a tener presente
+
+El nivel de avance real varía por grupo ("algunos solo dejaron planteados los títulos de los casos de uso"). Las fechas de "revisión en vivo" están pensadas para calibrar sobre la marcha cuánto tiempo de clase necesita cada sección — si un grupo viene muy atrasado en Casos de Uso, probablemente haga falta correr tiempo de Modelo ER o Diseño UI hacia las semanas de consulta (30/09 y 06/10), que quedaron sin contenido fijo a propósito como colchón.
+
+## Nota sobre alcance
+
+La rúbrica de EIDAS hoy cubre Requisitos, HU, Casos de Uso, Modelo ER, Diseño UI, Stakeholders y README — el contenido de los TP1 a TP3 del programa oficial, aproximadamente. Los TP4 en adelante (prototipo con testeo, capacitación, manual de usuario, implementación, usabilidad, IA) no están en este cronograma — avisame si también tienen que salir este cuatrimestre.

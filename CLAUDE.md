@@ -16,6 +16,7 @@ scripts, el dispositivo pedagógico en sí) es compartida entre todas.
 | Carpeta en `materias/` | Carrera | Materia | Comisión | Template |
 |---|---|---|---|---|
 | `af-diseno-sistemas-web-31` | Analista Funcional de Sistemas | Diseño de Sistemas Web | 31 | https://github.com/pablopedernera0/eidas-template |
+| `af-diseno-sistemas-web-32` | Analista Funcional de Sistemas | Diseño de Sistemas Web | 32 | https://github.com/pablopedernera0/eidas-template (mismo template, compartido entre comisiones) |
 
 ---
 
