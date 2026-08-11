@@ -4,6 +4,10 @@ materias/*/template/
 # repos clonados de cada grupo — son sus propios repos, no se versionan acá
 materias/*/grupos/
 
+# datos de estudiantes (emails, notas) — nunca públicos
+materias/*/grupos.json
+materias/*/feedback/
+
 # tooling local (los comandos personalizados en .claude/commands/ sí se versionan)
 .idea/
 .claude/settings.local.json
