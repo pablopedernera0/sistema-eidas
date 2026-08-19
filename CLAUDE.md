@@ -73,6 +73,11 @@ Grupo sube trabajo al repo GitHub (repo generado desde el template de SU materia
 Profe corre: python3 scripts/grupos.py sync <materia>
 — clona los grupos nuevos de materias/<materia>/grupos.json, actualiza los que ya estaban —
         ↓
+(Opcional) Abre Claude Code y corre: /chequear-grupo <materia> <grupo-id>
+— de solo lectura, no toca branches ni escribe nada; da un veredicto LISTO PARA EVALUAR /
+ESPERAR / PEDIR ACTUALIZACIÓN, para no generar una devolución completa de un grupo que
+todavía no tiene nada evaluable —
+        ↓
 Abre Claude Code en sistema-eidas/ y corre: /evaluar-grupo <materia> <grupo-id>
 — dentro de materias/<materia>/grupos/<grupo-id>/, crea (o actualiza) la branch local
 "feedback", aplica materias/<materia>/rubrica.md, y commitea

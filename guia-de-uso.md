@@ -69,7 +69,14 @@ antes de tiempo.
    python3 scripts/grupos.py sync <materia>
    ```
    (o `cd materias/<materia>/grupos/grupo-01-nombre && git pull` si solo querés actualizar ese grupo puntual)
-2. **Generar el borrador con Claude Code:** abrís Claude Code en `sistema-eidas/` y corrés
+2. **(Opcional) Chequear si conviene evaluar todavía:** `/chequear-grupo <materia> grupo-01-nombre`
+   (definido en `.claude/commands/chequear-grupo.md`) es de solo lectura — no crea la branch
+   `feedback` ni escribe nada — y te da un veredicto (`LISTO PARA EVALUAR` / `ESPERAR` /
+   `PEDIR ACTUALIZACIÓN`) contrastando lo que subió el grupo contra `rubrica.md`. Sirve para
+   no generar (y dejar commiteada en la branch local) una devolución completa de un grupo
+   que todavía no tiene nada evaluable — más simple que generarla igual y después tener que
+   rehacerla cuando el grupo actualice.
+3. **Generar el borrador con Claude Code:** abrís Claude Code en `sistema-eidas/` y corrés
    `/evaluar-grupo <materia> grupo-01-nombre`. Ese comando (definido en
    `.claude/commands/evaluar-grupo.md`) crea (o actualiza) la branch local `feedback` dentro
    de `materias/<materia>/grupos/grupo-01-nombre/`, aplica `materias/<materia>/rubrica.md`,
@@ -77,11 +84,11 @@ antes de tiempo.
    deja una copia de trabajo en
    `materias/<materia>/feedback/grupo-01-nombre_AAAA-MM-DD.md` (esta sí es tuya,
    no se pushea a ningún lado, es solo para que tengas todas las devoluciones de esa materia juntas).
-3. **Revisión docente (obligatoria):** revisás el diff de la branch `feedback` contra `main`
+4. **Revisión docente (obligatoria):** revisás el diff de la branch `feedback` contra `main`
    (`git diff main..feedback` dentro del repo del grupo), ajustás puntajes y texto directamente
    en el archivo, agregás el contexto que Claude no puede ver (proceso grupal, presentación
    oral, etc.), y respondés la "Pregunta para el docente" que Claude dejó planteada.
-4. **Publicar y notificar — un solo comando, recién acá se vuelve visible para el grupo:**
+5. **Publicar y notificar — un solo comando, recién acá se vuelve visible para el grupo:**
    ```
    python3 scripts/grupos.py publicar <materia> grupo-01-nombre
    ```
