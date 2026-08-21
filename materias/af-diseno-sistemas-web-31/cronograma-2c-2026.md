@@ -30,7 +30,7 @@ Si preferís la alternativa, avisame y reordeno.
 | Semana | Modalidad | Miércoles (80 min) | Viernes (120 min) | Sección de la rúbrica |
 |---|---|---|---|---|
 | 12-14/08 | Virtual | Alta del repo desde el template, agregar al profesor como colaborador | Volcar Stakeholders + arrancar Requisitos | Onboarding + Stakeholders + Requisitos |
-| 19-21/08 | Presencial | Feedback rápido de lo volcado | Revisión más profunda de Requisitos, repaso breve solo si hace falta | Requisitos |
+| 19-21/08 | Presencial | **Actualizado 19/08:** taller de DoR + Slicing (la revisión de Requisitos se corre, entrega retrasada — ver nota abajo) | Revisión más profunda de Requisitos, repaso breve solo si hace falta *(a confirmar si sigue en pie o también se corre)* | Requisitos + DoR/Slicing |
 | 26-28/08 | Virtual | Cierre de Requisitos | Historias de Usuario completas + arranque de Casos de Uso — **entrega sugerida de Requisitos + HU** | Requisitos + HU |
 | 02-04/09 | Presencial | Feedback rápido de HU | Revisión del diagrama general de Casos de Uso, foco en actores/include-extend | HU + Casos de uso |
 | 09-11/09 | Virtual | Diagrama general de Casos de Uso | CUs desarrollados completos + diagramas de secuencia — **cierre de la sección más pesada (20 pts)** | Casos de uso |
@@ -44,6 +44,14 @@ Si preferís la alternativa, avisame y reordeno.
 
 - **Parte A — Presentación virtual (grupal):** viernes 09/10 (ver tensión de calendario arriba).
 - **Parte B — Cuestionario individual (30 pts, Google Forms):** el mismo de `rubrica.md`, no es un examen nuevo — a rendir en el período de parciales, presencial por consistencia institucional (a confirmar).
+
+## Pendiente de reprogramar
+
+El miércoles 19/08 pasó a ser taller de DoR + Slicing (`DoR.md` / `slicing.md` del template,
+presentación en `pablopedernera0.github.io/dor-slicing/`) porque la entrega de Stakeholders +
+Requisitos viene retrasada — a los grupos les está costando entrar en la dinámica de GitHub.
+Falta decidir si la revisión de Requisitos se mantiene el viernes 21/08 como estaba, o
+también se corre a la semana virtual del 26-28/08.
 
 ## Riesgo a tener presente
 

@@ -32,7 +32,7 @@ Martes y miércoles alternan modalidad opuesta cada semana. Asumo virtual = con 
 |---|---|---|---|
 | Mié 12/08 | Virtual | Onboarding EIDAS | Alta del repo desde el template, agregar al profesor como colaborador, primer commit con lo que cada grupo ya tiene (aunque sea solo títulos) — arranca el volcado |
 | Mar 18/08 | Virtual | Stakeholders + Requisitos | Trabajo en grupo: volcar stakeholders y requisitos ya presentados a `docs/stakeholders.md` y `docs/requisitos.md`, completando lo que falte |
-| Mié 19/08 | Presencial | Stakeholders + Requisitos | Revisión en vivo (proyector) de 2-3 grupos: feedback puntual, no clase nueva — recordatorio breve de qué diferencia un RF observable de uno genérico |
+| Mié 19/08 | Presencial | DoR + Slicing | **Actualizado 19/08:** la revisión de Stakeholders + Requisitos se corre porque la entrega viene retrasada (a los grupos les está costando entrar en la dinámica de GitHub). En su lugar, taller de Definition of Ready y Slicing vertical (`DoR.md` / `slicing.md` del template) — ver presentación en `pablopedernera0.github.io/dor-slicing/`. |
 | Mar 25/08 | Presencial | Historias de usuario | Revisión en vivo de HU volcadas — repaso breve de INVEST solo si hace falta |
 | Mié 26/08 | Virtual | Requisitos + HU | Trabajo en grupo: cierre de Requisitos y HU, arranque de Casos de Uso — foco en los grupos que solo dejaron títulos |
 | Mar 01/09 | Virtual | Requisitos + HU | Consulta 1 a 1 — **entrega sugerida de estas dos secciones** |
@@ -51,6 +51,12 @@ Martes y miércoles alternan modalidad opuesta cada semana. Asumo virtual = con 
 | Mié 14/10 | Presencial | — | Cierre del cuatrimestre + repaso general para el Cuestionario individual |
 
 **Entrega sugerida del repo:** antes del martes 13/10 (ej. domingo 11/10 o lunes 12/10).
+
+**Pendiente de reprogramar:** la revisión en vivo de Stakeholders + Requisitos que estaba en
+Mié 19/08 se corrió por el taller de DoR/Slicing (ver fila de esa fecha) — todavía no tiene
+una fecha nueva asignada en esta tabla. Falta decidir en qué sesión entra sin desplazar el
+resto del cronograma (candidatas: sumarla a Mar 25/08 junto con HU, o a la consulta 1 a 1 del
+Mar 01/09).
 
 ## Parcial (fecha exacta a confirmar)
 
