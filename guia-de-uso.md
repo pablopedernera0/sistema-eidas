@@ -34,7 +34,8 @@ Detalle de cada uno en la sección 3.
 | Pieza | Dónde está | Estado |
 |---|---|---|
 | Template de cada materia | `materias/<materia>/template/`, repo propio en GitHub | Activo — ver `CLAUDE.md` para la lista de materias y sus templates |
-| Rúbrica de cada materia | `materias/<materia>/rubrica.md` | Completa para `af-diseno-sistemas-web-31` |
+| Rúbrica de cada materia | `materias/<materia>/rubrica.md` | Completa para `af-diseno-sistemas-web-31` y `-32` (incluye la sección "Proceso: evolución sobre la entrega intermedia") |
+| Cronograma de cada materia (opcional) | `materias/<materia>/cronograma-2c-2026.md` | Solo `af-diseno-sistemas-web-31` y `-32` lo tienen — si existe, `/chequear-grupo` y `/evaluar-grupo` lo usan para saber qué secciones de la rúbrica ya corresponden según la fecha |
 | Marco teórico | `marco-teorico-fundamentacion.md`, `marco-teorico-resumen.md` (compartido, materia-agnóstico) | Completo (pendiente confirmar 2 citas) |
 | Repos clonados de cada grupo | `materias/<materia>/grupos/grupo-XX-nombre/` (local, se puebla en el cuatrimestre) | — |
 | Borradores de devolución | `materias/<materia>/feedback/grupo-XX.md` (local, generados por Claude) | — |

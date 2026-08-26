@@ -166,6 +166,21 @@ sub-secciones de lo evaluado; de lo que no corresponde todavía no hace falta es
 
 ---
 
+### Convención al escribir un comando nuevo (`.claude/commands/*.md`)
+
+Si un comando necesita hacer operaciones de `git` sobre el repo clonado de un grupo
+(`materias/<materia>/grupos/<grupo-id>/`) **y** en algún otro paso lee un archivo a nivel de
+`sistema-eidas/` (`rubrica.md`, `cronograma-2c-2026.md`, `grupos.json`, etc.), usá siempre
+`git -C materias/<materia>/grupos/<grupo-id> <comando>` — nunca "entrá a esa carpeta y
+corré git ...". Un `cd` real dentro de las instrucciones deja los pasos siguientes
+dependiendo de que el modelo se acuerde de volver a la raíz antes de leer una ruta relativa
+a `sistema-eidas/`; `-C` corre el comando ahí sin mover el directorio de trabajo real, así
+que ningún paso posterior puede romperse por esto. Bug real, detectado el 2026-08-26
+probando `/chequear-grupo` en vivo — ya corregido en `chequear-grupo.md`, `evaluar-grupo.md`
+y `resumen-commits.md`.
+
+---
+
 ### Pendientes del sistema
 
 - [x] Crear `docs/diseño-ui.md` en el template
