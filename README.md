@@ -38,7 +38,9 @@ El fundamento pedagógico completo, con las referencias teóricas, está en
 
 El diseño completo (estructura de carpetas, formato de la devolución, cómo dar de alta
 una materia nueva) está en [`CLAUDE.md`](CLAUDE.md); los pasos operativos día a día, en
-[`guia-de-uso.md`](guia-de-uso.md).
+[`guia-de-uso.md`](guia-de-uso.md) — y una versión de un vistazo (comandos y advertencias,
+sin el detalle completo) en la
+[cheat sheet del docente](https://pablopedernera0.github.io/eidas-cheatsheet/).
 
 ## Estado actual
 

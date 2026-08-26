@@ -5,7 +5,8 @@
 > comandos toman `<materia>` como primer argumento — es el nombre de carpeta dentro de
 > `materias/` (ej: `af-diseno-sistemas-web-31`). Ver `CLAUDE.md` para el diseño completo y
 > `materias/<materia>/rubrica.md` / `marco-teorico-fundamentacion.md` para el fundamento de
-> cada decisión.
+> cada decisión. Versión de un vistazo de esta guía (comandos y advertencias, sin el
+> detalle completo): [cheat sheet del docente](https://pablopedernera0.github.io/eidas-cheatsheet/).
 
 ---
 
