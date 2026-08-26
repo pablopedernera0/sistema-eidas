@@ -21,13 +21,14 @@
 |---------|---------------|
 | Requisitos funcionales y no funcionales | 10 |
 | Historias de usuario (INVEST) | 10 |
-| Casos de uso | 15 |
-| Definition of Ready (DoR) | 8 |
-| Slicing vertical | 8 |
+| Casos de uso | 12 |
+| Definition of Ready (DoR) | 7 |
+| Slicing vertical | 7 |
 | Modelo Entidad-Relación | 7 |
 | Diseño UI | 7 |
 | Stakeholders | 3 |
 | README e integrantes | 2 |
+| Proceso: evolución sobre la entrega intermedia | 5 |
 | **Total** | **70** |
 
 ---
@@ -62,14 +63,14 @@
 
 ---
 
-## 3. Casos de uso (15 puntos)
+## 3. Casos de uso (12 puntos)
 
 | Nivel | Puntaje | Descripción |
 |-------|---------|-------------|
-| **Muy bueno** | 13–15 | Diagrama general coherente con actores bien identificados y relaciones UML correctas (include/extend justificadas). Al menos tres CU desarrollados con precondiciones, postcondiciones, secuencia normal y excepciones reales. Las excepciones modelan situaciones concretas del caso de estudio, no situaciones genéricas. Los campos de rendimiento y frecuencia tienen valores estimados. |
-| **Bueno** | 10–12 | El diagrama es mayormente correcto. Los CU están desarrollados con todos los campos pero alguna excepción es genérica o falta una situación relevante. Los valores de rendimiento y frecuencia están presentes. |
-| **Regular** | 6–9 | El diagrama tiene errores de relaciones o actores mal identificados. Los CU están incompletos — faltan excepciones o postcondiciones. Se modeló solo el camino feliz. |
-| **Insuficiente** | 0–5 | Falta el diagrama general o los CU desarrollados. Las excepciones están ausentes o son triviales. No hay coherencia entre el diagrama y los CU desarrollados. |
+| **Muy bueno** | 11–12 | Diagrama general coherente con actores bien identificados y relaciones UML correctas (include/extend justificadas). Al menos tres CU desarrollados con precondiciones, postcondiciones, secuencia normal y excepciones reales. Las excepciones modelan situaciones concretas del caso de estudio, no situaciones genéricas. Los campos de rendimiento y frecuencia tienen valores estimados. |
+| **Bueno** | 9–10 | El diagrama es mayormente correcto. Los CU están desarrollados con todos los campos pero alguna excepción es genérica o falta una situación relevante. Los valores de rendimiento y frecuencia están presentes. |
+| **Regular** | 5–8 | El diagrama tiene errores de relaciones o actores mal identificados. Los CU están incompletos — faltan excepciones o postcondiciones. Se modeló solo el camino feliz. |
+| **Insuficiente** | 0–4 | Falta el diagrama general o los CU desarrollados. Las excepciones están ausentes o son triviales. No hay coherencia entre el diagrama y los CU desarrollados. |
 
 **Criterios transversales a observar:**
 - *Coherencia:* ¿el diagrama general es consistente con los CU desarrollados y con los RF?
@@ -78,15 +79,15 @@
 
 ---
 
-## 4. Definition of Ready — DoR (8 puntos)
+## 4. Definition of Ready — DoR (7 puntos)
 
 Evalúa el archivo `DoR.md`: la checklist de criterios de entrada del equipo y su aplicación honesta a tres historias propias del primer semestre.
 
 | Nivel | Puntaje | Descripción |
 |-------|---------|-------------|
-| **Muy bueno** | 7–8 | Checklist de 6 a 10 ítems, todos formulados como condición verificable (se responden sí/no sin discutir), no como deseo. Cubre como mínimo: criterios de aceptación, flujos alternativos o excepciones, dependencias y algún requerimiento no funcional. Cada ítem tiene justificación específica (qué problema evita), no genérica. La autoevaluación de las tres historias es honesta: detecta faltas reales, no declara que las tres pasan sin observaciones. |
-| **Bueno** | 5–6 | Checklist completa y mayormente verificable, con algún ítem formulado como deseo en vez de condición. Cubre la mayor parte de las áreas mínimas exigidas, puede faltar una (por ejemplo dependencias o RNF). La autoevaluación es correcta pero alguna observación es superficial. |
-| **Regular** | 3–4 | Checklist incompleta o con ítems no verificables ("la historia está bien definida", "es clara"). Falta más de un área mínima de cobertura. La autoevaluación declara que las tres historias pasan sin detectar ninguna falta real, o las justificaciones son intercambiables entre ítems. |
+| **Muy bueno** | 6–7 | Checklist de 6 a 10 ítems, todos formulados como condición verificable (se responden sí/no sin discutir), no como deseo. Cubre como mínimo: criterios de aceptación, flujos alternativos o excepciones, dependencias y algún requerimiento no funcional. Cada ítem tiene justificación específica (qué problema evita), no genérica. La autoevaluación de las tres historias es honesta: detecta faltas reales, no declara que las tres pasan sin observaciones. |
+| **Bueno** | 4–5 | Checklist completa y mayormente verificable, con algún ítem formulado como deseo en vez de condición. Cubre la mayor parte de las áreas mínimas exigidas, puede faltar una (por ejemplo dependencias o RNF). La autoevaluación es correcta pero alguna observación es superficial. |
+| **Regular** | 3 | Checklist incompleta o con ítems no verificables ("la historia está bien definida", "es clara"). Falta más de un área mínima de cobertura. La autoevaluación declara que las tres historias pasan sin detectar ninguna falta real, o las justificaciones son intercambiables entre ítems. |
 | **Insuficiente** | 0–2 | No hay checklist, o los ítems son deseos sin forma de verificarse sí/no. No se aplicó a tres historias propias reales, o la aplicación es simulada. Archivo ausente o no versionado. |
 
 **Criterios transversales a observar:**
@@ -95,15 +96,15 @@ Evalúa el archivo `DoR.md`: la checklist de criterios de entrada del equipo y s
 
 ---
 
-## 5. Slicing vertical (8 puntos)
+## 5. Slicing vertical (7 puntos)
 
 Evalúa el archivo `slicing.md`: la fragmentación de la épica en historias verticales (Parte A) y el análisis de caminos alternativos sobre una de ellas (Parte B). La Parte C (defensa en plenario) no se documenta en el archivo.
 
 | Nivel | Puntaje | Descripción |
 |-------|---------|-------------|
-| **Muy bueno** | 7–8 | Entre 5 y 8 historias, todas genuinamente verticales (cada una, sola, entrega algo usable de punta a punta — no son capas técnicas disfrazadas de historia). Formato Como/Quiero/Para completo con dos criterios de aceptación específicos por historia. Las cinco preguntas de la Parte B están respondidas con decisiones concretas del sistema, no genéricas, y con la atribución de quién decide cada caso (analista, negocio o técnica) justificada. |
-| **Bueno** | 5–6 | Historias mayormente verticales, alguna se acerca a ser una capa horizontal sin que se note con claridad. Formato correcto pero algún criterio de aceptación es vago. Las cinco preguntas de la Parte B están respondidas, pero una o dos respuestas son genéricas o no distinguen bien quién decide. |
-| **Regular** | 3–4 | Menos de cinco historias, o alguna claramente horizontal (por ejemplo "diseñar la pantalla de envío") sin que el grupo lo detecte. Criterios de aceptación ausentes o triviales. La Parte B está incompleta o no llega a las tres preguntas más importantes (falla parcial entre el débito y el crédito, doble clic, corte de conexión). |
+| **Muy bueno** | 6–7 | Entre 5 y 8 historias, todas genuinamente verticales (cada una, sola, entrega algo usable de punta a punta — no son capas técnicas disfrazadas de historia). Formato Como/Quiero/Para completo con dos criterios de aceptación específicos por historia. Las cinco preguntas de la Parte B están respondidas con decisiones concretas del sistema, no genéricas, y con la atribución de quién decide cada caso (analista, negocio o técnica) justificada. |
+| **Bueno** | 4–5 | Historias mayormente verticales, alguna se acerca a ser una capa horizontal sin que se note con claridad. Formato correcto pero algún criterio de aceptación es vago. Las cinco preguntas de la Parte B están respondidas, pero una o dos respuestas son genéricas o no distinguen bien quién decide. |
+| **Regular** | 3 | Menos de cinco historias, o alguna claramente horizontal (por ejemplo "diseñar la pantalla de envío") sin que el grupo lo detecte. Criterios de aceptación ausentes o triviales. La Parte B está incompleta o no llega a las tres preguntas más importantes (falla parcial entre el débito y el crédito, doble clic, corte de conexión). |
 | **Insuficiente** | 0–2 | La épica no se fragmentó realmente, o el corte no tiene relación con historias verticales. Falta la Parte B. |
 
 **Criterios transversales a observar:**
@@ -162,6 +163,31 @@ Evalúa el archivo `slicing.md`: la fragmentación de la épica en historias ver
 
 ---
 
+## 10. Proceso: evolución sobre la entrega intermedia (5 puntos)
+
+Evalúa **cómo llegaron** al repo final, no solo su estado — cruzando dos fuentes: la
+devolución de la entrega intermedia de Requisitos + Historias de Usuario (si existe, en
+`feedback/` de este grupo) contra lo que quedó en la entrega final, y el patrón de
+iteración del historial de commits (a nivel de repo — no de quién commiteó qué; el aporte
+individual no se juzga acá).
+
+| Nivel | Puntaje | Descripción |
+|-------|---------|-------------|
+| **Muy bueno** | 5 | Las observaciones señaladas en la devolución intermedia fueron atendidas de forma visible en la entrega final. El historial de commits muestra que los documentos se revisaron a lo largo del tiempo (no todos concentrados en una sola sesión cerca de la fecha límite). |
+| **Bueno** | 3–4 | Se atendió la mayoría de las observaciones intermedias, o el historial muestra revisión en algunas secciones pero no en todas. |
+| **Regular** | 1–2 | Las observaciones intermedias se atendieron parcialmente o sin cambios claros, y el historial muestra poca revisión posterior — la mayor parte del contenido apareció de una sola vez. |
+| **Insuficiente** | 0 | No hubo entrega intermedia evaluable por causas del grupo (no subieron nada evaluable a tiempo) y el historial no muestra ningún indicio de revisión — el repo aparece completo en un bloque único, cerca de la fecha límite. |
+
+**Criterios transversales a observar:**
+- *Causa ajena:* si el grupo no tuvo devolución intermedia por algo fuera de su control
+  (por ejemplo, el docente no llegó a evaluarla a tiempo), este criterio se apoya solo en
+  el patrón del historial de commits — no penalizar por eso.
+- *No es aporte individual:* el desglose por autor que puede mostrar `/resumen-commits`
+  es solo informativo (quién commiteó no es lo mismo que quién hizo el trabajo) — no se usa
+  para puntuar acá ni para diferenciar integrantes.
+
+---
+
 ## Cuestionario individual (30 puntos)
 
 El cuestionario evalúa comprensión individual del proceso de análisis y la teoría detrás del trabajo grupal.
@@ -182,13 +208,14 @@ La puntuación se calcula automáticamente según las respuestas correctas.
 |------------|-----------------|---------------|
 | Requisitos | | 10 |
 | Historias de usuario | | 10 |
-| Casos de uso | | 15 |
-| Definition of Ready (DoR) | | 8 |
-| Slicing vertical | | 8 |
+| Casos de uso | | 12 |
+| Definition of Ready (DoR) | | 7 |
+| Slicing vertical | | 7 |
 | Modelo ER | | 7 |
 | Diseño UI | | 7 |
 | Stakeholders | | 3 |
 | README e integrantes | | 2 |
+| Proceso: evolución sobre la entrega intermedia | | 5 |
 | **Subtotal repo** | | **70** |
 | Cuestionario individual | | 30 |
 | **Total** | | **100** |

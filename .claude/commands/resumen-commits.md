@@ -17,12 +17,14 @@ Seguí estos pasos, en orden:
 
 1. **Asegurar que el repo está clonado y actualizado.** Si
    `materias/<materia>/grupos/<grupo-id>/` no existe, corré
-   `python3 scripts/grupos.py sync <materia>` primero. Si ya existe, dentro de esa carpeta
-   corré `git checkout main` y `git pull origin main` (no toques `feedback` aunque exista).
+   `python3 scripts/grupos.py sync <materia>` primero. Si ya existe, usá
+   `git -C materias/<materia>/grupos/<grupo-id> checkout main` y
+   `git -C materias/<materia>/grupos/<grupo-id> pull origin main` (no toques `feedback`
+   aunque exista) — `-C` evita el `cd`, así no hay que acordarse de volver a ningún lado.
 
 2. **Traer el historial completo de `main`** con fecha, autor y archivos tocados:
    ```
-   git log --format='--- %h|%ad|%an|%s' --date=short --name-only main
+   git -C materias/<materia>/grupos/<grupo-id> log --format='--- %h|%ad|%an|%s' --date=short --name-only main
    ```
    Usá esto como fuente de todo lo que sigue — no inventes commits que no aparezcan acá.
 

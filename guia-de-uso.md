@@ -99,16 +99,22 @@ antes de tiempo.
    pese en el veredicto. Sirve para no generar (y dejar commiteada en la branch local) una
    devolución completa de un grupo que todavía no tiene nada evaluable — más simple que
    generarla igual y después tener que rehacerla cuando el grupo actualice.
+
+   Si la materia tiene `materias/<materia>/cronograma-2c-2026.md`, el chequeo solo mira las
+   secciones que ya corresponden según la fecha de hoy — lo que todavía no se dio en clase
+   no cuenta como "Ausente", se reporta aparte. Si la materia no tiene ese archivo, chequea
+   todas las secciones de la rúbrica como si fuera la entrega final.
 3. **(Opcional) Ver el detalle de cómo trabajaron en el tiempo:**
    `/resumen-commits <materia> grupo-01-nombre` (definido en
    `.claude/commands/resumen-commits.md`) recorre todo el historial de `main` y arma, por
    archivo, la línea de tiempo de cuándo se tocó y si fue en un solo bloque o revisado más
-   adelante, más un desglose por autor. Es informativo, no entra en la devolución ni pesa en
-   la nota salvo que lo agregues como criterio explícito en `rubrica.md` — sirve como
-   insumo para tu criterio (por ejemplo, para preparar una charla o defensa oral con el
-   grupo), no como score automático. El desglose por autor viene con la advertencia de que
-   "quién commiteó" no es lo mismo que "quién hizo" — no lo uses solo para juzgar aporte
-   individual.
+   adelante, más un desglose por autor. Es informativo, no entra en la devolución ni pesa
+   en la nota por sí solo — sirve como insumo para tu criterio (por ejemplo, para preparar
+   una charla o defensa oral con el grupo). El desglose por autor viene con la advertencia
+   de que "quién commiteó" no es lo mismo que "quién hizo" — no lo uses solo para juzgar
+   aporte individual. La versión a nivel de repo (sin autor) de este mismo análisis sí
+   entra en la devolución si la rúbrica de la materia tiene la sección "Proceso" (ver
+   punto 4).
 4. **Generar el borrador con Claude Code:** abrís Claude Code en `sistema-eidas/` y corrés
    `/evaluar-grupo <materia> grupo-01-nombre`. Ese comando (definido en
    `.claude/commands/evaluar-grupo.md`) crea (o actualiza) la branch local `feedback` dentro
@@ -117,6 +123,20 @@ antes de tiempo.
    deja una copia de trabajo en
    `materias/<materia>/feedback/grupo-01-nombre_AAAA-MM-DD.md` (esta sí es tuya,
    no se pushea a ningún lado, es solo para que tengas todas las devoluciones de esa materia juntas).
+
+   Las rúbricas de `af-diseno-sistemas-web-31` y `-32` tienen una sección "Proceso:
+   evolución sobre la entrega intermedia" (5 pts) — para esa sección, `/evaluar-grupo` busca
+   la devolución intermedia anterior de ese grupo en `feedback/` (si existe) y el patrón de
+   iteración del historial de commits (a nivel de repo, sin desglose por autor). Si otra
+   materia no tiene esta sección en su `rubrica.md`, `/evaluar-grupo` simplemente no la
+   evalúa — no hace falta que todas las materias la usen.
+
+   Igual que `/chequear-grupo`, si todavía quedan secciones sin darse en clase según
+   `cronograma-2c-2026.md`, el comando genera una **devolución parcial**: solo puntúa lo
+   que ya corresponde, marca el resto como "no corresponde todavía" (sin tratarlo como
+   Ausente) y no arma la tabla de "Total sobre 100" — esa se arma recién en la entrega
+   final, cuando ya todo esté en alcance. "Proceso" nunca se puntúa en una parcial. Formato
+   completo de la variante en `CLAUDE.md`, sección "Variante: devolución parcial".
 5. **Revisión docente (obligatoria):** revisás el diff de la branch `feedback` contra `main`
    (`git diff main..feedback` dentro del repo del grupo), ajustás puntajes y texto directamente
    en el archivo, agregás el contexto que Claude no puede ver (proceso grupal, presentación

@@ -143,6 +143,27 @@ mano durante la revisión. La tercera **no la toques manualmente** — `scripts/
 publicar` la tilda solo, como parte del mismo commit que hace el push, así el archivo queda
 consistente con la realidad sin pasos extra.
 
+#### Variante: devolución parcial (entrega intermedia)
+
+Cuando la materia tiene `materias/<materia>/cronograma-2c-2026.md` y todavía quedan
+secciones de la rúbrica sin darse en clase, `/evaluar-grupo` genera una devolución
+**parcial** en vez de la final — evalúa solo lo que ya corresponde según el cronograma, sin
+tratar lo que no se dio todavía como "Ausente". La tabla de puntuación queda así:
+
+```markdown
+## Puntuación (devolución parcial — entrega intermedia, no es la nota final del repo)
+
+| Sección | Puntaje obtenido | Puntaje máximo | Nivel |
+|---------|-----------------|---------------|-------|
+| [sección en alcance] | | [según rúbrica] | |
+| [sección fuera de alcance] | — | — | No corresponde todavía (ver cronograma) |
+| **Subtotal evaluado** | | [suma solo de lo en alcance] | |
+```
+
+No hay fila de "Total" sobre 100 en una devolución parcial — esa tabla se arma recién en la
+devolución final, cuando ya todo está en alcance. "Devolución por sección" solo lleva
+sub-secciones de lo evaluado; de lo que no corresponde todavía no hace falta escribir nada.
+
 ---
 
 ### Pendientes del sistema
