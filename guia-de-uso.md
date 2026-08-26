@@ -9,6 +9,25 @@
 
 ---
 
+## Comandos, de un vistazo
+
+Hay dos familias de comandos que no hay que confundir: los que corrés en la terminal
+(`python3 scripts/grupos.py ...`) y los que corrés dentro de Claude Code (`/comando`, sin
+`python3`). Ninguno de los `grupos.py` tiene un modo "dry-run" — el chequeo de solo lectura
+es un comando de Claude Code aparte, no un flag.
+
+| Quiero... | Comando | Tipo | ¿Escribe algo? |
+|---|---|---|---|
+| Traer/actualizar los repos de los grupos | `python3 scripts/grupos.py sync <materia>` | Python | Clona/actualiza repos en `materias/<materia>/grupos/` |
+| Ver si un grupo está listo para evaluar, sin generar nada todavía (el "dry-run") | `/chequear-grupo <materia> <grupo-id>` | Claude Code | No — solo reporta en el chat |
+| Generar el borrador de devolución | `/evaluar-grupo <materia> <grupo-id>` | Claude Code | Sí — commitea en la branch local `feedback` |
+| Publicar la devolución y notificar al grupo | `python3 scripts/grupos.py publicar <materia> <grupo-id>` | Python | Sí — merge a `main` y `git push` |
+| Reintentar solo la notificación (si publicar no la disparó) | `python3 scripts/grupos.py notificar <materia> <grupo-id> <fecha>` | Python | No sobre el repo — dispara el webhook de N8N |
+
+Detalle de cada uno en la sección 3.
+
+---
+
 ## 0. Piezas del sistema y dónde viven
 
 | Pieza | Dónde está | Estado |
