@@ -20,6 +20,7 @@ es un comando de Claude Code aparte, no un flag.
 |---|---|---|---|
 | Traer/actualizar los repos de los grupos | `python3 scripts/grupos.py sync <materia>` | Python | Clona/actualiza repos en `materias/<materia>/grupos/` |
 | Ver si un grupo está listo para evaluar, sin generar nada todavía (el "dry-run") | `/chequear-grupo <materia> <grupo-id>` | Claude Code | Actualiza `main` con `git pull`, pero no genera devolución — solo reporta en el chat |
+| Ver cómo trabajó el grupo a lo largo del tiempo (iteración, no aporte) | `/resumen-commits <materia> <grupo-id>` | Claude Code | No — solo reporta en el chat, no entra en la devolución |
 | Generar el borrador de devolución | `/evaluar-grupo <materia> <grupo-id>` | Claude Code | Sí — commitea en la branch local `feedback` |
 | Publicar la devolución y notificar al grupo | `python3 scripts/grupos.py publicar <materia> <grupo-id>` | Python | Sí — merge a `main` y `git push` |
 | Reintentar solo la notificación (si publicar no la disparó) | `python3 scripts/grupos.py notificar <materia> <grupo-id> <fecha>` | Python | No sobre el repo — dispara el webhook de N8N |
@@ -93,11 +94,22 @@ antes de tiempo.
    `git pull` de ese grupo puntual — no hace falta correr `sync` antes solo para chequear
    uno — y no genera ninguna devolución: no crea la branch `feedback` ni escribe nada, solo
    te da un veredicto (`LISTO PARA EVALUAR` / `ESPERAR` / `PEDIR ACTUALIZACIÓN`)
-   contrastando lo que subió el grupo contra `rubrica.md`. Sirve para no generar (y dejar
-   commiteada en la branch local) una devolución completa de un grupo que todavía no tiene
-   nada evaluable — más simple que generarla igual y después tener que rehacerla cuando el
-   grupo actualice.
-3. **Generar el borrador con Claude Code:** abrís Claude Code en `sistema-eidas/` y corrés
+   contrastando lo que subió el grupo contra `rubrica.md`. De paso muestra el total de
+   commits y cuántos archivos se retocaron más de una vez, como dato liviano — sin que eso
+   pese en el veredicto. Sirve para no generar (y dejar commiteada en la branch local) una
+   devolución completa de un grupo que todavía no tiene nada evaluable — más simple que
+   generarla igual y después tener que rehacerla cuando el grupo actualice.
+3. **(Opcional) Ver el detalle de cómo trabajaron en el tiempo:**
+   `/resumen-commits <materia> grupo-01-nombre` (definido en
+   `.claude/commands/resumen-commits.md`) recorre todo el historial de `main` y arma, por
+   archivo, la línea de tiempo de cuándo se tocó y si fue en un solo bloque o revisado más
+   adelante, más un desglose por autor. Es informativo, no entra en la devolución ni pesa en
+   la nota salvo que lo agregues como criterio explícito en `rubrica.md` — sirve como
+   insumo para tu criterio (por ejemplo, para preparar una charla o defensa oral con el
+   grupo), no como score automático. El desglose por autor viene con la advertencia de que
+   "quién commiteó" no es lo mismo que "quién hizo" — no lo uses solo para juzgar aporte
+   individual.
+4. **Generar el borrador con Claude Code:** abrís Claude Code en `sistema-eidas/` y corrés
    `/evaluar-grupo <materia> grupo-01-nombre`. Ese comando (definido en
    `.claude/commands/evaluar-grupo.md`) crea (o actualiza) la branch local `feedback` dentro
    de `materias/<materia>/grupos/grupo-01-nombre/`, aplica `materias/<materia>/rubrica.md`,
@@ -105,11 +117,13 @@ antes de tiempo.
    deja una copia de trabajo en
    `materias/<materia>/feedback/grupo-01-nombre_AAAA-MM-DD.md` (esta sí es tuya,
    no se pushea a ningún lado, es solo para que tengas todas las devoluciones de esa materia juntas).
-4. **Revisión docente (obligatoria):** revisás el diff de la branch `feedback` contra `main`
+5. **Revisión docente (obligatoria):** revisás el diff de la branch `feedback` contra `main`
    (`git diff main..feedback` dentro del repo del grupo), ajustás puntajes y texto directamente
    en el archivo, agregás el contexto que Claude no puede ver (proceso grupal, presentación
-   oral, etc.), y respondés la "Pregunta para el docente" que Claude dejó planteada.
-5. **Publicar y notificar — un solo comando, recién acá se vuelve visible para el grupo:**
+   oral, etc. — acá es donde entraría lo que viste con `/resumen-commits` si querés
+   mencionarlo, no como puntaje sino como observación), y respondés la "Pregunta para el
+   docente" que Claude dejó planteada.
+6. **Publicar y notificar — un solo comando, recién acá se vuelve visible para el grupo:**
    ```
    python3 scripts/grupos.py publicar <materia> grupo-01-nombre
    ```
