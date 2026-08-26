@@ -70,7 +70,7 @@ Para dar de alta una materia nueva: crear `materias/<slug>/` con su propia `rubr
 ```
 Grupo sube trabajo al repo GitHub (repo generado desde el template de SU materia)
         ↓
-Profe corre: python3 scripts/grupos.py sync <materia>
+Profe corre: python3 scripts/grupos.py sync <materia>  (o /sync <materia> en Claude Code)
 — clona los grupos nuevos de materias/<materia>/grupos.json, actualiza los que ya estaban —
         ↓
 (Opcional) Abre Claude Code y corre: /chequear-grupo <materia> <grupo-id>
