@@ -17,9 +17,16 @@ Hay dos familias de comandos que no hay que confundir: los que corrés en la ter
 `python3`). Ninguno de los `grupos.py` tiene un modo "dry-run" — el chequeo de solo lectura
 es un comando de Claude Code aparte, no un flag.
 
+`sync` es el único de los tres subcomandos de `grupos.py` que además tiene un wrapper de
+Claude Code (`/sync`) — así no hace falta abrir una terminal aparte solo para traer los
+repos al día antes de chequear o evaluar. `publicar` y `notificar` **no** tienen wrapper,
+a propósito: `publicar` pide una confirmación antes de un push que hace visible la
+devolución y dispara un mail — envolverlo significaría pasarle `--yes` para que no quede
+esperando input, y ese prompt es el último freno antes de algo que no se puede deshacer.
+
 | Quiero... | Comando | Tipo | ¿Escribe algo? |
 |---|---|---|---|
-| Traer/actualizar los repos de los grupos | `python3 scripts/grupos.py sync <materia>` | Python | Clona/actualiza repos en `materias/<materia>/grupos/` |
+| Traer/actualizar los repos de los grupos | `python3 scripts/grupos.py sync <materia>` o `/sync <materia>` | Python o Claude Code (mismo resultado) | Clona/actualiza repos en `materias/<materia>/grupos/` |
 | Ver si un grupo está listo para evaluar, sin generar nada todavía (el "dry-run") | `/chequear-grupo <materia> <grupo-id>` | Claude Code | Actualiza `main` con `git pull`, pero no genera devolución — solo reporta en el chat |
 | Ver cómo trabajó el grupo a lo largo del tiempo (iteración, no aporte) | `/resumen-commits <materia> <grupo-id>` | Claude Code | No — solo reporta en el chat, no entra en la devolución |
 | Generar el borrador de devolución | `/evaluar-grupo <materia> <grupo-id>` | Claude Code | Sí — commitea en la branch local `feedback` |
@@ -69,7 +76,8 @@ saben operar sobre cualquier materia que exista en `materias/`.
    ```json
    { "id": "grupo-01-nombre", "repo": "https://github.com/<usuario-del-grupo>/<repo>.git", "email": "grupo01@ejemplo.com" }
    ```
-5. Corrés el script para clonarlo:
+5. Corrés el script para clonarlo (o `/sync <materia>` si ya estás en una sesión de
+   Claude Code — es el mismo comando, sin cambiar de terminal):
    ```
    python3 scripts/grupos.py sync <materia>
    ```
@@ -87,10 +95,11 @@ del grupo — nunca se pushea hasta que la aprobás, así que el grupo no tiene 
 antes de tiempo.
 
 1. **Traer los cambios de todos los grupos de la materia** (opcional si solo vas a mirar
-   uno puntual — ver paso 2):
+   uno puntual — ver paso 2). Terminal o Claude Code, es lo mismo:
    ```
    python3 scripts/grupos.py sync <materia>
    ```
+   o `/sync <materia>` sin salir de la sesión.
 2. **Chequear si conviene evaluar todavía:** `/chequear-grupo <materia> grupo-01-nombre`
    (definido en `.claude/commands/chequear-grupo.md`) clona el repo si hace falta y hace
    `git pull` de ese grupo puntual — no hace falta correr `sync` antes solo para chequear
