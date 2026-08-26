@@ -6,19 +6,21 @@ evaluación (buena o mala) en la branch local `feedback`.
 `$ARGUMENTS` trae dos valores separados por espacio: `<materia> <grupo-id>`. Si
 `$ARGUMENTS` no trae ambos valores, pedíselos al usuario antes de seguir.
 
-Este comando es **de solo lectura**: en ningún paso creás ni cambiás de branch, ni escribís
-ni commiteás ningún archivo, ni en `materias/<materia>/grupos/<grupo-id>/` ni en
-`materias/<materia>/feedback/`.
+Este comando **no genera ninguna devolución**: no crea ni cambia a la branch `feedback`, ni
+escribe ni commitea ningún archivo, ni en `materias/<materia>/grupos/<grupo-id>/` ni en
+`materias/<materia>/feedback/`. Sí actualiza `main` con lo último del remoto (paso 2) —
+eso no cuenta como "generar" nada, es la misma actualización que hace `sync`.
 
 Seguí estos pasos, en orden:
 
-1. **Verificar que el repo está clonado.** Si `materias/<materia>/grupos/<grupo-id>/` no
-   existe, avisá que hay que correr `python3 scripts/grupos.py sync <materia>` primero, y
-   no sigas.
+1. **Asegurar que el repo está clonado.** Si `materias/<materia>/grupos/<grupo-id>/` no
+   existe todavía, corré `python3 scripts/grupos.py sync <materia>` (clona todos los grupos
+   nuevos de esa materia, no solo este) y seguí desde el paso 2.
 
-2. **Traer lo último sin generar nada.** Dentro de `materias/<materia>/grupos/<grupo-id>/`,
-   quedate en `main` (no toques la branch `feedback` aunque exista) y fijate cuándo fue el
-   último commit (`git log -1 --format="%ad %s" --date=relative`).
+2. **Actualizar y traer lo último.** Dentro de `materias/<materia>/grupos/<grupo-id>/`,
+   corré `git checkout main` y `git pull origin main` (no toques la branch `feedback`
+   aunque exista), y fijate cuándo fue el último commit
+   (`git log -1 --format="%ad %s" --date=relative`).
 
 3. **Leer el contenido actual** (README, `integrantes.md`, `docs/`, `diagramas/`) y
    contrastarlo, sección por sección, contra `materias/<materia>/rubrica.md` — no para

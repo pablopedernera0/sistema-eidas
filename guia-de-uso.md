@@ -19,7 +19,7 @@ es un comando de Claude Code aparte, no un flag.
 | Quiero... | Comando | Tipo | ¿Escribe algo? |
 |---|---|---|---|
 | Traer/actualizar los repos de los grupos | `python3 scripts/grupos.py sync <materia>` | Python | Clona/actualiza repos en `materias/<materia>/grupos/` |
-| Ver si un grupo está listo para evaluar, sin generar nada todavía (el "dry-run") | `/chequear-grupo <materia> <grupo-id>` | Claude Code | No — solo reporta en el chat |
+| Ver si un grupo está listo para evaluar, sin generar nada todavía (el "dry-run") | `/chequear-grupo <materia> <grupo-id>` | Claude Code | Actualiza `main` con `git pull`, pero no genera devolución — solo reporta en el chat |
 | Generar el borrador de devolución | `/evaluar-grupo <materia> <grupo-id>` | Claude Code | Sí — commitea en la branch local `feedback` |
 | Publicar la devolución y notificar al grupo | `python3 scripts/grupos.py publicar <materia> <grupo-id>` | Python | Sí — merge a `main` y `git push` |
 | Reintentar solo la notificación (si publicar no la disparó) | `python3 scripts/grupos.py notificar <materia> <grupo-id> <fecha>` | Python | No sobre el repo — dispara el webhook de N8N |
@@ -83,18 +83,20 @@ La devolución vive como una **branch local** (`feedback`) dentro del propio rep
 del grupo — nunca se pushea hasta que la aprobás, así que el grupo no tiene forma de verla
 antes de tiempo.
 
-1. **Traer los cambios del grupo:**
+1. **Traer los cambios de todos los grupos de la materia** (opcional si solo vas a mirar
+   uno puntual — ver paso 2):
    ```
    python3 scripts/grupos.py sync <materia>
    ```
-   (o `cd materias/<materia>/grupos/grupo-01-nombre && git pull` si solo querés actualizar ese grupo puntual)
-2. **(Opcional) Chequear si conviene evaluar todavía:** `/chequear-grupo <materia> grupo-01-nombre`
-   (definido en `.claude/commands/chequear-grupo.md`) es de solo lectura — no crea la branch
-   `feedback` ni escribe nada — y te da un veredicto (`LISTO PARA EVALUAR` / `ESPERAR` /
-   `PEDIR ACTUALIZACIÓN`) contrastando lo que subió el grupo contra `rubrica.md`. Sirve para
-   no generar (y dejar commiteada en la branch local) una devolución completa de un grupo
-   que todavía no tiene nada evaluable — más simple que generarla igual y después tener que
-   rehacerla cuando el grupo actualice.
+2. **Chequear si conviene evaluar todavía:** `/chequear-grupo <materia> grupo-01-nombre`
+   (definido en `.claude/commands/chequear-grupo.md`) clona el repo si hace falta y hace
+   `git pull` de ese grupo puntual — no hace falta correr `sync` antes solo para chequear
+   uno — y no genera ninguna devolución: no crea la branch `feedback` ni escribe nada, solo
+   te da un veredicto (`LISTO PARA EVALUAR` / `ESPERAR` / `PEDIR ACTUALIZACIÓN`)
+   contrastando lo que subió el grupo contra `rubrica.md`. Sirve para no generar (y dejar
+   commiteada en la branch local) una devolución completa de un grupo que todavía no tiene
+   nada evaluable — más simple que generarla igual y después tener que rehacerla cuando el
+   grupo actualice.
 3. **Generar el borrador con Claude Code:** abrís Claude Code en `sistema-eidas/` y corrés
    `/evaluar-grupo <materia> grupo-01-nombre`. Ese comando (definido en
    `.claude/commands/evaluar-grupo.md`) crea (o actualiza) la branch local `feedback` dentro
