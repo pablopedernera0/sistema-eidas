@@ -32,6 +32,7 @@ esperando input, y ese prompt es el último freno antes de algo que no se puede 
 | Generar el borrador de devolución | `/evaluar-grupo <materia> <grupo-id>` | Claude Code | Sí — commitea en la branch local `feedback` |
 | Publicar la devolución y notificar al grupo | `python3 scripts/grupos.py publicar <materia> <grupo-id>` | Python | Sí — merge a `main` y `git push` |
 | Reintentar solo la notificación (si publicar no la disparó) | `python3 scripts/grupos.py notificar <materia> <grupo-id> <fecha>` | Python | No sobre el repo — dispara el webhook de N8N |
+| Ver si esta máquina tiene todo al día (`sistema-eidas`, `sistema-eidas-datos`, `sistema-eidas-memory`, `eidas-template`) | `/estado-eidas` (sin argumentos) | Claude Code | Pullea solo lo que esté limpio y atrasado; lo demás solo lo reporta |
 
 Detalle de cada uno en la sección 3.
 
@@ -41,7 +42,7 @@ Detalle de cada uno en la sección 3.
 
 | Pieza | Dónde está | Estado |
 |---|---|---|
-| Template de cada materia | `materias/<materia>/template/`, repo propio en GitHub | Activo — ver `CLAUDE.md` para la lista de materias y sus templates |
+| Template de cada materia | `materias/<materia>/template/` (mirror de solo lectura); se edita desde la copia hermana `.../terciario-urquiza/eidas-template/`, nunca desde acá | Activo — ver `CLAUDE.md` para la lista de materias y sus templates |
 | Rúbrica de cada materia | `materias/<materia>/rubrica.md` | Completa para `af-diseno-sistemas-web-31` y `-32` (incluye la sección "Proceso: evolución sobre la entrega intermedia") |
 | Cronograma de cada materia (opcional) | `materias/<materia>/cronograma-2c-2026.md` | Solo `af-diseno-sistemas-web-31` y `-32` lo tienen — si existe, `/chequear-grupo` y `/evaluar-grupo` lo usan para saber qué secciones de la rúbrica ya corresponden según la fecha |
 | Marco teórico | `marco-teorico-fundamentacion.md`, `marco-teorico-resumen.md` (compartido, materia-agnóstico) | Completo (pendiente confirmar 2 citas) |

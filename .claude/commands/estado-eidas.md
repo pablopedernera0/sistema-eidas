@@ -2,8 +2,9 @@ Chequeá el estado de sincronización de todos los repos del Sistema EIDAS en es
 
 No toma argumentos. Corré `python3 scripts/estado.py` y reportá la salida.
 
-El script chequea, por cada repo (`sistema-eidas`, `sistema-eidas-datos`, `sistema-eidas-memory`
-y `eidas-template` una vez por cada materia en `materias/`): fetch, y
+El script chequea, por cada repo (`sistema-eidas`, `sistema-eidas-datos`,
+`sistema-eidas-memory`, la copia de edición de `eidas-template` —hermana de `sistema-eidas`—
+y su mirror dentro de cada materia en `materias/<materia>/template`): fetch, y
 
 - si está limpio y solo atrasado respecto de `origin` → hace `git pull --ff-only` solo,
   sin preguntar (es 100% seguro);

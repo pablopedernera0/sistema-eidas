@@ -3,7 +3,9 @@
 
 Repos chequeados: sistema-eidas (este), sistema-eidas-datos (grupos.json privado,
 symlinkeado desde acá), sistema-eidas-memory (memoria de Claude Code para este
-proyecto) y eidas-template (uno por materia, clonado en materias/<materia>/template).
+proyecto), eidas-template en su copia de edición (hermana de sistema-eidas) y
+eidas-template en cada copia por-materia (materias/<materia>/template — mirrors de
+solo lectura, se editan siempre desde la copia de edición, nunca desde acá).
 
 Los repos de materias/<materia>/grupos/ quedan afuera a propósito: no tienen estado
 propio que importe entre máquinas, se resuelven con 'grupos.py sync <materia>'.
@@ -94,6 +96,7 @@ def main():
 
     check_repo("sistema-eidas", ROOT)
     check_repo("sistema-eidas-datos", ROOT.parent / "sistema-eidas-datos")
+    check_repo("eidas-template (edición)", ROOT.parent / "eidas-template")
 
     memory_path = find_memory_repo()
     if memory_path:
@@ -105,7 +108,7 @@ def main():
     if not MATERIAS_DIR.exists():
         return
     for materia_path in sorted(p for p in MATERIAS_DIR.iterdir() if p.is_dir()):
-        check_repo(f"eidas-template ({materia_path.name})", materia_path / "template")
+        check_repo(f"eidas-template ({materia_path.name}, mirror)", materia_path / "template")
 
 
 if __name__ == "__main__":

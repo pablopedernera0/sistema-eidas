@@ -49,7 +49,7 @@ sistema-eidas/
 └── materias/
     └── af-diseno-sistemas-web-31/      ← una carpeta por materia/comisión
         ├── rubrica.md                  ← rúbrica de ESTA materia
-        ├── template/                   ← repo template de ESTA materia (su propio .git → GitHub)
+        ├── template/                   ← mirror de solo lectura de eidas-template (ver nota debajo)
         ├── grupos.json                 ← id + url de repo + email de cada grupo de ESTA materia
         ├── grupos/                     ← repos clonados de los grupos de esta materia
         │   └── grupo-01-xxxxx/
@@ -60,8 +60,17 @@ sistema-eidas/
 ```
 
 Para dar de alta una materia nueva: crear `materias/<slug>/` con su propia `rubrica.md` y
-`template/` (repo GitHub propio), y un `grupos.json` con `{"grupos": []}`. El resto
-(scripts, comando, N8N) ya sabe operar sobre cualquier materia sin cambios.
+`template/` (clon de su repo template en GitHub — propio de la materia, o compartido si
+reutiliza uno existente como `eidas-template`), y un `grupos.json` con `{"grupos": []}`. El
+resto (scripts, comando, N8N) ya sabe operar sobre cualquier materia sin cambios.
+
+**Convención para editar un template compartido entre materias:** cuando el mismo repo
+template se usa en más de una materia (como `eidas-template`, hoy en 31 y 32), no se edita
+desde ninguna de las copias en `materias/*/template/` — esas son mirrors de solo lectura,
+`/estado-eidas` las pullea solas cuando están limpias. Se clona una copia aparte, hermana de
+`sistema-eidas/` (ej. `.../terciario-urquiza/eidas-template/`), y ahí se edita, commitea y
+pushea. Mismo patrón que `sistema-eidas-datos` y `sistema-eidas-memory`: los repos que no son
+de una sola materia viven al lado de `sistema-eidas/`, no anidados adentro de una.
 
 ---
 
