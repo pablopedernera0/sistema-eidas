@@ -28,27 +28,27 @@ Martes y miércoles alternan modalidad opuesta cada semana. Asumo virtual = con 
 **Virtual = trabajo en grupo, volcando y ampliando lo que ya presentaron.**
 **Presencial = revisión en vivo con proyector de lo volcado (feedback puntual, no clase nueva), más lo mínimo indispensable de EIDAS como herramienta.**
 
-| Fecha | Modalidad | Sección de la rúbrica | Actividad |
-|---|---|---|---|
-| Mié 12/08 | Virtual | Onboarding EIDAS | Alta del repo desde el template, agregar al profesor como colaborador, primer commit con lo que cada grupo ya tiene (aunque sea solo títulos) — arranca el volcado |
-| Mar 18/08 | Virtual | Stakeholders + Requisitos | Trabajo en grupo: volcar stakeholders y requisitos ya presentados a `docs/stakeholders.md` y `docs/requisitos.md`, completando lo que falte |
-| Mié 19/08 | Presencial | DoR + Slicing | **Actualizado 19/08:** la revisión de Stakeholders + Requisitos se corre porque la entrega viene retrasada (a los grupos les está costando entrar en la dinámica de GitHub). En su lugar, taller de Definition of Ready y Slicing vertical (`DoR.md` / `slicing.md` del template) — ver presentación en `pablopedernera0.github.io/dor-slicing/`. |
-| Mar 25/08 | Presencial | Historias de usuario | Revisión en vivo de HU volcadas — repaso breve de INVEST solo si hace falta |
-| Mié 26/08 | Virtual | Requisitos + HU | Trabajo en grupo: cierre de Requisitos y HU, arranque de Casos de Uso — foco en los grupos que solo dejaron títulos |
-| Mar 01/09 | Virtual | Requisitos + HU | Consulta 1 a 1 — **entrega sugerida de estas dos secciones** |
-| Mié 02/09 | Presencial | Casos de uso | Revisión en vivo del diagrama general de 2-3 grupos: actores, include/extend |
-| Mar 08/09 | Presencial | Casos de uso | Revisión en vivo de CUs desarrollados — foco en excepciones reales, no solo camino feliz |
-| Mié 09/09 | Virtual | Casos de uso (20 pts) | Trabajo en grupo: expandir títulos a diagrama general completo |
-| Mar 15/09 | Virtual | Casos de uso (20 pts) | Trabajo en grupo: CUs desarrollados (precondiciones, postcondiciones, secuencia, excepciones) — cierre de la sección más pesada |
-| Mié 16/09 | Presencial | Modelo ER | Revisión en vivo + repaso breve de cardinalidades/PK/FK si hace falta (nivel de cobertura previa incierto, calibrar en clase) |
-| Mar 22/09 | Presencial | Diseño UI | Revisión en vivo de wireframes contra los criterios ya vistos en la presentación de interfaces (agrupación, jerarquía, accesibilidad) |
-| Mié 23/09 | Virtual | Modelo ER (10 pts) | Trabajo en grupo: diagrama entidad-relación |
-| Mar 29/09 | Virtual | Diseño UI (10 pts) | Trabajo en grupo: wireframes |
-| Mié 30/09 | Presencial | — | Consulta general y repaso, sin contenido nuevo |
-| Mar 06/10 | Presencial | — | Consulta final del repo + repaso para el cuestionario individual |
-| Mié 07/10 | Virtual | README (5 pts) | Últimos ajustes: README, `integrantes.md`, estructura del repo completa |
+| Fecha         | Modalidad | Sección de la rúbrica | Actividad |
+|---------------|---|---|---|
+| Mié 12/08     | Virtual | Onboarding EIDAS | Alta del repo desde el template, agregar al profesor como colaborador, primer commit con lo que cada grupo ya tiene (aunque sea solo títulos) — arranca el volcado |
+| Mar 25/08     | Virtual | Stakeholders + Requisitos | Trabajo en grupo: volcar stakeholders y requisitos ya presentados a `docs/stakeholders.md` y `docs/requisitos.md`, completando lo que falte |
+| Mié 02/09     | Presencial | DoR + Slicing | **Actualizado 19/08:** la revisión de Stakeholders + Requisitos se corre porque la entrega viene retrasada (a los grupos les está costando entrar en la dinámica de GitHub). En su lugar, taller de Definition of Ready y Slicing vertical (`DoR.md` / `slicing.md` del template) — ver presentación en `pablopedernera0.github.io/dor-slicing/`. |
+| Mar 02/09     | Presencial | Historias de usuario | Revisión en vivo de HU volcadas — repaso breve de INVEST solo si hace falta |
+| Mié 08/09     | Virtual | Requisitos + HU | Trabajo en grupo: cierre de Requisitos y HU, arranque de Casos de Uso — foco en los grupos que solo dejaron títulos |
+| Mar 08/09     | Virtual | Requisitos + HU | Consulta 1 a 1 — **entrega sugerida de estas dos secciones** |
+| Mié 08/09     | Presencial | Casos de uso | Revisión en vivo del diagrama general de 2-3 grupos: actores, include/extend |
+| Mar 08/09     | Presencial | Casos de uso | Revisión en vivo de CUs desarrollados — foco en excepciones reales, no solo camino feliz |
+| Mié 09/09     | Virtual | Casos de uso (20 pts) | Trabajo en grupo: expandir títulos a diagrama general completo |
+| Mar 15/09     | Virtual | Casos de uso (20 pts) | Trabajo en grupo: CUs desarrollados (precondiciones, postcondiciones, secuencia, excepciones) — cierre de la sección más pesada |
+| Mié 16/09     | Presencial | Modelo ER | Revisión en vivo + repaso breve de cardinalidades/PK/FK si hace falta (nivel de cobertura previa incierto, calibrar en clase) |
+| Mar 22/09     | Presencial | Diseño UI | Revisión en vivo de wireframes contra los criterios ya vistos en la presentación de interfaces (agrupación, jerarquía, accesibilidad) |
+| Mié 23/09     | Virtual | Modelo ER (10 pts) | Trabajo en grupo: diagrama entidad-relación |
+| Mar 29/09     | Virtual | Diseño UI (10 pts) | Trabajo en grupo: wireframes |
+| Mié 30/09     | Presencial | — | Consulta general y repaso, sin contenido nuevo |
+| Mar 06/10     | Presencial | — | Consulta final del repo + repaso para el cuestionario individual |
+| Mié 07/10     | Virtual | README (5 pts) | Últimos ajustes: README, `integrantes.md`, estructura del repo completa |
 | **Mar 13/10** | Virtual | — | **Presentación final grupal = Parcial, Parte A** (última semana de clases) |
-| Mié 14/10 | Presencial | — | Cierre del cuatrimestre + repaso general para el Cuestionario individual |
+| Mié 14/10     | Presencial | — | Cierre del cuatrimestre + repaso general para el Cuestionario individual |
 
 **Entrega sugerida del repo:** antes del martes 13/10 (ej. domingo 11/10 o lunes 12/10).
 

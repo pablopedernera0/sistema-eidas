@@ -27,18 +27,18 @@ Si preferís la alternativa, avisame y reordeno.
 **Semanas virtuales = trabajo en grupo (miércoles corto = check-in, viernes largo = sesión principal de construcción).**
 **Semanas presenciales = revisión en vivo con proyector de lo volcado (miércoles corto = feedback rápido, viernes largo = revisión más profunda), sin contenido teórico nuevo salvo repasos breves puntuales.**
 
-| Semana | Modalidad | Miércoles (80 min) | Viernes (120 min) | Sección de la rúbrica |
-|---|---|---|---|---|
-| 12-14/08 | Virtual | Alta del repo desde el template, agregar al profesor como colaborador | Volcar Stakeholders + arrancar Requisitos | Onboarding + Stakeholders + Requisitos |
-| 19-21/08 | Presencial | **Actualizado 19/08:** taller de DoR + Slicing (la revisión de Requisitos se corre, entrega retrasada — ver nota abajo) | Revisión más profunda de Requisitos, repaso breve solo si hace falta *(a confirmar si sigue en pie o también se corre)* | Requisitos + DoR/Slicing |
-| 26-28/08 | Virtual | Cierre de Requisitos | Historias de Usuario completas + arranque de Casos de Uso — **entrega sugerida de Requisitos + HU** | Requisitos + HU |
-| 02-04/09 | Presencial | Feedback rápido de HU | Revisión del diagrama general de Casos de Uso, foco en actores/include-extend | HU + Casos de uso |
-| 09-11/09 | Virtual | Diagrama general de Casos de Uso | CUs desarrollados completos + diagramas de secuencia — **cierre de la sección más pesada (20 pts)** | Casos de uso |
-| 16-18/09 | Presencial | Feedback de Casos de Uso | Repaso breve de Modelo ER y Diseño UI si hace falta (cobertura previa incierta, calibrar en clase) | Casos de uso + ER + UI |
-| 23-25/09 | Virtual | Modelo ER | Diseño UI / wireframes | Modelo ER + Diseño UI |
+| Semana      | Modalidad | Miércoles (80 min) | Viernes (120 min) | Sección de la rúbrica |
+|-------------|---|---|---|---|
+| 12-14/08    | Virtual | Alta del repo desde el template, agregar al profesor como colaborador | Volcar Stakeholders + arrancar Requisitos | Onboarding + Stakeholders + Requisitos |
+| 26-28/08    | Presencial | **Actualizado 19/08:** taller de DoR + Slicing (la revisión de Requisitos se corre, entrega retrasada — ver nota abajo) | Revisión más profunda de Requisitos, repaso breve solo si hace falta *(a confirmar si sigue en pie o también se corre)* | Requisitos + DoR/Slicing |
+| *Pendiente* | Virtual | Cierre de Requisitos | Historias de Usuario completas + arranque de Casos de Uso — **entrega sugerida de Requisitos + HU** | Requisitos + HU |
+| 02-04/09    | Presencial | Feedback rápido de HU | Revisión del diagrama general de Casos de Uso, foco en actores/include-extend | HU + Casos de uso |
+| 09-11/09    | Virtual | Diagrama general de Casos de Uso | CUs desarrollados completos + diagramas de secuencia — **cierre de la sección más pesada (20 pts)** | Casos de uso |
+| 16-18/09    | Presencial | Feedback de Casos de Uso | Repaso breve de Modelo ER y Diseño UI si hace falta (cobertura previa incierta, calibrar en clase) | Casos de uso + ER + UI |
+| 23-25/09    | Virtual | Modelo ER | Diseño UI / wireframes | Modelo ER + Diseño UI |
 | 30/09-02/10 | Presencial | Consulta general | Consulta general — **colchón para lo que se haya atrasado** | — |
-| 07-09/10 | Virtual | Últimos ajustes: README, `integrantes.md` — **entrega sugerida del repo completo** | **Presentación final grupal = Parcial, Parte A** | README |
-| 14-16/10 | Presencial | Cierre del cuatrimestre | Repaso general para el Cuestionario individual | — |
+| 07-09/10    | Virtual | Últimos ajustes: README, `integrantes.md` — **entrega sugerida del repo completo** | **Presentación final grupal = Parcial, Parte A** | README |
+| 14-16/10    | Presencial | Cierre del cuatrimestre | Repaso general para el Cuestionario individual | — |
 
 ## Parcial (fecha exacta a confirmar)
 
@@ -47,11 +47,15 @@ Si preferís la alternativa, avisame y reordeno.
 
 ## Pendiente de reprogramar
 
-El miércoles 19/08 pasó a ser taller de DoR + Slicing (`DoR.md` / `slicing.md` del template,
-presentación en `pablopedernera0.github.io/dor-slicing/`) porque la entrega de Stakeholders +
-Requisitos viene retrasada — a los grupos les está costando entrar en la dinámica de GitHub.
-Falta decidir si la revisión de Requisitos se mantiene el viernes 21/08 como estaba, o
-también se corre a la semana virtual del 26-28/08.
+**Actualizado 26/08:** el taller de DoR + Slicing (`DoR.md` / `slicing.md` del template,
+presentación en `pablopedernera0.github.io/dor-slicing/`) se corrió de la semana del 19-21/08
+a esta semana (26-28/08, miércoles) porque la entrega de Stakeholders + Requisitos venía
+retrasada — a los grupos les está costando entrar en la dinámica de GitHub. Con eso, la fila
+de "Cierre de Requisitos + arranque de HU" que estaba en 26-28/08 se quedó sin semana propia
+— todavía no tiene una fecha nueva asignada en esta tabla. Falta decidir en qué sesión entra
+sin desplazar el resto del cronograma (candidatas: sumarla al feedback rápido de HU del
+02-04/09, o abrir una semana extra usando el colchón que ya estaba pensado para el
+30/09-02/10).
 
 ## Riesgo a tener presente
 
