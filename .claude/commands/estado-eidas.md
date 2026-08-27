@@ -3,8 +3,10 @@ Chequeá el estado de sincronización de todos los repos del Sistema EIDAS en es
 No toma argumentos. Corré `python3 scripts/estado.py` y reportá la salida.
 
 El script chequea, por cada repo (`sistema-eidas`, `sistema-eidas-datos`,
-`sistema-eidas-memory`, la copia de edición de `eidas-template` —hermana de `sistema-eidas`—
-y su mirror dentro de cada materia en `materias/<materia>/template`): fetch, y
+`sistema-eidas-memory`, la copia de edición de `eidas-template` —hermana de `sistema-eidas`—,
+su mirror dentro de cada materia en `materias/<materia>/template`, y
+`pablopedernera0.github.io` —el sitio docente general, no exclusivo de EIDAS, pero con
+carpetas publicadas de esta materia adentro—): fetch, y
 
 - si está limpio y solo atrasado respecto de `origin` → hace `git pull --ff-only` solo,
   sin preguntar (es 100% seguro);
@@ -22,7 +24,8 @@ Después de correrlo:
 2. **Si `sistema-eidas-memory` quedó con cambios sin commitear o commits sin pushear**,
    ofrecé al usuario commitear y pushear vos mismo ahora, con su confirmación explícita en
    el momento (nunca en silencio). Es memoria propia tuya, generada por vos, de bajo riesgo.
-3. **Para `sistema-eidas`, `sistema-eidas-datos` y `eidas-template`, nunca hagas push por tu
-   cuenta**, ni lo ofrezcas como "lo hago ya" — son repos que ven estudiantes u otras
-   personas. Si quedaron con cambios sin subir, solo señalalo; el push queda en manos del
-   usuario, a mano, cuando quiera.
+3. **Para `sistema-eidas`, `sistema-eidas-datos`, `eidas-template` y
+   `pablopedernera0.github.io`, nunca hagas push por tu cuenta**, ni lo ofrezcas como "lo
+   hago ya" — son repos que ven estudiantes u otras personas (el último, además, es un
+   sitio publicado en vivo). Si quedaron con cambios sin subir, solo señalalo; el push
+   queda en manos del usuario, a mano, cuando quiera.

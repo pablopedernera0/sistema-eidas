@@ -3,9 +3,10 @@
 
 Repos chequeados: sistema-eidas (este), sistema-eidas-datos (grupos.json privado,
 symlinkeado desde acá), sistema-eidas-memory (memoria de Claude Code para este
-proyecto), eidas-template en su copia de edición (hermana de sistema-eidas) y
-eidas-template en cada copia por-materia (materias/<materia>/template — mirrors de
-solo lectura, se editan siempre desde la copia de edición, nunca desde acá).
+proyecto), eidas-template en su copia de edición (hermana de sistema-eidas), eidas-template
+en cada copia por-materia (materias/<materia>/template — mirrors de solo lectura, se editan
+siempre desde la copia de edición, nunca desde acá) y pablopedernera0.github.io (sitio
+docente general, tiene carpetas de EIDAS adentro pero no es exclusivo de esta materia).
 
 Los repos de materias/<materia>/grupos/ quedan afuera a propósito: no tienen estado
 propio que importe entre máquinas, se resuelven con 'grupos.py sync <materia>'.
@@ -97,6 +98,10 @@ def main():
     check_repo("sistema-eidas", ROOT)
     check_repo("sistema-eidas-datos", ROOT.parent / "sistema-eidas-datos")
     check_repo("eidas-template (edición)", ROOT.parent / "eidas-template")
+    check_repo(
+        "pablopedernera0.github.io (sitio docente, no exclusivo de EIDAS)",
+        ROOT.parent / "pablopedernera0.github.io",
+    )
 
     memory_path = find_memory_repo()
     if memory_path:
