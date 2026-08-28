@@ -31,8 +31,7 @@ Si preferís la alternativa, avisame y reordeno.
 |-------------|---|---|---|---|
 | 12-14/08    | Virtual | Alta del repo desde el template, agregar al profesor como colaborador | Volcar Stakeholders + arrancar Requisitos | Onboarding + Stakeholders + Requisitos |
 | 26-28/08    | Presencial | **Actualizado 19/08:** taller de DoR + Slicing (la revisión de Requisitos se corre, entrega retrasada — ver nota abajo) | Revisión más profunda de Requisitos, repaso breve solo si hace falta *(a confirmar si sigue en pie o también se corre)* | Requisitos + DoR/Slicing |
-| *Pendiente* | Virtual | Cierre de Requisitos | Historias de Usuario completas + arranque de Casos de Uso — **entrega sugerida de Requisitos + HU** | Requisitos + HU |
-| 02-04/09    | Presencial | Feedback rápido de HU | Revisión del diagrama general de Casos de Uso, foco en actores/include-extend | HU + Casos de uso |
+| 02-04/09    | Presencial | **Actualizado 28/08:** Cierre de Requisitos + Feedback rápido de HU (sumado desde la semana corrida del 26-28/08) | Historias de Usuario completas + arranque del diagrama general de Casos de Uso, foco en actores/include-extend — **entrega sugerida de Requisitos + HU** | Requisitos + HU + Casos de uso |
 | 09-11/09    | Virtual | Diagrama general de Casos de Uso | CUs desarrollados completos + diagramas de secuencia — **cierre de la sección más pesada (20 pts)** | Casos de uso |
 | 16-18/09    | Presencial | Feedback de Casos de Uso | Repaso breve de Modelo ER y Diseño UI si hace falta (cobertura previa incierta, calibrar en clase) | Casos de uso + ER + UI |
 | 23-25/09    | Virtual | Modelo ER | Diseño UI / wireframes | Modelo ER + Diseño UI |
@@ -51,11 +50,11 @@ Si preferís la alternativa, avisame y reordeno.
 presentación en `pablopedernera0.github.io/dor-slicing/`) se corrió de la semana del 19-21/08
 a esta semana (26-28/08, miércoles) porque la entrega de Stakeholders + Requisitos venía
 retrasada — a los grupos les está costando entrar en la dinámica de GitHub. Con eso, la fila
-de "Cierre de Requisitos + arranque de HU" que estaba en 26-28/08 se quedó sin semana propia
-— todavía no tiene una fecha nueva asignada en esta tabla. Falta decidir en qué sesión entra
-sin desplazar el resto del cronograma (candidatas: sumarla al feedback rápido de HU del
-02-04/09, o abrir una semana extra usando el colchón que ya estaba pensado para el
-30/09-02/10).
+de "Cierre de Requisitos + arranque de HU" que estaba en 26-28/08 se quedó sin semana propia.
+
+**Resuelto 28/08:** esa fila se sumó a la semana del 02-04/09, junto con el feedback rápido
+de HU que ya estaba planeado ahí (ver tabla arriba). No se abrió una semana extra — el
+colchón del 30/09-02/10 sigue disponible sin usar.
 
 ## Riesgo a tener presente
 
