@@ -43,4 +43,25 @@ motivador en la clase.
 
 ---
 
+## 2026-08-27/28 — Primeras devoluciones parciales generadas (comisión 31)
+
+**Contexto:** Entrega intermedia (Requisitos + DoR/Slicing en curso, según cronograma). Comisión
+31 de Diseño de Sistemas Web.
+
+**Proceso:** Se corrió `/evaluar-grupo` sobre los 5 grupos de la 31
+(`easy-core-computacion`, `ecommerce-mundo-sport`, `GLPI`, `pos-carrefour`, `sistema-turnos`),
+generando en cada uno una devolución **parcial** en branch local `feedback` (variante de
+entrega intermedia, sin fila de Total sobre 100). Ninguna fue publicada todavía —quedan
+pendientes de revisión y ajuste manual antes de correr `scripts/grupos.py publicar`. La
+comisión 32 ya tenía sus 8 devoluciones generadas desde el 2026-08-26, tampoco publicadas
+todavía — la revisión de ambas comisiones queda para la próxima sesión.
+
+**Recepción:** —
+
+**Nivel observado:** —
+
+**A revisar:** —
+
+---
+
 <!-- Nueva entrada: copiar el bloque de arriba con fecha y completar -->
