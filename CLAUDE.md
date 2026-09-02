@@ -55,8 +55,9 @@ sistema-eidas/
         │   └── grupo-01-xxxxx/
         │       └── feedback/           ← se puebla vía branch local "feedback" en el repo del grupo
         │           └── AAAA-MM-DD.md   ← devolución aprobada y pusheada (visible para el grupo)
-        └── feedback/                   ← copia de trabajo del docente para esta materia
-            └── grupo-01-xxxxx_AAAA-MM-DD.md
+        └── feedback/                   ← symlinks a los AAAA-MM-DD.md de arriba, para
+            └── grupo-01-xxxxx_AAAA-MM-DD.md   abrirlos sin navegar al repo clonado (mismo
+                                                archivo, no una copia — ver Pipeline)
 ```
 
 Para dar de alta una materia nueva: crear `materias/<slug>/` con su propia `rubrica.md` y
@@ -93,21 +94,20 @@ Abre Claude Code en sistema-eidas/ y corre: /evaluar-grupo <materia> <grupo-id>
 "feedback", aplica materias/<materia>/rubrica.md, y commitea
 materias/<materia>/grupos/<grupo-id>/feedback/AAAA-MM-DD.md
 — esta branch es 100% local, nunca se pushea, el grupo no puede verla —
-también deja una copia de trabajo en materias/<materia>/feedback/<grupo-id>_AAAA-MM-DD.md
+también crea un symlink materias/<materia>/feedback/<grupo-id>_AAAA-MM-DD.md → el archivo
+de arriba (mismo archivo, dos rutas — no una copia; ver nota abajo)
         ↓
-Profe revisa y edita directamente materias/<materia>/grupos/<grupo-id>/feedback/AAAA-MM-DD.md
-(el de la branch "feedback", que es el único que lee "publicar" — no la copia de arriba),
-ajusta puntajes y texto, agrega contexto que Claude no puede ver
+Profe edita el archivo de devolución — por cualquiera de las dos rutas, es el mismo archivo
+en disco — ajusta puntajes y texto, agrega contexto que Claude no puede ver
         ↓
 Profe corre: python3 scripts/grupos.py publicar <materia> <grupo-id>
 — si quedaron ediciones sin commitear en "feedback" (el profe editó el archivo directo, sin
 pasar por git), las commitea sola antes de seguir; corta con error si el repo tiene cambios
 sin commitear parado en otra branch que no sea "feedback" (revisión manual necesaria) — saca
 también, como red de seguridad, cualquier "Confianza Claude" o "Pregunta para el docente" que
-haya quedado sin sacar — hace merge feedback → main (local), tilda "Publicado al grupo", git
-push origin main, y re-sincroniza materias/<materia>/feedback/<grupo-id>_AAAA-MM-DD.md con el
-contenido ya publicado — así la copia de trabajo nunca queda desactualizada respecto de lo que
-ven los estudiantes, aunque el profe solo haya editado la branch "feedback" —
+haya quedado sin sacar — hace merge feedback → main (local), tilda "Publicado al grupo", y
+git push origin main. El symlink sigue apuntando al mismo archivo (que ahora también existe
+en main) sin que haga falta ningún paso extra —
 — ACÁ es cuando la devolución se vuelve visible para el grupo, al pushear main —
         ↓
 El mismo comando dispara automáticamente el workflow de N8N (webhook local,
@@ -195,6 +195,29 @@ a `sistema-eidas/`; `-C` corre el comando ahí sin mover el directorio de trabaj
 que ningún paso posterior puede romperse por esto. Bug real, detectado el 2026-08-26
 probando `/chequear-grupo` en vivo — ya corregido en `chequear-grupo.md`, `evaluar-grupo.md`
 y `resumen-commits.md`.
+
+---
+
+### Bug real: devolución sin publicar que "desaparecía" al correr `sync`
+
+Detectado el 2026-09-02 trabajando desde la notebook con una devolución en curso sin
+publicar todavía. Dos problemas relacionados:
+
+1. **`grupos.py sync`** hacía `git checkout main` sin condición alguna para **todos** los
+   grupos ya clonados, incluido uno con una devolución sin publicar parada en la branch
+   `feedback`. Eso sacaba `feedback/AAAA-MM-DD.md` del working tree (esa branch todavía no
+   existe en `main`), dejando visible solo la copia de trabajo del docente en
+   `materias/<materia>/feedback/`. **Corregido:** `sync` ahora detecta si un grupo está
+   parado en `feedback` y, en ese caso, no lo toca — solo hace `git fetch origin main` (sin
+   tocar el working tree) y avisa por consola.
+2. Aunque el problema de arriba no hubiera pasado, la copia de trabajo era un **archivo
+   independiente**, escrito una sola vez por `/evaluar-grupo` y vuelto a escribir por
+   `publicar` — cualquier edición del docente hecha directamente sobre esa copia, entre
+   medio, se perdía en silencio, porque `publicar` solo lee
+   `grupos/<grupo-id>/feedback/AAAA-MM-DD.md`, nunca la copia. **Corregido:** la copia de
+   trabajo pasó a ser un **symlink** a ese mismo archivo (`evaluar-grupo.md` paso 5,
+   `marcar_publicado` en `grupos.py` como red de seguridad) — ya no hay dos archivos, así
+   que no hay forma de editar el que no corresponde.
 
 ---
 

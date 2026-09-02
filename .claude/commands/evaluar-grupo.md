@@ -63,11 +63,22 @@ Seguí estos pasos, en orden:
    "Formato del archivo de feedback" de `CLAUDE.md` (una fila de puntuación y una
    sub-sección "Devolución por sección" por cada sección **en alcance** de `rubrica.md` de
    esta materia — los nombres de sección salen de la rúbrica, no están hardcodeados), en
-   dos lugares:
+   un solo lugar:
    - `materias/<materia>/grupos/<grupo-id>/feedback/AAAA-MM-DD.md` (fecha de hoy) — este es
      el que se pushea cuando el docente lo apruebe.
-   - `materias/<materia>/feedback/<grupo-id>_AAAA-MM-DD.md` — copia de trabajo del docente,
-     no se pushea a ningún repo de grupo.
+
+   Después, creá (o actualizá) un symlink para que el docente lo pueda abrir sin navegar al
+   repo clonado del grupo — creá antes `materias/<materia>/feedback/` si no existe:
+   ```
+   mkdir -p materias/<materia>/feedback
+   ln -sf ../grupos/<grupo-id>/feedback/AAAA-MM-DD.md materias/<materia>/feedback/<grupo-id>_AAAA-MM-DD.md
+   ```
+   **No escribas el contenido dos veces** — es el mismo archivo visto desde dos rutas, así
+   que cualquier edición del docente en cualquiera de las dos rutas cae siempre en el único
+   archivo real (el de la branch `feedback`, que es el que lee `publicar`). Esto reemplaza
+   al viejo esquema de "copia de trabajo" como archivo aparte — con dos archivos
+   independientes, una edición hecha en la copia se perdía en silencio porque `publicar`
+   nunca la leía.
 
    Si el paso 3 determinó que esto es una **devolución parcial**, seguí la variante de
    formato "Devolución parcial (entrega intermedia)" de `CLAUDE.md`: en la tabla de

@@ -47,7 +47,7 @@ Detalle de cada uno en la sección 3.
 | Cronograma de cada materia (opcional) | `materias/<materia>/cronograma-2c-2026.md` | Solo `af-diseno-sistemas-web-31` y `-32` lo tienen — si existe, `/chequear-grupo` y `/evaluar-grupo` lo usan para saber qué secciones de la rúbrica ya corresponden según la fecha |
 | Marco teórico | `marco-teorico-fundamentacion.md`, `marco-teorico-resumen.md` (compartido, materia-agnóstico) | Completo (pendiente confirmar 2 citas) |
 | Repos clonados de cada grupo | `materias/<materia>/grupos/grupo-XX-nombre/` (local, se puebla en el cuatrimestre) | — |
-| Borradores de devolución | `materias/<materia>/feedback/grupo-XX.md` (local, generados por Claude) | — |
+| Borradores de devolución | `materias/<materia>/grupos/grupo-XX/feedback/AAAA-MM-DD.md` (local, generados por Claude); `materias/<materia>/feedback/grupo-XX_AAAA-MM-DD.md` es un symlink a ese mismo archivo | — |
 | Automatización N8N | `infra/n8n/` (Docker local, compartido entre materias) | Activo — se dispara solo desde `scripts/grupos.py publicar` (webhook local), no desplegado en Linode |
 
 ---
@@ -132,9 +132,13 @@ antes de tiempo.
    `.claude/commands/evaluar-grupo.md`) crea (o actualiza) la branch local `feedback` dentro
    de `materias/<materia>/grupos/grupo-01-nombre/`, aplica `materias/<materia>/rubrica.md`,
    y commitea ahí `feedback/AAAA-MM-DD.md` con el formato definido en `CLAUDE.md`. De paso,
-   deja una copia de trabajo en
-   `materias/<materia>/feedback/grupo-01-nombre_AAAA-MM-DD.md` (esta sí es tuya,
-   no se pushea a ningún lado, es solo para que tengas todas las devoluciones de esa materia juntas).
+   crea un symlink en
+   `materias/<materia>/feedback/grupo-01-nombre_AAAA-MM-DD.md` apuntando a ese mismo archivo
+   — para que tengas todas las devoluciones de esa materia juntas sin navegar a cada repo
+   clonado. **No es una copia:** es el mismo archivo visto desde dos rutas, así que editarlo
+   desde acá o desde `grupos/grupo-01-nombre/feedback/` da exactamente lo mismo, y nunca se
+   pierde una edición (antes de 2026-09 era una copia real e independiente — si la editabas a
+   ella, `publicar` no la leía y el cambio se perdía en silencio).
 
    Las rúbricas de `af-diseno-sistemas-web-31` y `-32` tienen una sección "Proceso:
    evolución sobre la entrega intermedia" (5 pts) — para esa sección, `/evaluar-grupo` busca

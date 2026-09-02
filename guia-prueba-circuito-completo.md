@@ -53,8 +53,8 @@ necesitar el nombre de la materia (`<materia>`) que estés usando para la prueba
    Este comando (definido en `.claude/commands/evaluar-grupo.md`) hace todo el trabajo:
    crea la branch local `feedback` si no existe, aplica `materias/<materia>/rubrica.md`,
    escribe el archivo de devolución en
-   `materias/<materia>/grupos/grupo-prueba/feedback/AAAA-MM-DD.md` y la copia de trabajo en
-   `materias/<materia>/feedback/`, y lo commitea en esa branch — sin pushear nada.
+   `materias/<materia>/grupos/grupo-prueba/feedback/AAAA-MM-DD.md`, crea un symlink a ese
+   archivo en `materias/<materia>/feedback/`, y lo commitea en esa branch — sin pushear nada.
 2. Verificá que la branch `feedback` es local y no se pusheó sola:
    ```
    cd materias/<materia>/grupos/grupo-prueba && git branch -a

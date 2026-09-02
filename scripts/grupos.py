@@ -57,6 +57,17 @@ def sync(materia):
     for grupo_id, g in config.items():
         path = grupos_dir / grupo_id
         if path.exists():
+            actual = subprocess.run(
+                ["git", "branch", "--show-current"], cwd=path, capture_output=True, text=True
+            ).stdout.strip()
+            if actual == "feedback":
+                print(
+                    f"\n== {grupo_id}: tiene una devolución sin publicar en curso "
+                    f"(branch 'feedback') — no la piso. Actualizo el remoto de todos "
+                    f"modos (fetch, sin tocar el working tree) =="
+                )
+                run(["git", "fetch", "origin", "main"], cwd=path)
+                continue
             print(f"\n== {grupo_id}: ya clonado, actualizando main ==")
             run(["git", "checkout", "main"], cwd=path)
             run(["git", "pull", "origin", "main"], cwd=path)
@@ -125,9 +136,10 @@ def publicar(materia, grupo_id, skip_confirm=False):
 
 
 def marcar_publicado(path, pre_merge_sha):
-    """Tilda '- [ ] Publicado al grupo' en los archivos que trajo el merge, sincroniza
-    la copia de trabajo del docente (materias/<materia>/feedback/) con el contenido ya
-    publicado, y devuelve la lista de fechas (AAAA-MM-DD) detectadas en sus nombres."""
+    """Tilda '- [ ] Publicado al grupo' en los archivos que trajo el merge, asegura que
+    exista el symlink de la copia de trabajo del docente (materias/<materia>/feedback/) —
+    normalmente ya lo crea /evaluar-grupo, esto es solo red de seguridad — y devuelve la
+    lista de fechas (AAAA-MM-DD) detectadas en sus nombres."""
     changed = subprocess.run(
         ["git", "diff", "--name-only", pre_merge_sha, "HEAD", "--", "feedback/"],
         cwd=path, capture_output=True, text=True
@@ -161,8 +173,9 @@ def marcar_publicado(path, pre_merge_sha):
         if m:
             docente_feedback_dir.mkdir(exist_ok=True)
             copia = docente_feedback_dir / f"{grupo_id}_{m.group(1)}.md"
-            copia.write_text(file_path.read_text())
-            print(f"Copia de trabajo sincronizada: {copia}")
+            if not copia.exists() and not copia.is_symlink():
+                copia.symlink_to(Path("..") / "grupos" / grupo_id / rel_path)
+                print(f"Copia de trabajo (symlink) creada: {copia}")
 
     if updated:
         run(["git", "add", *updated], cwd=path)
