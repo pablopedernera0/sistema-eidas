@@ -43,4 +43,62 @@ motivador en la clase.
 
 ---
 
+## 2026-08-27/28 — Primeras devoluciones parciales generadas (comisión 31)
+
+**Contexto:** Entrega intermedia (Requisitos + DoR/Slicing en curso, según cronograma). Comisión
+31 de Diseño de Sistemas Web.
+
+**Proceso:** Se corrió `/evaluar-grupo` sobre los 5 grupos de la 31
+(`easy-core-computacion`, `ecommerce-mundo-sport`, `GLPI`, `pos-carrefour`, `sistema-turnos`),
+generando en cada uno una devolución **parcial** en branch local `feedback` (variante de
+entrega intermedia, sin fila de Total sobre 100). Ninguna fue publicada todavía —quedan
+pendientes de revisión y ajuste manual antes de correr `scripts/grupos.py publicar`. La
+comisión 32 ya tenía sus 8 devoluciones generadas desde el 2026-08-26, tampoco publicadas
+todavía — la revisión de ambas comisiones queda para la próxima sesión.
+
+**Recepción:** —
+
+**Nivel observado:** —
+
+**A revisar:** —
+
+---
+
+## 2026-09-02 — Primera revisión y ajuste manual antes de publicar (comisión 31)
+
+**Contexto:** Devolución parcial (Requisitos + Stakeholders en alcance según cronograma).
+Comisión 31 de Diseño de Sistemas Web. Revisión de las 5 devoluciones generadas el 28/08
+(`easy-core-computacion`, `ecommerce-mundo-sport`, `GLPI`, `pos-carrefour`, `sistema-turnos`)
+más una nueva generada hoy (`aberturas-los-pampas`), previo a la primera corrida real de
+`scripts/grupos.py publicar`.
+
+**Proceso:** Primer dato real sobre cuánto sobrevive el borrador de Claude al ajuste manual
+(pendiente desde la entrada del 27/28-08). En las 6 devoluciones, el texto evaluativo por
+sección (Requisitos, Stakeholders) quedó intacto tal como lo escribió Claude — el ajuste
+manual sistemático fue otro: sacar la línea "Confianza Claude" y reemplazar "Pregunta para
+el docente" por una sub-sección "Devolución docente". Esa nota fue idéntica en 4 de las 6
+(GLPI, pos-carrefour, sistema-turnos, ecommerce-mundo-sport — sobre la relación entre
+Requisitos, RNF y Diseño UI), y personalizada en las otras 2 (easy-core-computacion,
+aberturas-los-pampas). Se agregó un chequeo automático a `publicar` (saca "Confianza Claude"
+y "Pregunta para el docente" si quedan sin sacar) como red de seguridad, no reemplaza la
+revisión manual.
+
+Caso particular: `aberturas-los-pampas` no tenía ningún commit de este cuatrimestre — todo
+el repo era el trabajo del 1er cuatrimestre (un PDF fechado junio 2026, sin el template
+actual). Se decidió evaluar igual el contenido del PDF (Requisitos y Stakeholders, buen
+nivel) y usar la devolución como aviso formal para que el grupo migre al template y retome
+el proceso, en vez de esperar sin evaluar.
+
+**Recepción:** — (pendiente, todavía no se publicó esta tanda)
+
+**Nivel observado:** Bueno en las 6, con un caso atípico: el contenido de
+`aberturas-los-pampas` es de buen nivel pero corresponde a trabajo ya hecho el cuatrimestre
+anterior, nunca migrado al proceso de este.
+
+**A revisar:** Confirmar en la próxima tanda si reusar la misma nota de "Devolución docente"
+en varios grupos sigue siendo la práctica, o si conviene personalizarla más ahora que el
+volumen de grupos aprobados a la vez creció.
+
+---
+
 <!-- Nueva entrada: copiar el bloque de arriba con fecha y completar -->

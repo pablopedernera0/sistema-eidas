@@ -15,10 +15,10 @@ Después de correrlo, resumí en una línea qué grupos se clonaron por primera 
 alguno) y cuáles ya estaban — no hace falta repetir la salida completa del script si fue
 larga.
 
-**No es el lugar para `publicar` ni `notificar`.** Esos dos siguen siendo solo comandos de
-terminal (`python3 scripts/grupos.py publicar/notificar ...`), a propósito: `publicar`
-tiene un prompt de confirmación antes de un push que hace visible la devolución para el
-grupo y dispara un mail — ese es el último freno antes de algo que no se puede deshacer
-del todo, y envolverlo acá significaría pasarle `--yes` para que no quede esperando input,
-que es sacarte ese freno. Si el usuario pide un `/publicar` o `/notificar`, avisale esto
-antes de crearlo.
+**No es el lugar para `publicar` ni `notificar`.** `publicar` tiene su propio comando,
+`/publicar` (`.claude/commands/publicar.md`) — ahí el freno de confirmación se mueve al
+chat en vez de perderse, así que no hace falta duplicarlo acá. `notificar` (el reintento
+manual de la notificación de N8N si algo falló) sigue siendo solo de terminal
+(`python3 scripts/grupos.py notificar <materia> <grupo-id> <AAAA-MM-DD>`) — es un comando
+de bajo riesgo (no pushea nada, solo reintenta un webhook), no justifica su propio wrapper
+todavía.
