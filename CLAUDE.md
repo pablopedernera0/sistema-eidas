@@ -45,6 +45,7 @@ sistema-eidas/
 ├── .claude/commands/evaluar-grupo.md   ← comando /evaluar-grupo <materia> <grupo-id>
 ├── marco-teorico*.md                   ← fundamento pedagógico (compartido, materia-agnóstico)
 ├── infra/n8n/                          ← docker-compose de N8N (local, compartido entre materias)
+│   └── setup.sh                        ← setup en una máquina nueva, ver nota abajo
 ├── scripts/grupos.py                   ← sync/publicar/notificar, todos toman <materia> como argumento
 └── materias/
     └── af-diseno-sistemas-web-31/      ← una carpeta por materia/comisión
@@ -219,6 +220,22 @@ publicar todavía. Dos problemas relacionados:
    `marcar_publicado` en `grupos.py` como red de seguridad) — ya no hay dos archivos, así
    que no hay forma de editar el que no corresponde.
 
+Mismo día, causa raíz de fondo: **N8N era la única pieza de infraestructura que no viajaba
+entre máquinas.** `infra/n8n/.env` y `google-oauth-client.json` están en `.gitignore` (son
+secretos), y el workflow/credenciales importados viven en el volumen Docker `n8n_data`, que
+tampoco es portable — en una máquina nueva había que copiar archivos a mano y reconfigurar
+todo por la UI. **Corregido:** mismo patrón que `grupos.json` — los secretos ahora viven en
+`sistema-eidas-datos/n8n/` (repo privado, ver su `README.md`) y `infra/n8n/.env` /
+`google-oauth-client.json` son symlinks a ahí. `infra/n8n/setup.sh` automatiza todo lo
+demás: crea los symlinks si faltan, levanta el contenedor, e importa el workflow y las
+credenciales de Gmail/Drive por CLI (`n8n import:workflow` / `import:credentials`), leyendo
+`sistema-eidas-datos/n8n/credentials.json` — un export **desencriptado** de esas
+credenciales (decisión explícita del docente, ver advertencia en ese README sobre qué hacer
+si el repo se filtra). Único paso manual que queda: activar el workflow desde la UI — esta
+versión de N8N no soporta hacerlo por CLI fuera de modo queue. Probado de punta a punta
+simulando una máquina nueva (instancia con volumen Docker vacío, mismo puerto, mismos IDs de
+credencial/workflow tras importar) antes de darlo por terminado.
+
 ---
 
 ### Pendientes del sistema
@@ -244,7 +261,7 @@ publicar todavía. Dos problemas relacionados:
 | Repos de grupos | GitHub (template repository, uno por materia) | Activo |
 | Cuestionarios | Google Classroom + Forms | Activo |
 | Conexión Forms → repo | — | Descartado — no aporta valor suficiente (ver pendientes) |
-| Automatización | N8N en Docker (`infra/n8n/`), corre local en la PC del docente, compartido entre materias | Activo — se dispara solo desde `scripts/grupos.py publicar` |
+| Automatización | N8N en Docker (`infra/n8n/`), corre local en la PC del docente, compartido entre materias; setup en máquina nueva con `infra/n8n/setup.sh` (secretos en `sistema-eidas-datos/n8n/`) | Activo — se dispara solo desde `scripts/grupos.py publicar` |
 | Servidor | Linode propio de Profe Pablo | Disponible, no se usa por ahora |
 | Evaluación asistida | Claude Code (local) | Activo |
 

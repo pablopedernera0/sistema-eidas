@@ -169,14 +169,23 @@ antes de tiempo.
 
    Este único comando hace todo el resto solo: mergea `feedback` → `main`, tilda "Publicado
    al grupo" en el archivo, pushea, y **dispara automáticamente la notificación en N8N**
-   (vía un webhook local — requiere que `docker compose up -d` esté corriendo en
-   `infra/n8n/`). N8N busca el email del grupo en `materias/<materia>/grupos.json`, lee el
+   (vía un webhook local — requiere que N8N esté corriendo: `infra/n8n/setup.sh` lo levanta
+   y lo deja configurado solo, ver sección 3.5). N8N busca el email del grupo en
+   `materias/<materia>/grupos.json`, lee el
    archivo recién publicado, lo sube a "Devoluciones EIDAS" en Drive con la materia en el
    nombre del archivo, y manda el mail con el link — sin que tengas que abrir el navegador
    ni tipear nada de nuevo.
 
    Requisito para que esto funcione: el grupo tiene que tener un campo `"email"` cargado en
    su entrada de `grupos.json` (ver sección 2).
+
+   **En una máquina nueva:** no hace falta configurar N8N a mano — corré
+   `sistema-eidas/infra/n8n/setup.sh` una vez. Crea los symlinks a los secretos (que viven
+   en `sistema-eidas-datos/n8n/`, ver el `README.md` de ese repo), levanta el contenedor, e
+   importa el workflow y las credenciales de Gmail/Drive por CLI. Único paso manual que
+   queda: prender el toggle "Active" del workflow "Evaluacion EIDAS" en `localhost:5678` —
+   esta versión de N8N no soporta activarlo por CLI fuera de modo queue. El script es
+   idempotente, corrélo de nuevo sin miedo si no estás seguro de en qué quedó una máquina.
 
    Si la notificación falla (por ejemplo, N8N no estaba corriendo), el push ya se hizo —
    no se pierde nada — y el script te va a decir cómo reintentar:

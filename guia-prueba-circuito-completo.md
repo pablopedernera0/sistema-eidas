@@ -68,8 +68,9 @@ necesitar el nombre de la materia (`<materia>`) que estés usando para la prueba
    git diff main..feedback
    ```
 2. Ajustá lo que haga falta directamente en el archivo (esto simula tu revisión real).
-3. Asegurate de que N8N esté corriendo (`cd infra/n8n && docker compose up -d`, si no lo
-   estaba) y publicá — esto también dispara la notificación solo, no hace falta nada más:
+3. Asegurate de que N8N esté corriendo (`cd infra/n8n && ./setup.sh`, si no lo estaba —
+   también deja importados el workflow y las credenciales si hacía falta) y publicá — esto
+   también dispara la notificación solo, no hace falta nada más:
    ```
    cd ../../../..    # volver a sistema-eidas/
    python3 scripts/grupos.py publicar <materia> grupo-prueba
