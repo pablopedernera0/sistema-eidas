@@ -33,14 +33,11 @@ Martes y miércoles alternan modalidad opuesta cada semana. Asumo virtual = con 
 | Mié 12/08     | Virtual | Onboarding EIDAS | Alta del repo desde el template, agregar al profesor como colaborador, primer commit con lo que cada grupo ya tiene (aunque sea solo títulos) — arranca el volcado |
 | Mar 25/08     | Virtual | Stakeholders + Requisitos | Trabajo en grupo: volcar stakeholders y requisitos ya presentados a `docs/stakeholders.md` y `docs/requisitos.md`, completando lo que falte |
 | Mié 02/09     | Presencial | DoR + Slicing | **Actualizado 19/08:** la revisión de Stakeholders + Requisitos se corre porque la entrega viene retrasada (a los grupos les está costando entrar en la dinámica de GitHub). En su lugar, taller de Definition of Ready y Slicing vertical (`DoR.md` / `slicing.md` del template) — ver presentación en `pablopedernera0.github.io/dor-slicing/`. |
-| Mar 02/09     | Presencial | Historias de usuario | Revisión en vivo de HU volcadas — repaso breve de INVEST solo si hace falta |
-| Mié 08/09     | Virtual | Requisitos + HU | Trabajo en grupo: cierre de Requisitos y HU, arranque de Casos de Uso — foco en los grupos que solo dejaron títulos |
-| Mar 08/09     | Virtual | Requisitos + HU | Consulta 1 a 1 — **entrega sugerida de estas dos secciones** |
-| Mié 08/09     | Presencial | Casos de uso | Revisión en vivo del diagrama general de 2-3 grupos: actores, include/extend |
-| Mar 08/09     | Presencial | Casos de uso | Revisión en vivo de CUs desarrollados — foco en excepciones reales, no solo camino feliz |
-| Mié 09/09     | Virtual | Casos de uso (20 pts) | Trabajo en grupo: expandir títulos a diagrama general completo |
-| Mar 15/09     | Virtual | Casos de uso (20 pts) | Trabajo en grupo: CUs desarrollados (precondiciones, postcondiciones, secuencia, excepciones) — cierre de la sección más pesada |
-| Mié 16/09     | Presencial | Modelo ER | Revisión en vivo + repaso breve de cardinalidades/PK/FK si hace falta (nivel de cobertura previa incierto, calibrar en clase) |
+| Mar 01/09     | Presencial | Historias de usuario | Revisión en vivo de HU volcadas — repaso breve de INVEST solo si hace falta |
+| Mar 08/09     | Presencial | Requisitos + HU + Casos de uso | Cierre de Requisitos y HU (lo pendiente desde que el taller de DoR/Slicing corrió esta revisión) + arranque del diagrama general de Casos de Uso |
+| Mié 09/09     | Virtual | Casos de uso (20 pts) | Trabajo en grupo: expandir a diagrama general completo + arrancar CUs desarrollados |
+| Mar 15/09     | Virtual | Casos de uso (20 pts) | Trabajo en grupo: cierre de CUs desarrollados (precondiciones, postcondiciones, secuencia, excepciones) |
+| Mié 16/09     | Presencial | Requisitos + HU + Casos de uso | **Entrega de plantillas completas — entrega intermedia** (confirmado por Pablo el 02/09: el taller de DoR/Slicing ya se dio, la entrega completa de Requisitos+HU+CU se pide esta semana). Revisión en vivo de lo entregado, feedback puntual por grupo |
 | Mar 22/09     | Presencial | Diseño UI | Revisión en vivo de wireframes contra los criterios ya vistos en la presentación de interfaces (agrupación, jerarquía, accesibilidad) |
 | Mié 23/09     | Virtual | Modelo ER (10 pts) | Trabajo en grupo: diagrama entidad-relación |
 | Mar 29/09     | Virtual | Diseño UI (10 pts) | Trabajo en grupo: wireframes |
@@ -52,11 +49,13 @@ Martes y miércoles alternan modalidad opuesta cada semana. Asumo virtual = con 
 
 **Entrega sugerida del repo:** antes del martes 13/10 (ej. domingo 11/10 o lunes 12/10).
 
-**Pendiente de reprogramar:** la revisión en vivo de Stakeholders + Requisitos que estaba en
-Mié 19/08 se corrió por el taller de DoR/Slicing (ver fila de esa fecha) — todavía no tiene
-una fecha nueva asignada en esta tabla. Falta decidir en qué sesión entra sin desplazar el
-resto del cronograma (candidatas: sumarla a Mar 25/08 junto con HU, o a la consulta 1 a 1 del
-Mar 01/09).
+**Resuelto 2026-09-02:** la revisión de Stakeholders + Requisitos que se había corrido por el
+taller de DoR/Slicing quedó absorbida en la fila de Mar 08/09 ("cierre de Requisitos y HU").
+Pablo confirmó que el taller de DoR/Slicing ya se dio y que la entrega completa de
+Requisitos + HU + Casos de uso ("plantillas completas") se pide en la semana del 16-18/09 —
+la fila de Mié 16/09 pasó a ser esa entrega intermedia, y la vieja revisión de Modelo ER que
+estaba ahí se sacó (Modelo ER pasa directo a la sesión de trabajo en grupo del Mié 23/09, sin
+revisión en vivo previa dedicada).
 
 ## Parcial (fecha exacta a confirmar)
 
