@@ -13,6 +13,17 @@ ROOT = Path(__file__).resolve().parent.parent
 MATERIAS_DIR = ROOT / "materias"
 N8N_WEBHOOK_URL = "http://localhost:5678/webhook/evaluar-grupo"
 FECHA_RE = re.compile(r"feedback/(\d{4}-\d{2}-\d{2})\.md$")
+CONFIANZA_RE = re.compile(r"^\*\*Confianza Claude:\*\*.*\n", re.MULTILINE)
+PREGUNTA_DOCENTE_RE = re.compile(r"## Pregunta para el docente\n\n.*?\n\n(?=## )", re.DOTALL)
+
+
+def limpiar_confidencial(text):
+    """Saca las líneas 'Confianza Claude' y la sección entera 'Pregunta para el
+    docente' — son para uso interno del docente durante la revisión, nunca deberían
+    llegarle al grupo. No-op si el docente ya las sacó a mano."""
+    text = CONFIANZA_RE.sub("", text)
+    text = PREGUNTA_DOCENTE_RE.sub("", text)
+    return text
 
 
 def materia_dir(materia):
@@ -69,6 +80,22 @@ def publicar(materia, grupo_id, skip_confirm=False):
     if "feedback" not in branches:
         raise SystemExit(f"{grupo_id} no tiene branch 'feedback' — no hay nada para publicar")
 
+    sucio = subprocess.run(
+        ["git", "status", "--porcelain"], cwd=path, capture_output=True, text=True
+    ).stdout
+    if sucio.strip():
+        actual = subprocess.run(
+            ["git", "branch", "--show-current"], cwd=path, capture_output=True, text=True
+        ).stdout.strip()
+        if actual != "feedback":
+            raise SystemExit(
+                f"{grupo_id} tiene cambios sin commitear pero está parado en '{actual}', no "
+                f"en 'feedback' — revisá a mano antes de publicar."
+            )
+        print(f"{grupo_id}: commiteando cambios pendientes en 'feedback' antes de publicar...")
+        run(["git", "add", "-A"], cwd=path)
+        run(["git", "commit", "-m", "Revisión docente"], cwd=path)
+
     if not skip_confirm:
         resp = input(
             f"¿Confirmás publicar la devolución de '{materia}/{grupo_id}' "
@@ -98,12 +125,16 @@ def publicar(materia, grupo_id, skip_confirm=False):
 
 
 def marcar_publicado(path, pre_merge_sha):
-    """Tilda '- [ ] Publicado al grupo' en los archivos que trajo el merge y devuelve
-    la lista de fechas (AAAA-MM-DD) detectadas en sus nombres."""
+    """Tilda '- [ ] Publicado al grupo' en los archivos que trajo el merge, sincroniza
+    la copia de trabajo del docente (materias/<materia>/feedback/) con el contenido ya
+    publicado, y devuelve la lista de fechas (AAAA-MM-DD) detectadas en sus nombres."""
     changed = subprocess.run(
         ["git", "diff", "--name-only", pre_merge_sha, "HEAD", "--", "feedback/"],
         cwd=path, capture_output=True, text=True
     ).stdout.split()
+
+    grupo_id = path.name
+    docente_feedback_dir = path.parent.parent / "feedback"
 
     updated = []
     fechas = []
@@ -116,10 +147,22 @@ def marcar_publicado(path, pre_merge_sha):
         if not file_path.exists():
             continue
         text = file_path.read_text()
-        marked = text.replace("- [ ] Publicado al grupo", "- [x] Publicado al grupo")
+        cleaned = limpiar_confidencial(text)
+        if cleaned != text:
+            print(
+                f"Aviso: saqué restos de 'Confianza Claude' y/o 'Pregunta para el "
+                f"docente' de {rel_path} antes de publicar."
+            )
+        marked = cleaned.replace("- [ ] Publicado al grupo", "- [x] Publicado al grupo")
         if marked != text:
             file_path.write_text(marked)
             updated.append(rel_path)
+
+        if m:
+            docente_feedback_dir.mkdir(exist_ok=True)
+            copia = docente_feedback_dir / f"{grupo_id}_{m.group(1)}.md"
+            copia.write_text(file_path.read_text())
+            print(f"Copia de trabajo sincronizada: {copia}")
 
     if updated:
         run(["git", "add", *updated], cwd=path)

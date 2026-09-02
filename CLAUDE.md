@@ -95,11 +95,19 @@ materias/<materia>/grupos/<grupo-id>/feedback/AAAA-MM-DD.md
 — esta branch es 100% local, nunca se pushea, el grupo no puede verla —
 también deja una copia de trabajo en materias/<materia>/feedback/<grupo-id>_AAAA-MM-DD.md
         ↓
-Profe revisa la branch "feedback" (diff local), ajusta puntajes y texto,
-agrega contexto que Claude no puede ver
+Profe revisa y edita directamente materias/<materia>/grupos/<grupo-id>/feedback/AAAA-MM-DD.md
+(el de la branch "feedback", que es el único que lee "publicar" — no la copia de arriba),
+ajusta puntajes y texto, agrega contexto que Claude no puede ver
         ↓
 Profe corre: python3 scripts/grupos.py publicar <materia> <grupo-id>
-— hace merge feedback → main (local), tilda "Publicado al grupo", y git push origin main —
+— si quedaron ediciones sin commitear en "feedback" (el profe editó el archivo directo, sin
+pasar por git), las commitea sola antes de seguir; corta con error si el repo tiene cambios
+sin commitear parado en otra branch que no sea "feedback" (revisión manual necesaria) — saca
+también, como red de seguridad, cualquier "Confianza Claude" o "Pregunta para el docente" que
+haya quedado sin sacar — hace merge feedback → main (local), tilda "Publicado al grupo", git
+push origin main, y re-sincroniza materias/<materia>/feedback/<grupo-id>_AAAA-MM-DD.md con el
+contenido ya publicado — así la copia de trabajo nunca queda desactualizada respecto de lo que
+ven los estudiantes, aunque el profe solo haya editado la branch "feedback" —
 — ACÁ es cuando la devolución se vuelve visible para el grupo, al pushear main —
         ↓
 El mismo comando dispara automáticamente el workflow de N8N (webhook local,
