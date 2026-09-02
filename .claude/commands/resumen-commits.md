@@ -1,7 +1,7 @@
 Analizá el historial de commits de un grupo del Sistema EIDAS para ver **cómo trabajaron a
 lo largo del tiempo**, no qué tienen hoy. Es un comando informativo, aparte de
 `/chequear-grupo` y `/evaluar-grupo`: no decide si el grupo está listo, no genera
-devolución, y **no se guarda en ningún archivo ni entra en la branch `feedback`**. Sirve
+devolución, y **no se guarda en ningún archivo**. Sirve
 como insumo para tu criterio — por ejemplo, para preparar preguntas de una defensa oral, o
 como el "contexto que Claude no puede ver" que agregás a mano al revisar una devolución.
 
@@ -19,8 +19,8 @@ Seguí estos pasos, en orden:
    `materias/<materia>/grupos/<grupo-id>/` no existe, corré
    `python3 scripts/grupos.py sync <materia>` primero. Si ya existe, usá
    `git -C materias/<materia>/grupos/<grupo-id> checkout main` y
-   `git -C materias/<materia>/grupos/<grupo-id> pull origin main` (no toques `feedback`
-   aunque exista) — `-C` evita el `cd`, así no hay que acordarse de volver a ningún lado.
+   `git -C materias/<materia>/grupos/<grupo-id> pull origin main` — `-C` evita el `cd`, así
+   no hay que acordarse de volver a ningún lado.
 
 2. **Traer el historial completo de `main`** con fecha, autor y archivos tocados:
    ```

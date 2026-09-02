@@ -13,16 +13,14 @@ el chat.
 Seguí estos pasos, en orden:
 
 1. **Armar la lista de candidatos.** Leé `materias/<materia>/grupos.json` para tener todos
-   los `grupo-id` de la materia. Para cada uno cuyo repo exista en
-   `materias/<materia>/grupos/<grupo-id>/`, fijate si tiene branch `feedback`
-   (`git -C ... branch --list feedback`). Descartá sin mostrar diff a los que no la tengan
-   (no hay nada generado todavía).
+   los `grupo-id` de la materia. Para cada uno, fijate si
+   `../sistema-eidas-datos/<materia>/borradores/<grupo-id>/` tiene algún `AAAA-MM-DD.md`
+   que **no** diga `- [x] Publicado al grupo`. Descartá sin mostrar nada a los que no
+   tengan ninguno (no hay nada pendiente para ese grupo).
 
-2. **Filtrar por aprobado.** Para cada grupo con branch `feedback`, leé el archivo
-   `feedback/AAAA-MM-DD.md` más reciente de esa branch (working tree, no solo lo commiteado
-   — el docente puede tener ediciones sin commitear) y fijate si
-   `- [x] Revisado y aprobado por Profe Pablo` está tildado. Separá en dos listas: **listos**
-   (tildado) y **no listos** (sin tildar, o sin ningún archivo de feedback legible).
+2. **Filtrar por aprobado.** Para cada grupo con al menos un borrador pendiente, leé el más
+   reciente y fijate si `- [x] Revisado y aprobado por Profe Pablo` está tildado. Separá en
+   dos listas: **listos** (tildado) y **no listos** (sin tildar).
 
 3. **Reportar el plan antes de tocar nada:** mostrale al usuario la lista de listos (van a
    pasar por publicación) y la de no listos (se van a saltear, con el motivo — por ejemplo
@@ -30,9 +28,8 @@ Seguí estos pasos, en orden:
    de arrancar el lote — si el usuario quiere sacar o agregar alguno, ajustá la lista.
 
 4. **Por cada grupo de la lista de listos, en orden, repetí el proceso completo de
-   `/publicar`:** mostrale el diff (`git -C materias/<materia>/grupos/<grupo-id> diff
-   main..feedback` más los cambios sin commitear si los hay), pedile confirmación puntual
-   para ESE grupo, y si confirma corré
+   `/publicar`:** mostrale el contenido del/de los borrador(es) pendiente(s), pedile
+   confirmación puntual para ESE grupo, y si confirma corré
    `python3 scripts/grupos.py publicar <materia> <grupo-id> --yes`. Si no confirma para un
    grupo puntual, saltealo (no aborta el lote entero) y seguí con el siguiente.
 

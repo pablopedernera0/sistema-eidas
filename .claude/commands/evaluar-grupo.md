@@ -12,15 +12,10 @@ Seguí estos pasos, en orden:
    existe, avisá que hay que correr `python3 scripts/grupos.py sync <materia>` primero, y
    no sigas.
 
-2. **Preparar la branch local.** Usá `git -C materias/<materia>/grupos/<grupo-id> ...` para
-   todo esto (no hagas `cd` — así no arrastrás el directorio de trabajo a los pasos
-   siguientes, que necesitan rutas relativas a la raíz de `sistema-eidas/`):
-   - Si la branch `feedback` no existe todavía, creala desde `main`
-     (`git -C materias/<materia>/grupos/<grupo-id> checkout -b feedback`).
-   - Si ya existe, hacé `git -C materias/<materia>/grupos/<grupo-id> checkout feedback`
-     (no la recrees, no perdés lo que ya estaba ahí a menos que la vayas a reemplazar a
-     propósito).
-   - Esta branch es **local únicamente** — no la pushees en ningún paso de este comando.
+2. **No toques el repo del grupo todavía.** El borrador de esta devolución no vive ahí — va
+   a `sistema-eidas-datos/<materia>/borradores/<grupo-id>/` (repo privado del docente,
+   hermano de `sistema-eidas/`, ya sincronizado entre sus máquinas). El repo clonado del
+   grupo se queda en `main`, sin tocar, hasta que se publique.
 
 3. **Determinar el alcance según el cronograma.** Todas las rutas de este paso son
    relativas a la raíz de `sistema-eidas/` — el paso 2 no te movió de ahí. Si existe
@@ -62,23 +57,11 @@ Seguí estos pasos, en orden:
 5. **Escribir el archivo de devolución**, siguiendo el formato genérico de la sección
    "Formato del archivo de feedback" de `CLAUDE.md` (una fila de puntuación y una
    sub-sección "Devolución por sección" por cada sección **en alcance** de `rubrica.md` de
-   esta materia — los nombres de sección salen de la rúbrica, no están hardcodeados), en
-   un solo lugar:
-   - `materias/<materia>/grupos/<grupo-id>/feedback/AAAA-MM-DD.md` (fecha de hoy) — este es
-     el que se pushea cuando el docente lo apruebe.
-
-   Después, creá (o actualizá) un symlink para que el docente lo pueda abrir sin navegar al
-   repo clonado del grupo — creá antes `materias/<materia>/feedback/` si no existe:
-   ```
-   mkdir -p materias/<materia>/feedback
-   ln -sf ../grupos/<grupo-id>/feedback/AAAA-MM-DD.md materias/<materia>/feedback/<grupo-id>_AAAA-MM-DD.md
-   ```
-   **No escribas el contenido dos veces** — es el mismo archivo visto desde dos rutas, así
-   que cualquier edición del docente en cualquiera de las dos rutas cae siempre en el único
-   archivo real (el de la branch `feedback`, que es el que lee `publicar`). Esto reemplaza
-   al viejo esquema de "copia de trabajo" como archivo aparte — con dos archivos
-   independientes, una edición hecha en la copia se perdía en silencio porque `publicar`
-   nunca la leía.
+   esta materia — los nombres de sección salen de la rúbrica, no están hardcodeados), en:
+   - `sistema-eidas-datos/<materia>/borradores/<grupo-id>/AAAA-MM-DD.md` (fecha de hoy;
+     creá los directorios que hagan falta con `mkdir -p`). Este es el **único** lugar donde
+     vive el borrador — no hay copia aparte ni symlink. El docente lo edita ahí
+     directamente, en cualquiera de sus máquinas, hasta publicarlo.
 
    Si el paso 3 determinó que esto es una **devolución parcial**, seguí la variante de
    formato "Devolución parcial (entrega intermedia)" de `CLAUDE.md`: en la tabla de
@@ -91,16 +74,23 @@ Seguí estos pasos, en orden:
    evaluada, y dejá una "Pregunta para el docente" real y específica de este grupo — no una
    genérica.
 
-6. **Commitear en la branch `feedback`** el archivo del punto 5 que vive en
-   `materias/<materia>/grupos/<grupo-id>/feedback/`, usando
-   `git -C materias/<materia>/grupos/<grupo-id> add feedback/AAAA-MM-DD.md` y
-   `git -C materias/<materia>/grupos/<grupo-id> commit -m "..."`. Mensaje de commit
-   sugerido: `Devolución AAAA-MM-DD` (o `Devolución parcial AAAA-MM-DD` si corresponde). No
-   commitees ni pushees nada en `main`. No pushees la branch `feedback`.
+6. **Commitear y pushear en `sistema-eidas-datos`** el archivo del punto 5 — **no** en
+   `sistema-eidas` ni en el repo del grupo:
+   ```
+   git -C ../sistema-eidas-datos add <materia>/borradores/<grupo-id>/AAAA-MM-DD.md
+   git -C ../sistema-eidas-datos commit -m "Devolución AAAA-MM-DD para <grupo-id>"
+   git -C ../sistema-eidas-datos push
+   ```
+   (mensaje `Devolución parcial AAAA-MM-DD para <grupo-id>` si corresponde). Pushealo — es
+   un repo privado del docente, no el del grupo, así que esto es lo que hace que el
+   borrador esté disponible para seguir editándolo desde otra máquina.
 
 7. **Reportar al final:** un resumen breve de la puntuación por sección evaluada y el
    puntaje obtenido sobre el máximo de lo evaluado (aclarando si es parcial o final), y
-   recordale al docente que antes de publicar tiene que revisar el diff con
-   `git -C materias/<materia>/grupos/<grupo-id> diff main..feedback`, y que la publicación
-   (que también dispara la notificación) se hace con
-   `python3 scripts/grupos.py publicar <materia> <grupo-id>`.
+   recordale al docente que:
+   - Puede seguir editando el archivo directamente en
+     `sistema-eidas-datos/<materia>/borradores/<grupo-id>/AAAA-MM-DD.md` — si lo edita a
+     mano (sin pasar por acá), tiene que commitear y pushear en `sistema-eidas-datos` él
+     mismo antes de cambiar de máquina, o el cambio no viaja.
+   - La publicación (que lee ese archivo, lo pushea al repo del grupo, y dispara la
+     notificación) se hace con `python3 scripts/grupos.py publicar <materia> <grupo-id>`.

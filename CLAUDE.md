@@ -52,14 +52,17 @@ sistema-eidas/
         ├── rubrica.md                  ← rúbrica de ESTA materia
         ├── template/                   ← mirror de solo lectura de eidas-template (ver nota debajo)
         ├── grupos.json                 ← id + url de repo + email de cada grupo de ESTA materia
-        ├── grupos/                     ← repos clonados de los grupos de esta materia
-        │   └── grupo-01-xxxxx/
-        │       └── feedback/           ← se puebla vía branch local "feedback" en el repo del grupo
-        │           └── AAAA-MM-DD.md   ← devolución aprobada y pusheada (visible para el grupo)
-        └── feedback/                   ← symlinks a los AAAA-MM-DD.md de arriba, para
-            └── grupo-01-xxxxx_AAAA-MM-DD.md   abrirlos sin navegar al repo clonado (mismo
-                                                archivo, no una copia — ver Pipeline)
+        └── grupos/                     ← repos clonados de los grupos de esta materia
+            └── grupo-01-xxxxx/
+                └── feedback/
+                    └── AAAA-MM-DD.md   ← devolución ya publicada (visible para el grupo);
+                                           no existe hasta que se publica — antes de eso el
+                                           borrador vive en sistema-eidas-datos, ver Pipeline
 ```
+
+El borrador de una devolución **no vive en `sistema-eidas`** — vive en
+`sistema-eidas-datos/<materia>/borradores/<grupo-id>/AAAA-MM-DD.md` (repo privado, ver su
+`README.md`), justo para que sea portable entre las máquinas del docente. Ver Pipeline abajo.
 
 Para dar de alta una materia nueva: crear `materias/<slug>/` con su propia `rubrica.md` y
 `template/` (clon de su repo template en GitHub — propio de la materia, o compartido si
@@ -86,30 +89,34 @@ Profe corre: python3 scripts/grupos.py sync <materia>  (o /sync <materia> en Cla
         ↓
 (Opcional) Abre Claude Code y corre: /chequear-grupo <materia> <grupo-id>
 — clona el repo si hace falta y actualiza main con git pull para ese grupo puntual (no
-hace falta correr sync antes solo para chequear uno); no toca la branch feedback ni escribe
-nada; da un veredicto LISTO PARA EVALUAR / ESPERAR / PEDIR ACTUALIZACIÓN, para no generar
-una devolución completa de un grupo que todavía no tiene nada evaluable —
+hace falta correr sync antes solo para chequear uno); no escribe nada; da un veredicto
+LISTO PARA EVALUAR / ESPERAR / PEDIR ACTUALIZACIÓN, para no generar una devolución
+completa de un grupo que todavía no tiene nada evaluable —
         ↓
 Abre Claude Code en sistema-eidas/ y corre: /evaluar-grupo <materia> <grupo-id>
-— dentro de materias/<materia>/grupos/<grupo-id>/, crea (o actualiza) la branch local
-"feedback", aplica materias/<materia>/rubrica.md, y commitea
-materias/<materia>/grupos/<grupo-id>/feedback/AAAA-MM-DD.md
-— esta branch es 100% local, nunca se pushea, el grupo no puede verla —
-también crea un symlink materias/<materia>/feedback/<grupo-id>_AAAA-MM-DD.md → el archivo
-de arriba (mismo archivo, dos rutas — no una copia; ver nota abajo)
+— NO toca el repo del grupo (se queda en main, sin tocar, hasta publicar). Aplica
+materias/<materia>/rubrica.md y escribe el borrador en
+sistema-eidas-datos/<materia>/borradores/<grupo-id>/AAAA-MM-DD.md — commitea y pushea ahí
+(repo privado del docente, no el del grupo, así que esto no lo ve nadie más). Es el único
+lugar donde vive el borrador — no hay copia ni symlink —
         ↓
-Profe edita el archivo de devolución — por cualquiera de las dos rutas, es el mismo archivo
-en disco — ajusta puntajes y texto, agrega contexto que Claude no puede ver
+Profe edita el archivo de devolución directamente en sistema-eidas-datos, desde la máquina
+que le quede cómoda — ajusta puntajes y texto, agrega contexto que Claude no puede ver. Si
+lo edita a mano (sin Claude Code de por medio), tiene que commitear y pushear él mismo en
+sistema-eidas-datos antes de seguir en otra máquina, o el cambio no viaja —
         ↓
 Profe corre: python3 scripts/grupos.py publicar <materia> <grupo-id>
-— si quedaron ediciones sin commitear en "feedback" (el profe editó el archivo directo, sin
-pasar por git), las commitea sola antes de seguir; corta con error si el repo tiene cambios
-sin commitear parado en otra branch que no sea "feedback" (revisión manual necesaria) — saca
-también, como red de seguridad, cualquier "Confianza Claude" o "Pregunta para el docente" que
-haya quedado sin sacar — hace merge feedback → main (local), tilda "Publicado al grupo", y
-git push origin main. El symlink sigue apuntando al mismo archivo (que ahora también existe
-en main) sin que haga falta ningún paso extra —
+— busca en sistema-eidas-datos/<materia>/borradores/<grupo-id>/ los AAAA-MM-DD.md que
+todavía no digan "[x] Publicado al grupo"; corta con error si no hay ninguno, o si el repo
+del grupo tiene cambios sin commitear (no debería pasar — ya nada se edita ahí hasta acá).
+Saca, como red de seguridad, cualquier "Confianza Claude" o "Pregunta para el docente" que
+haya quedado sin sacar, tilda "Publicado al grupo", escribe cada archivo en
+materias/<materia>/grupos/<grupo-id>/feedback/ del repo clonado, commitea y pushea directo
+a main (no hace falta merge, no hay branch de por medio) —
 — ACÁ es cuando la devolución se vuelve visible para el grupo, al pushear main —
+— de paso, marca el mismo cambio en el borrador de sistema-eidas-datos y lo pushea ahí
+también (bookkeeping, para que otra máquina no lo vuelva a publicar; si esto último falla,
+no aborta — la devolución ya se publicó, lo importante ya pasó) —
         ↓
 El mismo comando dispara automáticamente el workflow de N8N (webhook local,
 no sale de esta máquina) para subir el archivo a Drive y notificar por Gmail,
@@ -236,6 +243,18 @@ versión de N8N no soporta hacerlo por CLI fuera de modo queue. Probado de punta
 simulando una máquina nueva (instancia con volumen Docker vacío, mismo puerto, mismos IDs de
 credencial/workflow tras importar) antes de darlo por terminado.
 
+**Actualización, más tarde el mismo día — rediseño de fondo, no solo el bug de arriba:**
+Pablo notó la limitación real detrás de los dos síntomas de la sección anterior: **por
+diseño, una devolución en curso no podía continuarse en otra máquina**, porque la branch
+`feedback` era 100% local al repo clonado del grupo (a propósito, para que el grupo no la
+viera) — el symlink de más arriba resolvía la pérdida silenciosa de ediciones, pero no la
+portabilidad entre máquinas. Se sacó la branch `feedback` del medio por completo: el
+borrador ahora vive como archivo normal en `sistema-eidas-datos/<materia>/borradores/`
+(mismo repo privado que ya sincroniza `grupos.json` y los secretos de N8N), y `publicar`
+lee de ahí en vez de mergear una branch. Esto también volvió obsoleto el symlink del punto
+2 de arriba — ya no hay dos rutas para el mismo archivo, hay una sola, y está en un repo
+que sí viaja entre máquinas. Ver "Pipeline de evaluación" arriba para el flujo final.
+
 ---
 
 ### Pendientes del sistema
@@ -251,6 +270,19 @@ credencial/workflow tras importar) antes de darlo por terminado.
 - [x] Escribir marco teórico del Sistema EIDAS (`marco-teorico-fundamentacion.md` y `marco-teorico-resumen.md`) — pendiente confirmar datos de edición de Achilli/Ander-Egg y ampliar referencia al seminario de Placci sobre IA
 - [x] Soporte multi-materia (2026-08-04): reestructurado a `materias/<carrera>-<materia>-<comisión>/` — cada una con su propia `rubrica.md`, `template/` (repo GitHub propio) y `grupos.json`. `scripts/grupos.py`, `/evaluar-grupo` y el workflow de N8N ahora toman la materia como parámetro. Migrada la materia existente a `af-diseno-sistemas-web-31`.
 - [ ] Armar `rubrica.md` y `template/` para las materias de Redes (ej: `af-redes-comunicaciones-31`, `iti-infraestructura-redes-21`) — pendiente, va a llevar más tiempo por ser contenido nuevo, no reutilizable de Diseño de Sistemas Web.
+- [ ] **⚠️ URGENTE — migrar 14 devoluciones sin publicar que quedaron en branches `feedback`
+  locales en la notebook** (rediseño del borrador movido a `sistema-eidas-datos/borradores/`,
+  ver más arriba): 6 de `af-diseno-sistemas-web-31` (`easy-core-computacion`,
+  `ecommerce-mundo-sport`, `GLPI`, `pos-carrefour`, `sistema-turnos`, `aberturas-los-pampas`
+  — ya editadas a mano el 2026-09-02, con "Devolución docente" escrita, ver
+  `bitacora-implementacion.md`) y 8 de `af-diseno-sistemas-web-32` (generadas 26/08, sin
+  revisar todavía). El código nuevo de `/publicar` y `/evaluar-grupo` ya no sabe leer esa
+  branch — nada se perdió (los commits siguen ahí, en la branch `feedback` de cada repo
+  clonado en la notebook), pero quedaron invisibles para la herramienta hasta que alguien
+  copie ese contenido a `sistema-eidas-datos/<materia>/borradores/<grupo-id>/AAAA-MM-DD.md`
+  a mano (o publique esas 14 con el código viejo antes de actualizar la notebook). Pablo lo
+  sabe y decidió resolverlo él mismo la próxima vez que use la notebook (2026-09-02) — no
+  hacer nada automático acá sin que él lo pida explícitamente.
 
 ---
 

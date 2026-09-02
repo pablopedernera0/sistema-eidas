@@ -6,10 +6,11 @@ antes de seguir — es el nombre de carpeta dentro de `materias/` (ej:
 
 Este comando es un wrapper fino: solo corre
 `python3 scripts/grupos.py sync <materia>` y reporta la salida tal cual — no interpreta
-nada, no escribe nada por su cuenta, no toca ninguna branch `feedback`. Clona los grupos
-nuevos de `materias/<materia>/grupos.json` que todavía no estén en
-`materias/<materia>/grupos/`, y hace `git checkout main` + `git pull origin main` de los
-que ya estaban clonados.
+nada, no escribe nada por su cuenta. Clona los grupos nuevos de
+`materias/<materia>/grupos.json` que todavía no estén en `materias/<materia>/grupos/`, y
+hace `git checkout main` + `git pull origin main` de los que ya estaban clonados (si algún
+repo de grupo está parado en una branch que no es `main` — no debería pasar en el flujo
+normal — lo deja intacto y avisa en vez de tocarlo).
 
 Después de correrlo, resumí en una línea qué grupos se clonaron por primera vez (si
 alguno) y cuáles ya estaban — no hace falta repetir la salida completa del script si fue

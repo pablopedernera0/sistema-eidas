@@ -29,8 +29,8 @@ esperando input, y ese prompt es el último freno antes de algo que no se puede 
 | Traer/actualizar los repos de los grupos | `python3 scripts/grupos.py sync <materia>` o `/sync <materia>` | Python o Claude Code (mismo resultado) | Clona/actualiza repos en `materias/<materia>/grupos/` |
 | Ver si un grupo está listo para evaluar, sin generar nada todavía (el "dry-run") | `/chequear-grupo <materia> <grupo-id>` | Claude Code | Actualiza `main` con `git pull`, pero no genera devolución — solo reporta en el chat |
 | Ver cómo trabajó el grupo a lo largo del tiempo (iteración, no aporte) | `/resumen-commits <materia> <grupo-id>` | Claude Code | No — solo reporta en el chat, no entra en la devolución |
-| Generar el borrador de devolución | `/evaluar-grupo <materia> <grupo-id>` | Claude Code | Sí — commitea en la branch local `feedback` |
-| Publicar la devolución y notificar al grupo | `python3 scripts/grupos.py publicar <materia> <grupo-id>` | Python | Sí — merge a `main` y `git push` |
+| Generar el borrador de devolución | `/evaluar-grupo <materia> <grupo-id>` | Claude Code | Sí — commitea y pushea en `sistema-eidas-datos` (repo privado, no el del grupo) |
+| Publicar la devolución y notificar al grupo | `python3 scripts/grupos.py publicar <materia> <grupo-id>` | Python | Sí — commit directo a `main` del repo del grupo y `git push` |
 | Reintentar solo la notificación (si publicar no la disparó) | `python3 scripts/grupos.py notificar <materia> <grupo-id> <fecha>` | Python | No sobre el repo — dispara el webhook de N8N |
 | Ver si esta máquina tiene todo al día (`sistema-eidas`, `sistema-eidas-datos`, `sistema-eidas-memory`, `eidas-template`) | `/estado-eidas` (sin argumentos) | Claude Code | Pullea solo lo que esté limpio y atrasado; lo demás solo lo reporta |
 
@@ -47,7 +47,7 @@ Detalle de cada uno en la sección 3.
 | Cronograma de cada materia (opcional) | `materias/<materia>/cronograma-2c-2026.md` | Solo `af-diseno-sistemas-web-31` y `-32` lo tienen — si existe, `/chequear-grupo` y `/evaluar-grupo` lo usan para saber qué secciones de la rúbrica ya corresponden según la fecha |
 | Marco teórico | `marco-teorico-fundamentacion.md`, `marco-teorico-resumen.md` (compartido, materia-agnóstico) | Completo (pendiente confirmar 2 citas) |
 | Repos clonados de cada grupo | `materias/<materia>/grupos/grupo-XX-nombre/` (local, se puebla en el cuatrimestre) | — |
-| Borradores de devolución | `materias/<materia>/grupos/grupo-XX/feedback/AAAA-MM-DD.md` (local, generados por Claude); `materias/<materia>/feedback/grupo-XX_AAAA-MM-DD.md` es un symlink a ese mismo archivo | — |
+| Borradores de devolución | `sistema-eidas-datos/<materia>/borradores/grupo-XX/AAAA-MM-DD.md` (repo privado, sincronizado entre máquinas — no vive en `sistema-eidas` ni en el repo del grupo, ver `CLAUDE.md`) | — |
 | Automatización N8N | `infra/n8n/` (Docker local, compartido entre materias) | Activo — se dispara solo desde `scripts/grupos.py publicar` (webhook local), no desplegado en Linode |
 
 ---
@@ -91,9 +91,10 @@ saben operar sobre cualquier materia que exista en `materias/`.
 ## 3. Durante el cuatrimestre — evaluar una entrega
 
 Este es el pipeline tal como funciona **hoy** (pasos manuales incluidos, sin disimular).
-La devolución vive como una **branch local** (`feedback`) dentro del propio repo clonado
-del grupo — nunca se pushea hasta que la aprobás, así que el grupo no tiene forma de verla
-antes de tiempo.
+El borrador de la devolución vive como archivo normal en `sistema-eidas-datos` (repo
+privado, hermano de `sistema-eidas/`) — nunca se pushea al repo del grupo hasta que la
+aprobás, así que el grupo no tiene forma de verla antes de tiempo, y de paso podés
+retomarla desde cualquiera de tus máquinas.
 
 1. **Traer los cambios de todos los grupos de la materia** (opcional si solo vas a mirar
    uno puntual — ver paso 2). Terminal o Claude Code, es lo mismo:
@@ -104,11 +105,11 @@ antes de tiempo.
 2. **Chequear si conviene evaluar todavía:** `/chequear-grupo <materia> grupo-01-nombre`
    (definido en `.claude/commands/chequear-grupo.md`) clona el repo si hace falta y hace
    `git pull` de ese grupo puntual — no hace falta correr `sync` antes solo para chequear
-   uno — y no genera ninguna devolución: no crea la branch `feedback` ni escribe nada, solo
-   te da un veredicto (`LISTO PARA EVALUAR` / `ESPERAR` / `PEDIR ACTUALIZACIÓN`)
-   contrastando lo que subió el grupo contra `rubrica.md`. De paso muestra el total de
-   commits y cuántos archivos se retocaron más de una vez, como dato liviano — sin que eso
-   pese en el veredicto. Sirve para no generar (y dejar commiteada en la branch local) una
+   uno — y no genera ninguna devolución: no escribe nada, solo te da un veredicto
+   (`LISTO PARA EVALUAR` / `ESPERAR` / `PEDIR ACTUALIZACIÓN`) contrastando lo que subió el
+   grupo contra `rubrica.md`. De paso muestra el total de commits y cuántos archivos se
+   retocaron más de una vez, como dato liviano — sin que eso pese en el veredicto. Sirve
+   para no generar (y dejar commiteado en `sistema-eidas-datos`) un borrador de
    devolución completa de un grupo que todavía no tiene nada evaluable — más simple que
    generarla igual y después tener que rehacerla cuando el grupo actualice.
 
@@ -129,16 +130,13 @@ antes de tiempo.
    punto 4).
 4. **Generar el borrador con Claude Code:** abrís Claude Code en `sistema-eidas/` y corrés
    `/evaluar-grupo <materia> grupo-01-nombre`. Ese comando (definido en
-   `.claude/commands/evaluar-grupo.md`) crea (o actualiza) la branch local `feedback` dentro
-   de `materias/<materia>/grupos/grupo-01-nombre/`, aplica `materias/<materia>/rubrica.md`,
-   y commitea ahí `feedback/AAAA-MM-DD.md` con el formato definido en `CLAUDE.md`. De paso,
-   crea un symlink en
-   `materias/<materia>/feedback/grupo-01-nombre_AAAA-MM-DD.md` apuntando a ese mismo archivo
-   — para que tengas todas las devoluciones de esa materia juntas sin navegar a cada repo
-   clonado. **No es una copia:** es el mismo archivo visto desde dos rutas, así que editarlo
-   desde acá o desde `grupos/grupo-01-nombre/feedback/` da exactamente lo mismo, y nunca se
-   pierde una edición (antes de 2026-09 era una copia real e independiente — si la editabas a
-   ella, `publicar` no la leía y el cambio se perdía en silencio).
+   `.claude/commands/evaluar-grupo.md`) **no toca el repo clonado del grupo** — aplica
+   `materias/<materia>/rubrica.md` y escribe el borrador en
+   `sistema-eidas-datos/<materia>/borradores/grupo-01-nombre/AAAA-MM-DD.md` con el formato
+   definido en `CLAUDE.md`, y lo commitea y pushea ahí mismo (repo privado del docente, no
+   el del grupo). Es el único lugar donde vive el borrador hasta que se publica — nada de
+   branches locales ni copias aparte (así funcionaba hasta 2026-09: una branch `feedback`
+   100% local dentro del repo del grupo, que quedaba atada a la máquina donde se generó).
 
    Las rúbricas de `af-diseno-sistemas-web-31` y `-32` tienen una sección "Proceso:
    evolución sobre la entrega intermedia" (5 pts) — para esa sección, `/evaluar-grupo` busca
@@ -153,25 +151,30 @@ antes de tiempo.
    Ausente) y no arma la tabla de "Total sobre 100" — esa se arma recién en la entrega
    final, cuando ya todo esté en alcance. "Proceso" nunca se puntúa en una parcial. Formato
    completo de la variante en `CLAUDE.md`, sección "Variante: devolución parcial".
-5. **Revisión docente (obligatoria):** revisás el diff de la branch `feedback` contra `main`
-   (`git diff main..feedback` dentro del repo del grupo), ajustás puntajes y texto directamente
-   en el archivo, agregás el contexto que Claude no puede ver (proceso grupal, presentación
-   oral, etc. — acá es donde entraría lo que viste con `/resumen-commits` si querés
-   mencionarlo, no como puntaje sino como observación), y respondés la "Pregunta para el
-   docente" que Claude dejó planteada.
+5. **Revisión docente (obligatoria):** abrís
+   `sistema-eidas-datos/<materia>/borradores/grupo-01-nombre/AAAA-MM-DD.md` directamente
+   (desde cualquier máquina), ajustás puntajes y texto, agregás el contexto que Claude no
+   puede ver (proceso grupal, presentación oral, etc. — acá es donde entraría lo que viste
+   con `/resumen-commits` si querés mencionarlo, no como puntaje sino como observación), y
+   respondés la "Pregunta para el docente" que Claude dejó planteada. Si editás a mano
+   (sin Claude Code), acordate de commitear y pushear en `sistema-eidas-datos` — si no, el
+   cambio se queda solo en esa máquina.
 6. **Publicar y notificar — un solo comando, recién acá se vuelve visible para el grupo:**
    ```
    python3 scripts/grupos.py publicar <materia> grupo-01-nombre
    ```
-   Te pide confirmación antes de hacer el merge y el push (podés saltearla con `--yes` si
-   ya estás seguro). Revisá la branch `feedback` con `git diff main..feedback` **antes** de
-   correr esto — el script no te muestra el diff, asume que ya lo revisaste vos.
+   Te pide confirmación antes de pushear (podés saltearla con `--yes` si ya estás seguro).
+   Revisá el borrador en `sistema-eidas-datos` **antes** de correr esto — el script no te
+   muestra el contenido, asume que ya lo revisaste vos. Publica todos los borradores
+   pendientes de ese grupo que encuentre (normalmente uno, puede ser más de uno si quedaron
+   varias fechas sin publicar).
 
-   Este único comando hace todo el resto solo: mergea `feedback` → `main`, tilda "Publicado
-   al grupo" en el archivo, pushea, y **dispara automáticamente la notificación en N8N**
-   (vía un webhook local — requiere que N8N esté corriendo: `infra/n8n/setup.sh` lo levanta
-   y lo deja configurado solo, ver sección 3.5). N8N busca el email del grupo en
-   `materias/<materia>/grupos.json`, lee el
+   Este único comando hace todo el resto solo: tilda "Publicado al grupo" en el archivo, lo
+   escribe en `feedback/AAAA-MM-DD.md` del repo del grupo, commitea y pushea directo a
+   `main` (no hay branch de por medio, así que no hace falta merge), y **dispara
+   automáticamente la notificación en N8N** (vía un webhook local — requiere que N8N esté
+   corriendo: `infra/n8n/setup.sh` lo levanta y lo deja configurado solo). N8N busca el
+   email del grupo en `materias/<materia>/grupos.json`, lee el
    archivo recién publicado, lo sube a "Devoluciones EIDAS" en Drive con la materia en el
    nombre del archivo, y manda el mail con el link — sin que tengas que abrir el navegador
    ni tipear nada de nuevo.

@@ -50,24 +50,26 @@ necesitar el nombre de la materia (`<materia>`) que estés usando para la prueba
    ```
    /evaluar-grupo <materia> grupo-prueba
    ```
-   Este comando (definido en `.claude/commands/evaluar-grupo.md`) hace todo el trabajo:
-   crea la branch local `feedback` si no existe, aplica `materias/<materia>/rubrica.md`,
-   escribe el archivo de devolución en
-   `materias/<materia>/grupos/grupo-prueba/feedback/AAAA-MM-DD.md`, crea un symlink a ese
-   archivo en `materias/<materia>/feedback/`, y lo commitea en esa branch — sin pushear nada.
-2. Verificá que la branch `feedback` es local y no se pusheó sola:
+   Este comando (definido en `.claude/commands/evaluar-grupo.md`) hace todo el trabajo: no
+   toca el repo clonado del grupo, aplica `materias/<materia>/rubrica.md`, escribe el
+   archivo de devolución en
+   `sistema-eidas-datos/<materia>/borradores/grupo-prueba/AAAA-MM-DD.md`, y lo commitea y
+   pushea ahí (repo privado del docente).
+2. Verificá que el repo del grupo de prueba sigue intacto (nada se pushea ahí todavía):
    ```
-   cd materias/<materia>/grupos/grupo-prueba && git branch -a
+   git -C materias/<materia>/grupos/grupo-prueba log --oneline
    ```
-   No debería aparecer `feedback` en el listado de `origin/*`.
+   Tiene que seguir mostrando solo el commit inicial del paso 1.3.
 
 ## 4. Revisar y publicar
 
 1. Revisá el contenido:
    ```
-   git diff main..feedback
+   cat ../sistema-eidas-datos/<materia>/borradores/grupo-prueba/AAAA-MM-DD.md
    ```
-2. Ajustá lo que haga falta directamente en el archivo (esto simula tu revisión real).
+2. Ajustá lo que haga falta directamente en el archivo (esto simula tu revisión real). Si lo
+   editás a mano, commiteá y pusheá en `sistema-eidas-datos` (`/evaluar-grupo` ya lo hizo
+   por vos la primera vez).
 3. Asegurate de que N8N esté corriendo (`cd infra/n8n && ./setup.sh`, si no lo estaba —
    también deja importados el workflow y las credenciales si hacía falta) y publicá — esto
    también dispara la notificación solo, no hace falta nada más:
@@ -93,7 +95,9 @@ No te olvides de este paso, para no dejar basura de prueba en el sistema real:
 
 1. Sacá la entrada `grupo-prueba` de `materias/<materia>/grupos.json`.
 2. `rm -rf materias/<materia>/grupos/grupo-prueba` y
-   `rm materias/<materia>/feedback/grupo-prueba_*.md`.
+   `rm -rf ../sistema-eidas-datos/<materia>/borradores/grupo-prueba` — este último es un
+   repo git aparte, así que además commiteá y pusheá el borrado ahí
+   (`git -C ../sistema-eidas-datos add -A && git -C ../sistema-eidas-datos commit -m "Limpieza prueba de circuito" && git -C ../sistema-eidas-datos push`).
 3. Borrá el archivo de prueba subido a Drive (carpeta "Devoluciones EIDAS").
 4. Opcional: borrá el repo `eidas-prueba-circuito` desde la cuenta de estudiante de prueba
    (Settings → General → Delete this repository), si no lo vas a reusar en la próxima prueba.

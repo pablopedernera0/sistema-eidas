@@ -1,5 +1,5 @@
-Publicá la devolución de un grupo del Sistema EIDAS — merge de la branch local `feedback` a
-`main`, push, y notificación automática al grupo.
+Publicá la devolución de un grupo del Sistema EIDAS — pushea el borrador de
+`sistema-eidas-datos` al repo del grupo (`main`) y dispara la notificación automática.
 
 `$ARGUMENTS` trae dos valores separados por espacio: `<materia> <grupo-id>`. Ejemplo:
 `af-diseno-sistemas-web-31 GLPI`. Si `$ARGUMENTS` no trae ambos valores, pedíselos al
@@ -14,15 +14,14 @@ chat en vez de sacarlo — no se te ocurra saltear el paso 3.
 Seguí estos pasos, en orden:
 
 1. **Verificar que hay algo para publicar.** Si `materias/<materia>/grupos/<grupo-id>/` no
-   existe, avisá que hay que correr `/sync <materia>` primero, y no sigas. Si no existe la
-   branch `feedback` (`git -C materias/<materia>/grupos/<grupo-id> branch --list feedback`),
-   avisá que no hay devolución generada (`/evaluar-grupo <materia> <grupo-id>`) y no sigas.
+   existe, avisá que hay que correr `/sync <materia>` primero, y no sigas. Buscá en
+   `../sistema-eidas-datos/<materia>/borradores/<grupo-id>/` algún `AAAA-MM-DD.md` que
+   **no** diga `- [x] Publicado al grupo`. Si no hay ninguno, avisá que no hay devolución
+   pendiente (`/evaluar-grupo <materia> <grupo-id>` para generar una) y no sigas.
 
-2. **Mostrar el diff para revisión.** Corré
-   `git -C materias/<materia>/grupos/<grupo-id> diff main..feedback` (o
-   `main...feedback` si `main` no existe todavía localmente) y mostrale el contenido
-   completo al usuario — no lo resumas de más, es lo último que va a ver antes de que se
-   vuelva visible para el grupo. Fijate en particular si:
+2. **Mostrar el borrador para revisión.** Mostrale el contenido completo de cada
+   `AAAA-MM-DD.md` pendiente al usuario — no lo resumas de más, es lo último que va a ver
+   antes de que se vuelva visible para el grupo. Fijate en particular si:
    - El checkbox `- [x] Revisado y aprobado por Profe Pablo` está tildado. Si no lo está,
      avisá y preguntá si de verdad quiere publicar así.
    - Quedó algún resto de `**Confianza Claude:**` o `## Pregunta para el docente` sin sacar

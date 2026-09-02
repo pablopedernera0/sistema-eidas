@@ -1,15 +1,15 @@
 Chequeá si un grupo del Sistema EIDAS está en condiciones de ser evaluado, sin generar
 ninguna devolución todavía. Es el paso previo a `/evaluar-grupo` — sirve para decidir si
 conviene evaluar ahora o esperar/pedirle al grupo que actualice, sin dejar rastro de una
-evaluación (buena o mala) en la branch local `feedback`.
+evaluación (buena o mala) en ningún lado.
 
 `$ARGUMENTS` trae dos valores separados por espacio: `<materia> <grupo-id>`. Si
 `$ARGUMENTS` no trae ambos valores, pedíselos al usuario antes de seguir.
 
-Este comando **no genera ninguna devolución**: no crea ni cambia a la branch `feedback`, ni
-escribe ni commitea ningún archivo, ni en `materias/<materia>/grupos/<grupo-id>/` ni en
-`materias/<materia>/feedback/`. Sí actualiza `main` con lo último del remoto (paso 2) —
-eso no cuenta como "generar" nada, es la misma actualización que hace `sync`.
+Este comando **no genera ninguna devolución**: no escribe ni commitea ningún archivo, ni
+en `materias/<materia>/grupos/<grupo-id>/` ni en `sistema-eidas-datos`. Sí actualiza `main`
+con lo último del remoto (paso 2) — eso no cuenta como "generar" nada, es la misma
+actualización que hace `sync`.
 
 Seguí estos pasos, en orden:
 
@@ -18,9 +18,9 @@ Seguí estos pasos, en orden:
    nuevos de esa materia, no solo este) y seguí desde el paso 2.
 
 2. **Actualizar y traer lo último.** Usá `git -C materias/<materia>/grupos/<grupo-id>
-   checkout main` y `git -C materias/<materia>/grupos/<grupo-id> pull origin main` (no
-   toques la branch `feedback` aunque exista) — `-C` corre el comando ahí sin hacer `cd`,
-   así no dependés de en qué carpeta haya quedado parada la terminal por un paso anterior.
+   checkout main` y `git -C materias/<materia>/grupos/<grupo-id> pull origin main` — `-C`
+   corre el comando ahí sin hacer `cd`, así no dependés de en qué carpeta haya quedado
+   parada la terminal por un paso anterior.
    Fijate cuándo fue el último commit con
    `git -C materias/<materia>/grupos/<grupo-id> log -1 --format="%ad %s" --date=relative`.
 
