@@ -62,7 +62,7 @@
     {
       "parameters": {
         "operation": "read",
-        "fileSelector": "=/home/node/data/materias/{{ $json.materia }}/grupos.json",
+        "fileSelector": "=/home/node/data/sistema-eidas/materias/{{ $json.materia }}/grupos.json",
         "options": {
           "dataPropertyName": "data"
         }
@@ -110,7 +110,7 @@
     {
       "parameters": {
         "operation": "read",
-        "fileSelector": "=/home/node/data/materias/{{ $json.materia }}/grupos/{{ $json.grupo_id }}/feedback/{{ $json.fecha }}.md",
+        "fileSelector": "=/home/node/data/sistema-eidas/materias/{{ $json.materia }}/grupos/{{ $json.grupo_id }}/feedback/{{ $json.fecha }}.md",
         "options": {
           "dataPropertyName": "data"
         }

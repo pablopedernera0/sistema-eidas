@@ -15,15 +15,41 @@ services:
       - GENERIC_TIMEZONE=America/Argentina/Buenos_Aires
       - TZ=America/Argentina/Buenos_Aires
       - N8N_RESTRICT_FILE_ACCESS_TO=~/.n8n-files;/home/node/data
+      - N8N_DIAGNOSTICS_ENABLED=false
+      - N8N_VERSION_NOTIFICATIONS_ENABLED=false
+      - N8N_TEMPLATES_ENABLED=false
+      - N8N_PERSONALIZATION_ENABLED=false
+      - N8N_HIRING_BANNER_ENABLED=false
       - HTTP_PROXY=${HTTP_PROXY:-}
       - HTTPS_PROXY=${HTTPS_PROXY:-}
       - http_proxy=${HTTP_PROXY:-}
       - https_proxy=${HTTPS_PROXY:-}
       - NO_PROXY=localhost,127.0.0.1
       - no_proxy=localhost,127.0.0.1
+    extra_hosts:
+      - "api.n8n.io:127.0.0.1"
+      - "telemetry.n8n.io:127.0.0.1"
     volumes:
       - n8n_data:/home/node/.n8n
-      - ../../:/home/node/data:ro
+      # Monta el padre común de sistema-eidas y sistema-eidas-datos, no solo el repo: hay
+      # symlinks (grupos.json, feedback en curso) que apuntan al repo privado hermano, y con
+      # solo sistema-eidas montado esos reads fallaban con "No file(s) found" dentro del
+      # contenedor. Detectado el 2026-09-02.
+      - ../../../:/home/node/data:ro
+    networks:
+      - n8n
+
+networks:
+  n8n:
+    # Subred fija en 10.x: esta máquina tiene interfaces reales (LAN, WiFi, VMware,
+    # y ~20 redes Docker de otros proyectos) ocupando casi todo 172.16-172.31.0.0/16 y
+    # 192.168.0.0/16 — si Docker asigna una subred que pisa alguna, el puerto publicado
+    # queda colgado sin responder (el kernel enruta hacia la placa de red real en vez
+    # del bridge) aunque el contenedor esté sano. 10.250.99.0/24 no choca con nada de
+    # lo anterior. Detectado el 2026-09-02.
+    ipam:
+      config:
+        - subnet: 10.250.99.0/24
 
 volumes:
   n8n_data:
