@@ -7,6 +7,13 @@
 - **Docente:** Pedernera Pablo (Profe Pablo)
 - **Cuatrimestre:** 2.° 2026
 
+**Antes de arrancar, leer también** `~/trabajos/pablo/terciario-urquiza/contexto-docente/CONTEXTO.md`
+(repo privado `pablopedernera0/contexto-docente`) — contexto que cruza este repo con
+`la-cajonera`, `sistema-eidas-datos`, `hilo-conductor-redes-ataques` y
+`pablopedernera0.github.io` (cuentas de GitHub, incidente Killercoda, hábito de dos
+máquinas). La memoria de Claude Code es por proyecto; ese repo es el complemento manual
+para lo que es transversal a varios.
+
 Este sistema es **multi-materia**: cada materia/comisión vive en su propia carpeta bajo
 `materias/`, con su propia rúbrica y su propio repo template. La infraestructura (N8N,
 scripts, el dispositivo pedagógico en sí) es compartida entre todas.
