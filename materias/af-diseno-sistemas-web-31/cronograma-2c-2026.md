@@ -59,12 +59,21 @@ Sesión presencial con proyector, fuera de la rúbrica de EIDAS — conecta el c
 cuatrimestre con la búsqueda laboral real. Mismo taller en las dos comisiones (ver también
 `materias/af-diseno-sistemas-web-32/cronograma-2c-2026.md`, ahí va el martes 06/10).
 
+**Se fusiona con una actividad que ya estaba preparada y nunca se dio:** la comparación de
+3 avisos reales (Avalian/Federada/Claro Pay) contra los contenidos de la materia, en
+`pablopedernera0.github.io/que-pide-el-mercado/` (armada 18/08 para la semana 2, quedó sin
+agendar). Se retoma y se extiende ese mismo archivo como continuación, en vez de abrir una
+página nueva — el 16/10 es la primera vez que se da.
+
 **Material a entregar a los estudiantes antes de la clase** (ninguno existe todavía, hay
 que crearlos):
 - Guía de LinkedIn — tips, recomendaciones y recursos para armar un perfil efectivo,
   publicada en `pablopedernera0.github.io`.
 - Lista de instrucciones sobre qué puestos buscar.
 - Cuestionario tipo guía de estudio, para completar antes de venir a clase.
+- **Consigna a los estudiantes:** traer 2 avisos propios de analista funcional o analista
+  de procesos (retoma la consigna original de `que-pide-el-mercado/`, nunca se pidió porque
+  la clase no se había dado todavía).
 
 **A cambio de este taller**, la sesión del miércoles 14/10 deja de tener repaso presencial
 dedicado para el Cuestionario individual — ese repaso pasa a ofrecerse de forma
