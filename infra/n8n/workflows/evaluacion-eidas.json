@@ -96,7 +96,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const materia = $('Datos de la devolución').item.json.materia;\nconst grupoId = $('Datos de la devolución').item.json.grupo_id;\nconst fecha = $('Datos de la devolución').item.json.fecha;\nconst grupos = $input.all()[0].json.parsed.grupos;\nconst found = grupos.find(g => g.id === grupoId);\nif (!found) {\n  throw new Error(`Grupo '${grupoId}' no está en materias/${materia}/grupos.json`);\n}\nif (!found.email) {\n  throw new Error(`Grupo '${grupoId}' no tiene email cargado en grupos.json`);\n}\nreturn [{ json: { materia: materia, grupo_id: grupoId, fecha: fecha, email_destino: found.email } }];"
+        "jsCode": "const materia = $('Datos de la devolución').item.json.materia;\nconst grupoId = $('Datos de la devolución').item.json.grupo_id;\nconst fecha = $('Datos de la devolución').item.json.fecha;\nconst grupos = $input.all()[0].json.parsed.grupos;\nconst found = grupos.find(g => g.id === grupoId);\nif (!found) {\n  throw new Error(`Grupo '${grupoId}' no está en materias/${materia}/grupos.json`);\n}\nif (!found.email) {\n  throw new Error(`Grupo '${grupoId}' no tiene email cargado en grupos.json`);\n}\nif (!found.repo) {\n  throw new Error(`Grupo '${grupoId}' no tiene repo cargado en grupos.json`);\n}\nconst repoUrl = found.repo.replace(/\\.git$/, '');\nconst feedbackUrl = `${repoUrl}/blob/main/feedback/${fecha}.md`;\nreturn [{ json: { materia: materia, grupo_id: grupoId, fecha: fecha, email_destino: found.email, feedback_url: feedbackUrl } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -109,61 +109,9 @@
     },
     {
       "parameters": {
-        "operation": "read",
-        "fileSelector": "=/home/node/data/sistema-eidas/materias/{{ $json.materia }}/grupos/{{ $json.grupo_id }}/feedback/{{ $json.fecha }}.md",
-        "options": {
-          "dataPropertyName": "data"
-        }
-      },
-      "type": "n8n-nodes-base.readWriteFile",
-      "typeVersion": 1.1,
-      "position": [
-        1040,
-        0
-      ],
-      "id": "e6415759-b527-497e-bc94-0b6a2c5636d0",
-      "name": "Leer devolución"
-    },
-    {
-      "parameters": {
-        "resource": "file",
-        "operation": "upload",
-        "inputDataFieldName": "data",
-        "name": "={{ $('Buscar datos del grupo').item.json.materia }}_{{ $('Buscar datos del grupo').item.json.grupo_id }}_{{ $('Buscar datos del grupo').item.json.fecha }}.md",
-        "driveId": {
-          "__rl": true,
-          "mode": "list",
-          "value": "My Drive"
-        },
-        "folderId": {
-          "__rl": true,
-          "value": "1JlEkxF75ECL4KctwV48BGKL2sP8bYRQI",
-          "mode": "list",
-          "cachedResultName": "Devoluciones EIDAS",
-          "cachedResultUrl": "https://drive.google.com/drive/folders/1JlEkxF75ECL4KctwV48BGKL2sP8bYRQI"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleDrive",
-      "typeVersion": 3,
-      "position": [
-        1248,
-        0
-      ],
-      "id": "b3aed3c7-0a9b-4fd9-b871-49fb9dd5f19a",
-      "name": "Upload file",
-      "credentials": {
-        "googleDriveOAuth2Api": {
-          "id": "wdskuh13GGRn5W5D",
-          "name": "Google Drive account"
-        }
-      }
-    },
-    {
-      "parameters": {
         "sendTo": "={{ $('Buscar datos del grupo').item.json.email_destino }}",
         "subject": "=Devolución disponible — {{ $('Buscar datos del grupo').item.json.materia }} / {{ $('Buscar datos del grupo').item.json.grupo_id }}",
-        "message": "=Hola,\n\nLa devolución del {{ $('Buscar datos del grupo').item.json.grupo_id }} ya está disponible.\n\nPodés verla acá: {{ $json.webViewLink }}\n\nSaludos,\nSistema EIDAS",
+        "message": "=Hola,\n\nLa devolución del {{ $('Buscar datos del grupo').item.json.grupo_id }} ya está disponible.\n\nPodés verla acá: {{ $('Buscar datos del grupo').item.json.feedback_url }}\n\nSaludos,\nSistema EIDAS",
         "options": {}
       },
       "type": "n8n-nodes-base.gmail",
@@ -218,28 +166,6 @@
       ]
     },
     "Buscar datos del grupo": {
-      "main": [
-        [
-          {
-            "node": "Leer devolución",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Leer devolución": {
-      "main": [
-        [
-          {
-            "node": "Upload file",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Upload file": {
       "main": [
         [
           {

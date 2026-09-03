@@ -43,7 +43,7 @@ Martes y miércoles alternan modalidad opuesta cada semana. Asumo virtual = con 
 | Mié 23/09     | Virtual | Modelo ER (10 pts) | Trabajo en grupo: diagrama entidad-relación |
 | Mar 29/09     | Virtual | Diseño UI (10 pts) | Trabajo en grupo: wireframes |
 | Mié 30/09     | Presencial | — | Consulta general y repaso, sin contenido nuevo |
-| Mar 06/10     | Presencial | — | Consulta final del repo + repaso para el cuestionario individual |
+| Mar 06/10     | Presencial | — | **Taller "Qué pide el mercado"** (presencial, con proyector) — ver sección dedicada abajo. El repaso del Cuestionario individual pasa a ofrecerse de forma asincrónica, sin sesión presencial dedicada |
 | Mié 07/10     | Virtual | README (5 pts) | Últimos ajustes: README, `integrantes.md`, estructura del repo completa |
 | **Mar 13/10** | Virtual | — | **Presentación final grupal = Parcial, Parte A** (última semana de clases) |
 | Mié 14/10     | Presencial | — | Cierre del cuatrimestre + repaso general para el Cuestionario individual |
@@ -69,9 +69,32 @@ consulta que quedaron como colchón (30/09 o 06/10).
 - **Parte A — Presentación virtual (grupal):** la del martes 13/10, o una instancia equivalente dentro del período de parciales.
 - **Parte B — Cuestionario individual (30 pts, Google Forms):** ya existe en `rubrica.md`, no es un examen nuevo. Sugerencia: rendirlo presencial por consistencia institucional, a confirmar.
 
+## Taller "Qué pide el mercado" (martes 06/10, cierre)
+
+Sesión presencial con proyector, fuera de la rúbrica de EIDAS — conecta el cierre del
+cuatrimestre con la búsqueda laboral real. Mismo taller en las dos comisiones (ver también
+`materias/af-diseno-sistemas-web-31/cronograma-2c-2026.md`, ahí va el viernes 16/10).
+
+**Se fusiona con una actividad que ya estaba preparada y nunca se dio:** la comparación de
+3 avisos reales (Avalian/Federada/Claro Pay) contra los contenidos de la materia, en
+`pablopedernera0.github.io/que-pide-el-mercado/` (armada 18/08 para la semana 2, quedó sin
+agendar). Se retoma y se extiende ese mismo archivo como continuación, en vez de abrir una
+página nueva — el 06/10 es la primera vez que se da.
+
+**Material a entregar a los estudiantes antes de la clase** (ya armados, en
+`pablopedernera0.github.io/que-pide-el-mercado/`):
+- `guia-linkedin.html` — tips, recomendaciones y recursos para armar un perfil efectivo.
+- `lista-puestos.html` — dónde y cómo buscar avisos de Analista Funcional / de Procesos /
+  Business Analyst, con la consigna de traer 2 avisos propios (retoma la consigna original,
+  nunca se pidió porque la clase no se había dado todavía).
+
+**Sin cuestionario aparte** — la clase cierra en vivo, con la discusión grupal de los
+avisos que cada uno trajo (mismo formato que Avalian/Federada/Claro Pay en la
+presentación), no con un entregable escrito.
+
 ## Riesgo a tener presente
 
-El nivel de avance real varía por grupo ("algunos solo dejaron planteados los títulos de los casos de uso"). Las fechas de "revisión en vivo" están pensadas para calibrar sobre la marcha cuánto tiempo de clase necesita cada sección — si un grupo viene muy atrasado en Casos de Uso, probablemente haga falta correr tiempo de Modelo ER o Diseño UI hacia las semanas de consulta (30/09 y 06/10), que quedaron sin contenido fijo a propósito como colchón.
+El nivel de avance real varía por grupo ("algunos solo dejaron planteados los títulos de los casos de uso"). Las fechas de "revisión en vivo" están pensadas para calibrar sobre la marcha cuánto tiempo de clase necesita cada sección — si un grupo viene muy atrasado en Casos de Uso, probablemente haga falta correr tiempo de Modelo ER o Diseño UI hacia la semana de consulta del Mié 30/09, el único colchón que queda sin contenido fijo (el Mar 06/10 pasó a ser el taller "Qué pide el mercado", ver arriba).
 
 ## Nota sobre alcance
 

@@ -27,22 +27,58 @@ Si preferís la alternativa, avisame y reordeno.
 **Semanas virtuales = trabajo en grupo (miércoles corto = check-in, viernes largo = sesión principal de construcción).**
 **Semanas presenciales = revisión en vivo con proyector de lo volcado (miércoles corto = feedback rápido, viernes largo = revisión más profunda), sin contenido teórico nuevo salvo repasos breves puntuales.**
 
-| Semana      | Modalidad | Miércoles (80 min) | Viernes (120 min) | Sección de la rúbrica |
-|-------------|---|---|---|---|
-| 12-14/08    | Virtual | Alta del repo desde el template, agregar al profesor como colaborador | Volcar Stakeholders + arrancar Requisitos | Onboarding + Stakeholders + Requisitos |
-| 26-28/08    | Presencial | **Actualizado 19/08:** taller de DoR + Slicing (la revisión de Requisitos se corre, entrega retrasada — ver nota abajo) | Se corrió también, absorbida en la fila del 02-04/09 | Requisitos + DoR/Slicing |
-| 02-04/09    | Presencial | **Actualizado 28/08:** Cierre de Requisitos + Feedback rápido de HU (sumado desde la semana corrida del 26-28/08) | Historias de Usuario completas + arranque del diagrama general de Casos de Uso, foco en actores/include-extend — **entrega sugerida de Requisitos + HU** | Requisitos + HU + Casos de uso |
-| 09-11/09    | Virtual | Diagrama general de Casos de Uso | CUs desarrollados completos + diagramas de secuencia — **cierre de la sección más pesada (20 pts)** | Casos de uso |
-| 16-18/09    | Presencial | **Entrega de plantillas completas (Requisitos, HU, Casos de Uso) — entrega intermedia** | Revisión en vivo de lo entregado, feedback puntual por grupo | Requisitos + HU + Casos de uso (20 pts) |
-| 23-25/09    | Virtual | Modelo ER | Diseño UI / wireframes | Modelo ER + Diseño UI |
-| 30/09-02/10 | Presencial | Consulta general | Consulta general — **colchón para lo que se haya atrasado** | — |
-| 07-09/10    | Virtual | Últimos ajustes: README, `integrantes.md` — **entrega sugerida del repo completo** | **Presentación final grupal = Parcial, Parte A** | README |
-| 14-16/10    | Presencial | Cierre del cuatrimestre | Repaso general para el Cuestionario individual | — |
+| Fecha     | Modalidad | Sección de la rúbrica | Actividad |
+|-----------|---|---|---|
+| Mié 12/08 | Virtual | Onboarding + Stakeholders + Requisitos | Primera clase, sin previo. Alta del repo desde el template, agregar al profesor como colaborador |
+| Vie 14/08 | Virtual | Onboarding + Stakeholders + Requisitos | **Deben tener:** repo dado de alta (del miércoles). Volcar Stakeholders + arrancar Requisitos |
+| Mié 26/08 | Presencial | Requisitos + DoR/Slicing | **Deben tener:** Stakeholders volcados y Requisitos iniciados. **Actualizado 19/08:** taller de DoR + Slicing — no se pide entrega de contenido nuevo esta semana, foco en método de trabajo (la revisión de Requisitos se corre, entrega retrasada — ver nota abajo) |
+| Vie 28/08 | Presencial | Requisitos + DoR/Slicing | Se corrió también, absorbida en la clase del 02/09 |
+| Mié 02/09 | Presencial | Requisitos + HU + Casos de uso | **Deben tener: Requisitos completos.** **Actualizado 28/08:** cierre de Requisitos en clase + feedback rápido de HU (sumado desde la semana corrida del 26-28/08) |
+| Vie 04/09 | Presencial | Requisitos + HU + Casos de uso | **Deben tener: HU completas.** Arranque del diagrama general de Casos de Uso, foco en actores/include-extend — **entrega sugerida de Requisitos + HU** |
+| Mié 09/09 | Virtual | Casos de uso | **Deben tener:** avance de HU incorporado (de la clase pasada). Diagrama general de Casos de Uso |
+| Vie 11/09 | Virtual | Casos de uso | **Deben tener:** diagrama general de CU armado (del miércoles). CUs desarrollados completos + diagramas de secuencia — **cierre de la sección más pesada (20 pts) al final de esta semana** |
+| Mié 16/09 | Presencial | Requisitos + HU + Casos de uso (20 pts) | **Deben tener: Requisitos, HU y Casos de Uso completos — entrega de plantillas completas (entrega intermedia).** |
+| Vie 18/09 | Presencial | Requisitos + HU + Casos de uso (20 pts) | **Deben tener:** entrega intermedia ya subida (del miércoles). Revisión en vivo de lo entregado, feedback puntual por grupo |
+| Mié 23/09 | Virtual | Modelo ER + Diseño UI | **Deben tener:** feedback de la entrega intermedia incorporado. Modelo ER |
+| Vie 25/09 | Virtual | Modelo ER + Diseño UI | **Deben tener:** avance de Modelo ER (del miércoles). Diseño UI / wireframes — **al cierre de esta semana, Modelo ER y Diseño UI deberían quedar completos** (no hay revisión presencial dedicada después, ver colchón de la clase siguiente) |
+| Mié 30/09 | Presencial | — | **Deben tener (idealmente):** Modelo ER y Diseño UI completos. Consulta general |
+| Vie 02/10 | Presencial | — | Consulta general — **colchón para lo que se haya atrasado de cualquier sección anterior** |
+| Mié 07/10 | Virtual | README | **Deben tener: repo completo (README, `integrantes.md`) — entrega sugerida del repo completo** |
+| Vie 09/10 | Virtual | README | **Deben tener:** repo y presentación listos. **Presentación final grupal = Parcial, Parte A** |
+| Mié 14/10 | Presencial | — | Cierre general del cuatrimestre — consultas finales sueltas. El repaso del Cuestionario individual queda disponible de forma asincrónica, sin sesión presencial dedicada |
+| Vie 16/10 | Presencial | — | **Taller "Qué pide el mercado"** (presencial, con proyector) — ver sección dedicada abajo |
 
 ## Parcial (fecha exacta a confirmar)
 
 - **Parte A — Presentación virtual (grupal):** viernes 09/10 (ver tensión de calendario arriba).
 - **Parte B — Cuestionario individual (30 pts, Google Forms):** el mismo de `rubrica.md`, no es un examen nuevo — a rendir en el período de parciales, presencial por consistencia institucional (a confirmar).
+
+## Taller "Qué pide el mercado" (viernes 16/10, cierre)
+
+Sesión presencial con proyector, fuera de la rúbrica de EIDAS — conecta el cierre del
+cuatrimestre con la búsqueda laboral real. Mismo taller en las dos comisiones (ver también
+`materias/af-diseno-sistemas-web-32/cronograma-2c-2026.md`, ahí va el martes 06/10).
+
+**Se fusiona con una actividad que ya estaba preparada y nunca se dio:** la comparación de
+3 avisos reales (Avalian/Federada/Claro Pay) contra los contenidos de la materia, en
+`pablopedernera0.github.io/que-pide-el-mercado/` (armada 18/08 para la semana 2, quedó sin
+agendar). Se retoma y se extiende ese mismo archivo como continuación, en vez de abrir una
+página nueva — el 16/10 es la primera vez que se da.
+
+**Material a entregar a los estudiantes antes de la clase** (ya armados, en
+`pablopedernera0.github.io/que-pide-el-mercado/`):
+- `guia-linkedin.html` — tips, recomendaciones y recursos para armar un perfil efectivo.
+- `lista-puestos.html` — dónde y cómo buscar avisos de Analista Funcional / de Procesos /
+  Business Analyst, con la consigna de traer 2 avisos propios (retoma la consigna original,
+  nunca se pidió porque la clase no se había dado todavía).
+
+**Sin cuestionario aparte** — la clase cierra en vivo, con la discusión grupal de los
+avisos que cada uno trajo (mismo formato que Avalian/Federada/Claro Pay en la
+presentación), no con un entregable escrito.
+
+**A cambio de este taller**, la sesión del miércoles 14/10 deja de tener repaso presencial
+dedicado para el Cuestionario individual — ese repaso pasa a ofrecerse de forma
+asincrónica.
 
 ## Pendiente de reprogramar
 

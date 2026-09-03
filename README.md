@@ -33,8 +33,8 @@ El fundamento pedagógico completo, con las referencias teóricas, está en
 3. El docente revisa ese borrador, ajusta puntajes y agrega contexto que la IA no puede
    ver (proceso grupal, presentación oral, etc.).
 4. Al aprobarlo, un script mergea la devolución a `main`, la pushea — recién ahí se
-   vuelve visible para el grupo — y dispara una automatización (N8N) que sube el archivo
-   a Drive y notifica por Gmail.
+   vuelve visible para el grupo — y dispara una automatización (N8N) que notifica por
+   Gmail con un link directo al archivo en el repo del grupo (nada se duplica en Drive).
 
 El diseño completo (estructura de carpetas, formato de la devolución, cómo dar de alta
 una materia nueva) está en [`CLAUDE.md`](CLAUDE.md); los pasos operativos día a día, en
