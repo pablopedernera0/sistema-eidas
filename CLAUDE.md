@@ -126,8 +126,9 @@ también (bookkeeping, para que otra máquina no lo vuelva a publicar; si esto �
 no aborta — la devolución ya se publicó, lo importante ya pasó) —
         ↓
 El mismo comando dispara automáticamente el workflow de N8N (webhook local,
-no sale de esta máquina) para subir el archivo a Drive y notificar por Gmail,
-con la materia incluida en el nombre de archivo y en el asunto del mail
+no sale de esta máquina) para notificar por Gmail con un link directo al
+archivo ya pusheado al repo del grupo (`.../blob/main/feedback/AAAA-MM-DD.md`,
+nada se sube a Drive), con la materia incluida en el asunto del mail
 ```
 
 ---
@@ -273,6 +274,7 @@ que sí viaja entre máquinas. Ver "Pipeline de evaluación" arriba para el fluj
 - [~] Apps Script en Google Forms → repo — **decisión: no se hace.** El cuestionario ya se autocalifica en Forms, y como es individual (no grupal), meterlo en el repo del grupo expondría la nota de cada estudiante al resto del equipo.
 - [~] Levantar N8N en el Linode — **decisión: no es necesario por ahora.** Todo el pipeline es local; N8N puede seguir corriendo en la PC del docente indefinidamente. El Linode solo pasaría a ser necesario si un servicio externo necesitara llegarle a N8N desde internet.
 - [x] Armar lógica del flow N8N en local: genera archivo → sube a "Devoluciones EIDAS" en Drive → notifica por Gmail (workflow `Evaluacion EIDAS`, exportado a `infra/n8n/workflows/evaluacion-eidas.json`)
+- [x] **2026-09-03: sacado el paso de Drive.** El mail ya no linkea a una copia subida a Drive — linkea directo al archivo que `/publicar` ya pusheó al repo del grupo (`grupos.json` ya tenía el campo `repo`, alcanzó con derivar la URL del blob en el nodo "Buscar datos del grupo"). Se sacaron los nodos "Leer devolución" y "Upload file" del workflow. La credencial de Drive queda sin uso (no hace falta sacarla del import). **Pendiente: reimportar el workflow actualizado en N8N** — `infra/n8n/setup.sh` NO lo hace solo (si detecta que "Evaluacion EIDAS" ya existe, no lo toca, justamente para no desactivarlo). Hace falta reimportarlo a mano: `docker compose exec n8n n8n import:workflow --input=/home/node/data/infra/n8n/workflows/evaluacion-eidas.json` desde `infra/n8n/`, y después volver a prender el toggle "Active" en `localhost:5678` (queda inactivo tras cualquier reimport). El cambio en el JSON del repo todavía no corrió en la instancia real.
 - [x] Workflow de N8N conectado a los archivos reales, con disparo automático vía Webhook (workflow activado/publicado) — `scripts/grupos.py publicar` lo llama solo al final, sin volver a tipear nada. Fallback manual: `scripts/grupos.py notificar <materia> <grupo-id> <fecha>`. Requiere `N8N_RESTRICT_FILE_ACCESS_TO` seteado en `docker-compose.yml` y el bind mount del proyecto en `/home/node/data`.
 - [x] Escribir marco teórico del Sistema EIDAS (`marco-teorico-fundamentacion.md` y `marco-teorico-resumen.md`) — pendiente confirmar datos de edición de Achilli/Ander-Egg y ampliar referencia al seminario de Placci sobre IA
 - [x] Soporte multi-materia (2026-08-04): reestructurado a `materias/<carrera>-<materia>-<comisión>/` — cada una con su propia `rubrica.md`, `template/` (repo GitHub propio) y `grupos.json`. `scripts/grupos.py`, `/evaluar-grupo` y el workflow de N8N ahora toman la materia como parámetro. Migrada la materia existente a `af-diseno-sistemas-web-31`.

@@ -174,18 +174,19 @@ retomarla desde cualquiera de tus máquinas.
    `main` (no hay branch de por medio, así que no hace falta merge), y **dispara
    automáticamente la notificación en N8N** (vía un webhook local — requiere que N8N esté
    corriendo: `infra/n8n/setup.sh` lo levanta y lo deja configurado solo). N8N busca el
-   email del grupo en `materias/<materia>/grupos.json`, lee el
-   archivo recién publicado, lo sube a "Devoluciones EIDAS" en Drive con la materia en el
-   nombre del archivo, y manda el mail con el link — sin que tengas que abrir el navegador
-   ni tipear nada de nuevo.
+   email y el repo del grupo en `materias/<materia>/grupos.json`, arma el link directo al
+   archivo recién publicado en el repo del grupo (`.../blob/main/feedback/AAAA-MM-DD.md`,
+   nada se sube a Drive) y manda el mail con ese link — sin que tengas que abrir el
+   navegador ni tipear nada de nuevo.
 
-   Requisito para que esto funcione: el grupo tiene que tener un campo `"email"` cargado en
-   su entrada de `grupos.json` (ver sección 2).
+   Requisito para que esto funcione: el grupo tiene que tener los campos `"email"` y
+   `"repo"` cargados en su entrada de `grupos.json` (ver sección 2).
 
    **En una máquina nueva:** no hace falta configurar N8N a mano — corré
    `sistema-eidas/infra/n8n/setup.sh` una vez. Crea los symlinks a los secretos (que viven
    en `sistema-eidas-datos/n8n/`, ver el `README.md` de ese repo), levanta el contenedor, e
-   importa el workflow y las credenciales de Gmail/Drive por CLI. Único paso manual que
+   importa el workflow y las credenciales por CLI (el workflow ya no usa la de Drive, pero
+   no hace falta sacarla del import — no molesta si queda sin usar). Único paso manual que
    queda: prender el toggle "Active" del workflow "Evaluacion EIDAS" en `localhost:5678` —
    esta versión de N8N no soporta activarlo por CLI fuera de modo queue. El script es
    idempotente, corrélo de nuevo sin miedo si no estás seguro de en qué quedó una máquina.
