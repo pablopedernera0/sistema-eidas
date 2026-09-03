@@ -65,15 +65,16 @@ cuatrimestre con la búsqueda laboral real. Mismo taller en las dos comisiones (
 agendar). Se retoma y se extiende ese mismo archivo como continuación, en vez de abrir una
 página nueva — el 16/10 es la primera vez que se da.
 
-**Material a entregar a los estudiantes antes de la clase** (ninguno existe todavía, hay
-que crearlos):
-- Guía de LinkedIn — tips, recomendaciones y recursos para armar un perfil efectivo,
-  publicada en `pablopedernera0.github.io`.
-- Lista de instrucciones sobre qué puestos buscar.
-- Cuestionario tipo guía de estudio, para completar antes de venir a clase.
-- **Consigna a los estudiantes:** traer 2 avisos propios de analista funcional o analista
-  de procesos (retoma la consigna original de `que-pide-el-mercado/`, nunca se pidió porque
-  la clase no se había dado todavía).
+**Material a entregar a los estudiantes antes de la clase** (ya armados, en
+`pablopedernera0.github.io/que-pide-el-mercado/`):
+- `guia-linkedin.html` — tips, recomendaciones y recursos para armar un perfil efectivo.
+- `lista-puestos.html` — dónde y cómo buscar avisos de Analista Funcional / de Procesos /
+  Business Analyst, con la consigna de traer 2 avisos propios (retoma la consigna original,
+  nunca se pidió porque la clase no se había dado todavía).
+
+**Sin cuestionario aparte** — la clase cierra en vivo, con la discusión grupal de los
+avisos que cada uno trajo (mismo formato que Avalian/Federada/Claro Pay en la
+presentación), no con un entregable escrito.
 
 **A cambio de este taller**, la sesión del miércoles 14/10 deja de tener repaso presencial
 dedicado para el Cuestionario individual — ese repaso pasa a ofrecerse de forma
