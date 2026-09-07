@@ -34,7 +34,7 @@ Si preferís la alternativa, avisame y reordeno.
 | Mié 26/08 | Presencial | Requisitos + DoR/Slicing | **Deben tener:** Stakeholders volcados y Requisitos iniciados. **Actualizado 19/08:** taller de DoR + Slicing — no se pide entrega de contenido nuevo esta semana, foco en método de trabajo (la revisión de Requisitos se corre, entrega retrasada — ver nota abajo) |
 | Vie 28/08 | Presencial | Requisitos + DoR/Slicing | Se corrió también, absorbida en la clase del 02/09 |
 | Mié 02/09 | Presencial | Requisitos + HU + Casos de uso | **Deben tener: Requisitos completos.** **Actualizado 28/08:** cierre de Requisitos en clase + feedback rápido de HU (sumado desde la semana corrida del 26-28/08) |
-| Vie 04/09 | Presencial | Requisitos + HU + Casos de uso | **Deben tener: HU completas.** Arranque del diagrama general de Casos de Uso, foco en actores/include-extend — **entrega sugerida de Requisitos + HU** |
+| Vie 04/09 | Presencial | Requisitos + HU + Casos de uso | **Deben tener: HU iniciadas (no hace falta que estén completas).** Arranque del diagrama general de Casos de Uso, foco en actores/include-extend — **entrega sugerida de Requisitos + HU** |
 | Mié 09/09 | Virtual | Casos de uso | **Deben tener:** avance de HU incorporado (de la clase pasada). Diagrama general de Casos de Uso |
 | Vie 11/09 | Virtual | Casos de uso | **Deben tener:** diagrama general de CU armado (del miércoles). CUs desarrollados completos + diagramas de secuencia — **cierre de la sección más pesada (20 pts) al final de esta semana** |
 | Mié 16/09 | Presencial | Requisitos + HU + Casos de uso (20 pts) | **Deben tener: Requisitos, HU y Casos de Uso completos — entrega de plantillas completas (entrega intermedia).** |

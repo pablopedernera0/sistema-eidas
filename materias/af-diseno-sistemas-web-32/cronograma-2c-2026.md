@@ -34,7 +34,7 @@ Martes y miércoles alternan modalidad opuesta cada semana. Asumo virtual = con 
 | Mar 25/08     | Virtual | Stakeholders + Requisitos | Trabajo en grupo: volcar stakeholders y requisitos ya presentados a `docs/stakeholders.md` y `docs/requisitos.md`, completando lo que falte |
 | Mar 01/09     | Presencial | Historias de usuario | Revisión en vivo de HU volcadas — repaso breve de INVEST solo si hace falta |
 | Mié 02/09     | Presencial | Historias de usuario | **Actualizado 02/09:** la fila decía taller de DoR/Slicing (ver nota debajo de la tabla), pero la clase terminó siendo un repaso de Historias de Usuario — el taller de DoR/Slicing queda pendiente de reprogramar. |
-| **Vie 04/09** | — | Historias de usuario | **No es día de cursada de esta comisión (el patrón es martes/miércoles) — es la fecha límite pedida en la clase del 02/09 para que los grupos suban las HU al repo.** |
+| **Vie 04/09** | — | Historias de usuario | **No es día de cursada de esta comisión (el patrón es martes/miércoles) — es la fecha límite pedida en la clase del 02/09 para que los grupos tengan las HU iniciadas y subidas al repo (no hace falta que estén completas).** |
 | Mar 08/09     | Presencial | Requisitos + HU + Casos de uso | Cierre de Requisitos y HU (lo pendiente desde que el taller de DoR/Slicing corrió esta revisión) + arranque del diagrama general de Casos de Uso |
 | Mié 09/09     | Virtual | Casos de uso (20 pts) | Trabajo en grupo: expandir a diagrama general completo + arrancar CUs desarrollados |
 | Mar 15/09     | Virtual | Casos de uso (20 pts) | Trabajo en grupo: cierre de CUs desarrollados (precondiciones, postcondiciones, secuencia, excepciones) |
@@ -60,7 +60,8 @@ grupo del Mié 23/09, sin revisión en vivo previa dedicada).
 **Corrección, más tarde el mismo 2026-09-02:** lo de arriba asumía que el taller de DoR/Slicing
 ya se había dado el 02/09 — no fue así. La clase del 02/09 terminó siendo un repaso de
 Historias de Usuario, y en esa clase se pidió como fecha límite el viernes 04/09 para que los
-grupos suban las HU al repo (no es día de cursada de esta comisión, es solo el deadline). El
+grupos tengan las HU iniciadas y subidas al repo — no completas — (no es día de cursada de
+esta comisión, es solo el deadline). El
 taller de DoR/Slicing sigue sin darse — reprogramar, probablemente en una de las semanas de
 consulta que quedaron como colchón (30/09 o 06/10).
 

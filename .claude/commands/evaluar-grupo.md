@@ -38,19 +38,35 @@ Seguí estos pasos, en orden:
    los criterios transversales que pide `CLAUDE.md`: coherencia entre artefactos,
    profundidad de las justificaciones, y manejo de excepciones (no solo el camino feliz).
 
+   **Comparar contra la devolución anterior de este mismo grupo (si existe).** Buscá en
+   `sistema-eidas-datos/<materia>/borradores/<grupo-id>/` el `AAAA-MM-DD.md` más reciente de
+   fecha anterior a hoy — es el único lugar donde vive cualquier devolución de este grupo,
+   publicada o no (no busques en `materias/<materia>/grupos/<grupo-id>/feedback/`: ahí solo
+   están las que ya se publicaron, y esta comparación tiene que incluir también las que
+   quedaron revisadas o en borrador sin publicar). Si existe una devolución anterior:
+   - Para cada sección **en alcance hoy** que en esa devolución anterior también tenía un
+     nivel puntuado (no cuenta si ahí decía "no corresponde todavía"), anotá en su
+     sub-sección de "Devolución por sección" el nivel anterior junto al actual — ej.:
+     *"(devolución del 26/08: Insuficiente → ahora: Muy bueno)"*. El objetivo es que quede
+     registrado el momento en que una sección mejoró de nivel, no solo la foto de hoy.
+   - Para una sección que hoy tiene nivel pero en la devolución anterior no lo tenía (primera
+     vez que entra en alcance, o no había devolución previa), decilo explícitamente
+     ("primera evaluación de esta sección") — no lo compares como si viniera de
+     "Insuficiente".
+   - Si no hay ninguna devolución anterior para este grupo, saltá este punto — no hay nada
+     contra qué comparar todavía.
+
    Si la rúbrica de esta materia incluye la sección "Proceso: evolución sobre la entrega
-   intermedia", juntá además lo que hace falta para esa sección (no la puntúes todavía sin
-   esto):
-   - Buscá en `materias/<materia>/grupos/<grupo-id>/feedback/` si hay algún
-     `AAAA-MM-DD.md` de fecha anterior a hoy (la devolución de una entrega intermedia). Si
-     existe, leela y anotá qué observaciones señalaba.
+   intermedia" (solo aplica en una devolución final, ver paso 3), usá la comparación de
+   arriba, sección por sección, como evidencia principal — sumada al patrón del historial de
+   commits:
    - Corré
      `git -C materias/<materia>/grupos/<grupo-id> log --format='--- %h|%ad|%s' --date=short --name-only main`
      y clasificá, para README/`integrantes.md`/cada archivo de `docs/`/`diagramas/`, si se
      tocó en más de una fecha distinta (revisado en el tiempo) o solo apareció en un bloque
      cerca de la fecha de esta evaluación. **No hagas el desglose por autor acá** — esa
      parte es de `/resumen-commits`, no de esta sección de la rúbrica.
-   - Si no hay devolución intermedia previa para este grupo, basá el nivel de esta sección
+   - Si no hay ninguna devolución anterior para este grupo, basá el nivel de esta sección
      solo en el patrón del historial — no lo trates como "Insuficiente" automáticamente,
      puede ser una causa ajena al grupo (ver criterio transversal de la rúbrica).
 
