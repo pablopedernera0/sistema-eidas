@@ -127,6 +127,7 @@ def publicar(materia, grupo_id, skip_confirm=False):
     run(["git", "pull", "origin", "main"], cwd=path)
 
     fechas = []
+    marcados = {}
     feedback_dir = path / "feedback"
     feedback_dir.mkdir(exist_ok=True)
     for f in pendientes:
@@ -137,12 +138,18 @@ def publicar(materia, grupo_id, skip_confirm=False):
             print(f"Aviso: saqué restos de 'Confianza Claude' y/o 'Pregunta para el docente' de {fecha}.md.")
         marcado = text.replace("- [ ] Publicado al grupo", "- [x] Publicado al grupo")
         (feedback_dir / f"{fecha}.md").write_text(marcado)
-        f.write_text(marcado)  # también en el borrador — para no volver a publicarlo de nuevo
+        marcados[f] = marcado
         fechas.append(fecha)
         run(["git", "add", f"feedback/{fecha}.md"], cwd=path)
 
     run(["git", "commit", "-m", f"Devolución {fechas_str}"], cwd=path)
     run(["git", "push", "origin", "main"], cwd=path)
+
+    # Recién acá, con el push ya confirmado, marcamos el borrador como publicado — si el
+    # push de arriba falla, run() aborta antes de llegar a esto, y el borrador se queda
+    # sin marcar (correcto: no se publicó nada todavía).
+    for f, marcado in marcados.items():
+        f.write_text(marcado)  # también en el borrador — para no volver a publicarlo de nuevo
     print(f"\n{materia}/{grupo_id}: devolución publicada ({fechas_str}).")
 
     # La devolución ya está pusheada al repo del grupo — lo de acá es bookkeeping en el
