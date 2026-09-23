@@ -15,7 +15,10 @@ DATOS_DIR = ROOT.parent / "sistema-eidas-datos"
 N8N_WEBHOOK_URL = "http://localhost:5678/webhook/evaluar-grupo"
 FECHA_RE = re.compile(r"^(\d{4}-\d{2}-\d{2})\.md$")
 CONFIANZA_RE = re.compile(r"^\*\*Confianza Claude:\*\*.*\n", re.MULTILINE)
-PREGUNTA_DOCENTE_RE = re.compile(r"## Pregunta para el docente\n\n.*?\n\n(?=## )", re.DOTALL)
+# Hasta el próximo título "## " o el fin del archivo, haya o no línea en blanco después del
+# título (el 2026-09-23 se publicó una pregunta al docente porque el regex exigía esa línea).
+PREGUNTA_DOCENTE_RE = re.compile(r"^## Pregunta para el docente\n.*?(?=^## |\Z)", re.DOTALL | re.MULTILINE)
+APROBADO_RE = re.compile(r"^- \[x\] Revisado y aprobado", re.MULTILINE)
 
 
 def limpiar_confidencial(text):
@@ -103,6 +106,18 @@ def publicar(materia, grupo_id, skip_confirm=False):
     if not pendientes:
         raise SystemExit(f"No hay ningún borrador sin publicar en {bdir}")
 
+    # Solo se publica lo que el docente aprobó. El 2026-09-23 se publicó un borrador del
+    # 16/09 sin revisar porque se colaba junto con el de ese día.
+    sin_aprobar = [f for f in pendientes if not APROBADO_RE.search(f.read_text())]
+    pendientes = [f for f in pendientes if f not in sin_aprobar]
+    if sin_aprobar:
+        print(
+            "Quedan sin publicar (falta tildar 'Revisado y aprobado'): "
+            + ", ".join(f.stem for f in sin_aprobar)
+        )
+    if not pendientes:
+        raise SystemExit(f"Ningún borrador pendiente de {grupo_id} está aprobado — no se publica nada.")
+
     sucio = subprocess.run(
         ["git", "status", "--porcelain"], cwd=path, capture_output=True, text=True
     ).stdout
@@ -112,6 +127,17 @@ def publicar(materia, grupo_id, skip_confirm=False):
             f"debería pasar (ya nada se edita ahí hasta publicar), revisalo a mano antes "
             f"de publicar."
         )
+
+    # Control antes de tocar nada: si la limpieza deja texto interno, no se publica ningún
+    # borrador (cortar a mitad del bucle de abajo dejaría el repo del grupo a medio escribir).
+    for f in pendientes:
+        text = limpiar_confidencial(f.read_text())
+        if "Pregunta para el docente" in text or "Confianza Claude" in text:
+            raise SystemExit(
+                f"{f.name} todavía tiene texto interno ('Pregunta para el docente' o "
+                f"'Confianza Claude') después de limpiarlo — sacalo a mano del borrador. "
+                f"No se publicó nada."
+            )
 
     fechas_str = ", ".join(f.stem for f in pendientes)
     if not skip_confirm:

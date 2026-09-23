@@ -114,8 +114,12 @@ sistema-eidas-datos antes de seguir en otra máquina, o el cambio no viaja —
         ↓
 Profe corre: python3 scripts/grupos.py publicar <materia> <grupo-id>
 — busca en sistema-eidas-datos/<materia>/borradores/<grupo-id>/ los AAAA-MM-DD.md que
-todavía no digan "[x] Publicado al grupo"; corta con error si no hay ninguno, o si el repo
-del grupo tiene cambios sin commitear (no debería pasar — ya nada se edita ahí hasta acá).
+todavía no digan "[x] Publicado al grupo" **y que tengan tildado "Revisado y aprobado"** (los
+que no están aprobados quedan afuera y los nombra; si ninguno está aprobado, no publica nada);
+corta con error si no hay ninguno, o si el repo del grupo tiene cambios sin commitear (no
+debería pasar — ya nada se edita ahí hasta acá). También corta, antes de tocar nada, si
+después de limpiar queda texto interno en algún borrador. Pide confirmación por teclado:
+desde Claude Code se corre con `--yes`.
 Saca, como red de seguridad, cualquier "Confianza Claude" o "Pregunta para el docente" que
 haya quedado sin sacar, tilda "Publicado al grupo", escribe cada archivo en
 materias/<materia>/grupos/<grupo-id>/feedback/ del repo clonado, commitea y pushea directo
