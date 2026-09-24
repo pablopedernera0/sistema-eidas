@@ -52,6 +52,7 @@ sistema-eidas/
 ├── .claude/commands/evaluar-grupo.md   ← comando /evaluar-grupo <materia> <grupo-id>
 ├── marco-teorico*.md                   ← fundamento pedagógico (compartido, materia-agnóstico)
 ├── infra/n8n/                          ← docker-compose de N8N (local, compartido entre materias)
+├── infra/plantuml/                     ← PlantUML local: editor web (docker compose up -d → localhost:8090) y render.sh <materia> <grupo-id> para ver en SVG los diagramas de un grupo
 │   └── setup.sh                        ← setup en una máquina nueva, ver nota abajo
 ├── scripts/grupos.py                   ← sync/publicar/notificar, todos toman <materia> como argumento
 └── materias/

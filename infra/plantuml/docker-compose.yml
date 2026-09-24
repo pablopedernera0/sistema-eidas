@@ -1,0 +1,19 @@
+# Servidor local de PlantUML: editor web con vista previa en http://localhost:8090
+# Se levanta a demanda (no arranca solo con la máquina): docker compose up -d
+# Para generar los SVG de los diagramas de un grupo, ver render.sh (usa otra imagen, la CLI).
+services:
+  plantuml:
+    image: plantuml/plantuml-server:jetty
+    ports:
+      - "127.0.0.1:8090:8080"
+    networks:
+      - plantuml
+
+networks:
+  plantuml:
+    # Subred fija en 10.x por el mismo motivo que infra/n8n: en esta máquina una subred
+    # asignada por Docker puede pisar una interfaz real y el puerto publicado queda colgado.
+    # 10.250.98.0/24 es vecina de la de N8N (10.250.99.0/24) y no choca con nada.
+    ipam:
+      config:
+        - subnet: 10.250.98.0/24
