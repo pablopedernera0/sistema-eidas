@@ -107,10 +107,12 @@ def mezclar(meta, preguntas):
         orden = list(range(len(p['opciones'])))
         random.Random(semilla * 1000 + p['num']).shuffle(orden)
         opciones = [{'letra': letras[i], 'texto': p['opciones'][j]} for i, j in enumerate(orden)]
-        letra_ok = letras[orden.index(p['correcta'])]
+        letras_ok = [letras[orden.index(c)] for c in p['correctas']]
         publicas.append(dict(num=p['num'], puntos=p['puntos'],
                              enunciado=p['enunciado'], opciones=opciones))
-        clave[str(p['num'])] = dict(correcta=letra_ok, porque=p['porque'])
+        clave[str(p['num'])] = dict(correcta=letras_ok[0], porque=p['porque'])
+        if len(letras_ok) > 1:
+            clave[str(p['num'])]['correctas'] = letras_ok
     return publicas, clave
 
 
@@ -174,7 +176,8 @@ def corregir(args):
         puntos, marcas = 0, []
         for p in preguntas:
             dada = r.get(str(p['num']), '')
-            ok = dada == clave[str(p['num'])]['correcta']
+            c = clave[str(p['num'])]
+            ok = dada in c.get('correctas', [c['correcta']])
             puntos += p['puntos'] if ok else 0
             aciertos[p['num']] += ok
             marcas.append('ok' if ok else (dada or '-'))
