@@ -3,7 +3,9 @@
 Cuestionarios de opción múltiple a partir de un único archivo markdown.
 
 El banco de preguntas (con la clave) vive en sistema-eidas-datos, que es privado:
-este repo es público y nunca tiene que guardar la clave.
+este repo es público y nunca tiene que guardar la clave. El JSON que se publica en
+github.io sí la lleva: la página la usa para corregir cuando el alumno escribe el código
+del día que muestra ?modo=docente.
 
 Formato del archivo de preguntas:
 
@@ -11,6 +13,8 @@ Formato del archivo de preguntas:
     id: simulacro-2p-bicirio
     titulo: ...
     semilla: 2026
+    caso: bicirio              # carpeta casos/<caso>/caso.md del sitio
+    comisiones: 3°1°, 3°2°
     ---
 
     ### 1. (2 pts) Enunciado
@@ -21,10 +25,10 @@ Formato del archivo de preguntas:
 
 Comandos:
 
-    generar  <preguntas.md> --sitio <carpeta> --privado <carpeta>
-        Escribe <sitio>/preguntas.js (sin clave, se publica ya) y
-        <privado>/clave.js (se publica recién cuando termina el cuestionario).
-        El orden de las opciones se mezcla con la semilla, siempre igual.
+    generar  <preguntas.md> --sitio <carpeta>
+        Escribe <sitio>/<id>.json con las preguntas, la clave y las explicaciones,
+        para la página caso-bicirio/v2 de github.io (<sitio> es su carpeta
+        cuestionarios/). El orden de las opciones se mezcla con la semilla, siempre igual.
 
     corregir <preguntas.md> <archivos de respuestas...> [--csv salida.csv]
         Lee los .txt que generan los alumnos al finalizar, calcula el puntaje y
@@ -125,24 +129,26 @@ def generar(args):
     publicas, clave = mezclar(meta, preguntas)
     qid = cuestionario_id(meta, args.preguntas)
     total = sum(p['puntos'] for p in preguntas)
-    datos = dict(id=qid, titulo=meta.get('titulo', qid), total=total, preguntas=publicas)
-    sitio, privado = Path(args.sitio), Path(args.privado)
+    if 'caso' not in meta:
+        sys.exit('Falta `caso:` en el frontmatter (la carpeta casos/<caso>/ del sitio).')
+    comisiones = [c.strip() for c in meta.get('comisiones', '').split(',') if c.strip()]
+    if not comisiones:
+        sys.exit('Falta `comisiones:` en el frontmatter (por ejemplo: 3°1°, 3°2°).')
+    for p in publicas:
+        c = clave[str(p['num'])]
+        p['correctas'] = c.get('correctas', [c['correcta']])
+        p['porque'] = c['porque']
+    datos = dict(id=qid, titulo=meta.get('titulo', qid), caso=meta['caso'],
+                 comisiones=comisiones, total=total, preguntas=publicas)
+    sitio = Path(args.sitio)
     sitio.mkdir(parents=True, exist_ok=True)
-    privado.mkdir(parents=True, exist_ok=True)
-    (sitio / 'preguntas.js').write_text(
-        '// Generado por sistema-eidas/scripts/cuestionario.py. No editar a mano.\n'
-        'window.CUESTIONARIO = ' + json.dumps(datos, ensure_ascii=False, indent=1) + ';\n',
-        encoding='utf-8')
-    (privado / 'clave.js').write_text(
-        '// Generado por sistema-eidas/scripts/cuestionario.py. Publicar solo al terminar.\n'
-        'window.CLAVE = ' + json.dumps(dict(id=qid, respuestas=clave), ensure_ascii=False, indent=1)
-        + ';\n', encoding='utf-8')
+    salida = sitio / f'{qid}.json'
+    salida.write_text(json.dumps(datos, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
     reparto = {}
     for v in clave.values():
         reparto[v['correcta']] = reparto.get(v['correcta'], 0) + 1
     print(f'{len(preguntas)} preguntas, {total} puntos. Correctas por letra: {dict(sorted(reparto.items()))}')
-    print(f'  público : {sitio / "preguntas.js"}')
-    print(f'  privado : {privado / "clave.js"}  (subir al sitio recién al terminar)')
+    print(f'  {salida}')
 
 
 def leer_respuesta(ruta):
@@ -275,8 +281,7 @@ def main():
     sub = ap.add_subparsers(dest='cmd', required=True)
     g = sub.add_parser('generar')
     g.add_argument('preguntas')
-    g.add_argument('--sitio', required=True, help='carpeta pública (github.io)')
-    g.add_argument('--privado', required=True, help='carpeta privada para clave.js')
+    g.add_argument('--sitio', required=True, help='carpeta cuestionarios/ de caso-bicirio/v2 en github.io')
     c = sub.add_parser('corregir')
     c.add_argument('preguntas')
     c.add_argument('respuestas', nargs='+')
