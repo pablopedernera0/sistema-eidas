@@ -13,14 +13,10 @@ Acá **la semana completa** alterna modalidad (no el día): una semana entera Vi
 
 A partir del miércoles 12/08, temario vacío en la planilla hasta el período de parciales.
 
-## Tensión de calendario a resolver
+## Sin presentación final
 
-Pediste que la presentación final sea virtual y coincida con la última semana de clases. Acá la última semana de clases (14-16/10) es **presencial**, no virtual — a diferencia de 3°2°, donde la última semana sí caía virtual. Dos opciones:
-
-- **(Recomendada, la que usé abajo):** la presentación final va el **viernes 09/10** (última clase virtual disponible, sesión larga), y la semana presencial siguiente (14-16/10) queda como cierre + repaso para el Cuestionario individual, sin ser la semana de la presentación.
-- **Alternativa:** correr la presentación a la semana del 14-16/10 pero presencial (se pierde el "virtual" que pediste, se gana que coincida exactamente con la última semana).
-
-Si preferís la alternativa, avisame y reordeno.
+**Actualizado 02/10:** no hay presentación final grupal (decisión del docente). El parcial
+es escrito; queda solo "Parcial, Parte A" el viernes 09/10.
 
 ## Cronograma propuesto
 
@@ -44,13 +40,13 @@ Si preferís la alternativa, avisame y reordeno.
 | Mié 30/09 | Presencial | — | **Deben tener (idealmente):** Modelo ER y Diseño UI completos. Consulta general |
 | Vie 02/10 | Presencial | — | Consulta general — **colchón para lo que se haya atrasado de cualquier sección anterior** |
 | Mié 07/10 | Virtual | README | **Deben tener: repo completo (README, `integrantes.md`) — entrega sugerida del repo completo** |
-| Vie 09/10 | Virtual | README | **Deben tener:** repo y presentación listos. **Presentación final grupal = Parcial, Parte A** |
+| Vie 09/10 | Virtual | README | **Deben tener:** repo listo. **Parcial, Parte A** |
 | Mié 14/10 | Presencial | — | Cierre general del cuatrimestre — consultas finales sueltas. El repaso del Cuestionario individual queda disponible de forma asincrónica, sin sesión presencial dedicada |
 | Vie 16/10 | Presencial | — | **Taller "Qué pide el mercado"** (presencial, con proyector) — ver sección dedicada abajo |
 
 ## Parcial (fecha exacta a confirmar)
 
-- **Parte A — Presentación virtual (grupal):** viernes 09/10 (ver tensión de calendario arriba).
+- **Parte A:** viernes 09/10.
 - **Parte B — Cuestionario individual (30 pts, Google Forms):** el mismo de `rubrica.md`, no es un examen nuevo — a rendir en el período de parciales, presencial por consistencia institucional (a confirmar).
 
 ## Taller "Qué pide el mercado" (viernes 16/10, cierre)
