@@ -100,7 +100,7 @@ def main():
     check_repo("eidas-template (edición)", ROOT.parent / "eidas-template")
     check_repo(
         "pablopedernera0.github.io (sitio docente, no exclusivo de EIDAS)",
-        ROOT.parent / "pablopedernera0.github.io",
+        ROOT.parent.parent / "pablopedernera0.github.io",
     )
 
     memory_path = find_memory_repo()
