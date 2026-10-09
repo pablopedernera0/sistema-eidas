@@ -87,8 +87,8 @@ no existe; si el archivo ya existe, reemplazalo: es la foto del estado actual de
 ## Qué se les escapó
 (por área, con lo que falta y por qué importa)
 ## Bordes y coherencia
-## Para la presentación del <presentacion>
-(2 o 3 preguntas concretas para hacerle al grupo)
+## Para la revisión del <presentacion>
+(2 o 3 cosas concretas que tienen que quedar hechas en la branch para esa fecha)
 
 **Confianza Claude:** Alta / Media / Baja
 **Pregunta para el docente:** …
@@ -108,5 +108,5 @@ git -C ../sistema-eidas-datos push
 
 Un resumen corto: cumple o no el control, las áreas cubiertas y las que faltan, y la ruta
 del archivo. Esta devolución **no** se publica con `grupos.py publicar` (ese circuito es el de
-la rúbrica). Es para que el docente la use en la presentación del miércoles o la comparta
+la rúbrica). Es para que el docente la use en la revisión del miércoles o la comparta
 como quiera.
