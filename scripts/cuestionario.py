@@ -126,6 +126,22 @@ def cuestionario_id(meta, ruta):
     return meta.get('id') or Path(ruta).stem
 
 
+def escribir_indice(sitio):
+    """index.json con todos los cuestionarios de la carpeta: la página lo muestra como
+    índice cuando se abre sin ?cuestionario=. Se rehace entero cada vez."""
+    lista = []
+    for f in sorted(sitio.glob('*.json')):
+        if f.name == 'index.json':
+            continue
+        q = json.loads(f.read_text(encoding='utf-8'))
+        lista.append(dict(id=q['id'], titulo=q.get('titulo', q['id']),
+                          materia=q.get('materia', 'Diseño de Sistemas Web'),
+                          comisiones=q.get('comisiones', []), preguntas=len(q['preguntas']),
+                          total=q.get('total', 0)))
+    lista.sort(key=lambda q: (q['materia'], q['titulo']))
+    (sitio / 'index.json').write_text(json.dumps(lista, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
+
+
 def generar(args):
     meta, preguntas = leer_preguntas(args.preguntas)
     publicas, clave = mezclar(meta, preguntas)
@@ -151,6 +167,7 @@ def generar(args):
     sitio.mkdir(parents=True, exist_ok=True)
     salida = sitio / f'{qid}.json'
     salida.write_text(json.dumps(datos, ensure_ascii=False, indent=1) + '\n', encoding='utf-8')
+    escribir_indice(sitio)
     reparto = {}
     for v in clave.values():
         reparto[v['correcta']] = reparto.get(v['correcta'], 0) + 1
