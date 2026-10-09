@@ -1,0 +1,39 @@
+# Stack para juntar las respuestas de los cuestionarios que llegan por mail.
+# Dashboard en http://localhost:8430. Se levanta a demanda, después del N8N de infra/n8n
+# (se cuelga de su red para llamarlo): ver README.md.
+services:
+  api:
+    image: python:3.12-slim
+    restart: "no"
+    command: python3 -u /app/app.py
+    environment:
+      - DB=/datos/cuestionarios.db
+      - HTTP_PROXY=${HTTP_PROXY:-}
+      - HTTPS_PROXY=${HTTPS_PROXY:-}
+      - NO_PROXY=localhost,127.0.0.1,api,n8n,nginx
+    volumes:
+      - ./api:/app:ro
+      # Nombres y notas de estudiantes: queda en disco, nunca en git (ver .gitignore).
+      - ./datos:/datos
+    networks:
+      - n8n
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: "no"
+    depends_on:
+      - api
+    ports:
+      - "127.0.0.1:8430:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./web:/usr/share/nginx/html:ro
+    networks:
+      - n8n
+
+networks:
+  n8n:
+    # La red de infra/n8n (proyecto "n8n", red "n8n"): así nginx llega a n8n:5678 y N8N
+    # llega a api:8000. Por eso N8N tiene que estar levantado antes.
+    external: true
+    name: n8n_n8n

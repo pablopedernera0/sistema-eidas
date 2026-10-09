@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuestionarios por mail</title>
+<style>
+    :root {
+        --bg: #0d1117; --card: #161b22; --borde: #30363d; --texto: #c9d1d9; --muted: #8b949e;
+        --blue: #58a6ff; --green: #3fb950; --orange: #f0883e; --red: #f85149;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--texto); font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.5; }
+    main { max-width: 960px; margin: 0 auto; padding: 24px 16px 60px; }
+    h1 { color: var(--blue); font-size: 1.6rem; margin: 0 0 4px; }
+    h2 { color: var(--blue); font-size: 1.2rem; margin: 28px 0 10px; }
+    h3 { color: var(--green); font-size: 1.05rem; margin: 0 0 6px; }
+    .lead { color: var(--muted); margin: 0 0 20px; }
+    .card { background: var(--card); border: 1px solid var(--borde); border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; }
+    .fila { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .fila .crece { flex: 1; min-width: 200px; }
+    input[type=text] { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--borde); background: var(--bg); color: var(--texto); font-size: 1rem; }
+    button, a.btn { padding: 9px 14px; border-radius: 8px; border: none; font-weight: bold; font-size: 0.95rem; cursor: pointer; background: var(--green); color: var(--bg); text-decoration: none; }
+    button.sec, a.btn.sec { background: transparent; color: var(--blue); border: 1px solid var(--blue); }
+    button:disabled { opacity: 0.5; cursor: wait; }
+    .meta { color: var(--muted); font-size: 0.9rem; }
+    .msg { font-size: 0.92rem; color: var(--muted); margin: 8px 0 0; white-space: pre-line; }
+    .msg.ok { color: var(--green); }
+    .msg.err { color: var(--red); }
+    .num { font-size: 1.6rem; font-weight: bold; color: var(--texto); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+    th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--borde); vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; }
+    td.p { text-align: right; white-space: nowrap; }
+    .tabla { overflow-x: auto; }
+    .problema { color: var(--orange); }
+    .hidden { display: none; }
+    code { color: var(--orange); }
+</style>
+</head>
+<body>
+<main>
+    <h1>Cuestionarios por mail</h1>
+    <p class="lead">Cada cuestionario junta los mails con asunto <code>[id] …</code> que todavía no tienen la etiqueta <code>procesado</code>, los corrige y actualiza su planilla en Drive.</p>
+
+    <div class="card">
+        <div class="fila">
+            <div class="crece"><input type="text" id="nuevo" placeholder="id del cuestionario, como en el link (ej. caso-siga-af)" autocomplete="off"></div>
+            <button id="btn-agregar">Agregar</button>
+        </div>
+        <p class="msg" id="msg-agregar"></p>
+    </div>
+
+    <div id="lista"></div>
+
+    <div id="detalle" class="hidden">
+        <h2 id="det-titulo"></h2>
+        <div class="card">
+            <h3 id="det-resumen"></h3>
+            <div class="tabla"><table id="det-tabla"></table></div>
+        </div>
+        <div class="card">
+            <h3>Corridas</h3>
+            <div class="tabla"><table id="det-corridas"></table></div>
+        </div>
+    </div>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const esc = (t) => String(t ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const fecha = (iso) => iso ? new Date(iso).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' }) : '';
+
+async function api(ruta, opciones) {
+    const r = await fetch(ruta, opciones);
+    const tipo = r.headers.get('Content-Type') || '';
+    const datos = tipo.includes('json') ? await r.json() : { error: (await r.text()).slice(0, 300) };
+    if (!r.ok) throw new Error(datos.error || datos.message || `HTTP ${r.status}`);
+    return datos;
+}
+
+async function cargar() {
+    let lista;
+    try {
+        lista = await api('/api/cuestionarios');
+    } catch (e) {
+        $('lista').innerHTML = `<p class="msg err">No responde la API: ${esc(e.message)}</p>`;
+        return;
+    }
+    if (!lista.length) {
+        $('lista').innerHTML = '<p class="msg">Todavía no hay cuestionarios. Agregá uno arriba.</p>';
+        return;
+    }
+    $('lista').innerHTML = lista.map((q) => `
+        <div class="card" data-id="${esc(q.id)}">
+            <div class="fila">
+                <div class="crece">
+                    <h3>${esc(q.titulo)}</h3>
+                    <div class="meta"><code>${esc(q.id)}</code> · ${q.ultima_corrida
+                        ? `última corrida ${fecha(q.ultima_corrida.fecha)} (${q.ultima_corrida.mails} mails, ${q.ultima_corrida.nuevas} nuevas)`
+                        : 'nunca se procesó'}</div>
+                </div>
+                <div><span class="num">${q.respuestas}</span> <span class="meta">respuestas</span></div>
+            </div>
+            <div class="fila" style="margin-top:10px">
+                <button data-accion="procesar">Procesar mails</button>
+                <button class="sec" data-accion="ver">Ver respuestas</button>
+                <a class="btn sec" href="/api/cuestionarios/${encodeURIComponent(q.id)}/csv" download="${esc(q.id)}-respuestas.csv">CSV</a>
+                ${q.drive_file_id ? `<a class="btn sec" target="_blank" rel="noopener" href="https://drive.google.com/file/d/${encodeURIComponent(q.drive_file_id)}/view">Drive</a>` : ''}
+            </div>
+            <p class="msg"></p>
+        </div>`).join('');
+}
+
+$('lista').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+    const card = btn.closest('.card');
+    const id = card.dataset.id;
+    const msg = card.querySelector('.msg');
+    if (btn.dataset.accion === 'ver') return verDetalle(id);
+
+    btn.disabled = true;
+    btn.textContent = 'Procesando…';
+    msg.className = 'msg';
+    msg.textContent = 'Buscando mails en Gmail…';
+    try {
+        const r = await api('/procesar', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }),
+        });
+        const lineas = [`${r.mails} mails · ${r.nuevas} respuestas nuevas · ${r.repetidas} repetidas`];
+        (r.problemas || []).forEach((p) => lineas.push(`⚠ ${p.de}: ${p.motivo}`));
+        await cargar();
+        const nuevo = document.querySelector(`.card[data-id="${CSS.escape(id)}"] .msg`);
+        nuevo.className = 'msg ' + ((r.problemas || []).length ? 'err' : 'ok');
+        nuevo.textContent = lineas.join('\n');
+        if (!$('detalle').classList.contains('hidden')) verDetalle(id);
+    } catch (err) {
+        msg.className = 'msg err';
+        msg.textContent = 'Falló: ' + err.message + '\n¿Está N8N levantado y el flujo "Procesar cuestionario" activo?';
+        btn.disabled = false;
+        btn.textContent = 'Procesar mails';
+    }
+});
+
+async function verDetalle(id) {
+    const [q, r, corridas] = await Promise.all([
+        api(`/api/cuestionarios/${encodeURIComponent(id)}`),
+        api(`/api/cuestionarios/${encodeURIComponent(id)}/respuestas`),
+        api(`/api/cuestionarios/${encodeURIComponent(id)}/corridas`),
+    ]);
+    $('det-titulo').textContent = q.titulo;
+    const fs = r.respuestas;
+    const prom = fs.length ? fs.reduce((s, f) => s + f.puntos, 0) / fs.length : 0;
+    $('det-resumen').textContent = fs.length
+        ? `${fs.length} respuestas · promedio ${prom.toFixed(1)} / ${r.total}` : 'Sin respuestas todavía';
+    $('det-tabla').innerHTML = fs.length ? `
+        <tr><th>Nombre</th><th>Com.</th><th>Falló</th><th>Remitente</th><th class="p">Puntaje</th></tr>
+        ${fs.map((f) => `<tr>
+            <td>${esc(f.nombre)}<br><span class="meta">${fecha(f.fin)}</span></td>
+            <td>${esc(f.comision)}</td>
+            <td>${f.marcas.map((m, i) => m === 'ok' ? '' : 'P' + r.preguntas[i]).filter(Boolean).join(' ') || '—'}</td>
+            <td class="meta">${esc(f.remitente)}</td>
+            <td class="p"><b>${f.puntos}</b> / ${f.total}</td></tr>`).join('')}` : '';
+    $('det-corridas').innerHTML = corridas.length ? `
+        <tr><th>Fecha</th><th class="p">Mails</th><th class="p">Nuevas</th><th class="p">Repetidas</th><th>Problemas</th></tr>
+        ${corridas.map((c) => `<tr>
+            <td>${fecha(c.fecha)}</td><td class="p">${c.mails}</td><td class="p">${c.nuevas}</td><td class="p">${c.repetidas}</td>
+            <td class="problema">${c.problemas.map((p) => `${esc(p.de)}: ${esc(p.motivo)}`).join('<br>')}</td></tr>`).join('')}`
+        : '<tr><td class="meta">Nunca se procesó</td></tr>';
+    $('detalle').classList.remove('hidden');
+    $('detalle').scrollIntoView({ behavior: 'smooth' });
+}
+
+async function agregar() {
+    const id = $('nuevo').value.trim().toLowerCase();
+    const msg = $('msg-agregar');
+    if (!id) return;
+    try {
+        await api('/api/cuestionarios', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) });
+        msg.className = 'msg ok';
+        msg.textContent = `Agregado: ${id}`;
+        $('nuevo').value = '';
+        cargar();
+    } catch (e) {
+        msg.className = 'msg err';
+        msg.textContent = e.message;
+    }
+}
+$('btn-agregar').addEventListener('click', agregar);
+$('nuevo').addEventListener('keydown', (e) => { if (e.key === 'Enter') agregar(); });
+
+cargar();
+</script>
+</body>
+</html>

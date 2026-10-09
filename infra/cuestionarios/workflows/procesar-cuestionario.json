@@ -1,0 +1,536 @@
+{
+  "name": "Procesar cuestionario",
+  "id": "CuestMail0000001",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "procesar-cuestionario",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "8034fe46-65a8-55dc-8800-671164eafdbd",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        300
+      ],
+      "webhookId": "b106f9ef-9e6d-5563-b0fe-deb7d0209e4a"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=http://api:8000/api/cuestionarios/{{ $('Webhook').first().json.body.id }}",
+        "options": {}
+      },
+      "id": "5ac916f3-83e0-5574-b189-d593af2b83c4",
+      "name": "Cuestionario en la API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "returnAll": true,
+        "simple": false,
+        "filters": {
+          "q": "=subject:\"[{{ $('Webhook').first().json.body.id }}]\" -label:procesado"
+        },
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "id": "4abe714e-964e-5a2b-b18d-8f1f25891770",
+      "name": "Buscar mails",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        440,
+        300
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "nSmmvvTuyfhocfq4",
+          "name": "Gmail account"
+        }
+      },
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "// Un solo pedido a la API con todos los mails: cuerpo en texto y los .txt adjuntos.\nconst items = $input.all();\nconst mensajes = [];\nfor (let i = 0; i < items.length; i++) {\n  const j = items[i].json;\n  if (!j.id) continue; // sin mails: Gmail devuelve un item vacío\n  const adjuntos = [];\n  for (const [k, b] of Object.entries(items[i].binary || {})) {\n    if (/\\.txt$/i.test(b.fileName || '') || (b.mimeType || '').startsWith('text/')) {\n      adjuntos.push((await this.helpers.getBinaryDataBuffer(i, k)).toString('utf8'));\n    }\n  }\n  mensajes.push({ id: j.id, de: (j.from && j.from.text) || '', asunto: j.subject || '', texto: j.text || '', adjuntos });\n}\nreturn [{ json: { mensajes } }];"
+      },
+      "id": "685d471d-342f-5064-9155-28d01edd79bb",
+      "name": "Armar lote",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        660,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://api:8000/api/cuestionarios/{{ $('Webhook').first().json.body.id }}/ingesta",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json) }}"
+      },
+      "id": "bb86c274-c0b1-575d-a97c-9edebf43bd4d",
+      "name": "Ingesta",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e02b6c6c-4544-4c95-8969-a3e005d3247c",
+              "leftValue": "={{ $json.procesados.join(\",\") }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "ec704b3c-64d3-5bda-b15f-f904f542bdad",
+      "name": "¿Hay mails?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gmail.googleapis.com/gmail/v1/users/me/labels",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        },
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gmailOAuth2",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: \"procesado\" }) }}"
+      },
+      "id": "f015a350-d23c-5a98-85eb-e40f424fa828",
+      "name": "Crear etiqueta procesado",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1320,
+        160
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "nSmmvvTuyfhocfq4",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "https://gmail.googleapis.com/gmail/v1/users/me/labels",
+        "options": {},
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gmailOAuth2"
+      },
+      "id": "9114ea2e-9a6f-571f-acb2-0876d2592aee",
+      "name": "Etiquetas de Gmail",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1540,
+        160
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "nSmmvvTuyfhocfq4",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gmail.googleapis.com/gmail/v1/users/me/messages/batchModify",
+        "options": {},
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gmailOAuth2",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ ids: $('Ingesta').first().json.procesados, addLabelIds: [ $json.labels.find(l => l.name === \"procesado\").id ] }) }}"
+      },
+      "id": "5942875d-601f-5269-8c46-fc04a227a640",
+      "name": "Marcar procesados",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1760,
+        160
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "nSmmvvTuyfhocfq4",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=http://api:8000/api/cuestionarios/{{ $('Webhook').first().json.body.id }}/csv",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file",
+              "outputPropertyName": "data"
+            }
+          }
+        }
+      },
+      "id": "e4707c92-c565-58ef-905f-5e4e8710b315",
+      "name": "Bajar CSV",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1980,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "6589da69-a970-41ca-b770-8ac357a6c9ab",
+              "leftValue": "={{ $('Cuestionario en la API').first().json.drive_file_id || '' }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "55a72148-a908-5918-bb8c-51584772db1a",
+      "name": "¿Ya hay CSV en Drive?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "fileId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Cuestionario en la API').first().json.drive_file_id }}"
+        },
+        "changeFileContent": true,
+        "inputDataFieldName": "data",
+        "options": {}
+      },
+      "id": "9f758e97-74a6-50fe-93ba-40d7abfb713a",
+      "name": "Actualizar CSV",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2420,
+        200
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "wdskuh13GGRn5W5D",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "={{ $('Webhook').first().json.body.id }}-respuestas.csv",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "root",
+          "cachedResultName": "/ (Root folder)"
+        },
+        "options": {}
+      },
+      "id": "3b2d4337-b050-5110-9e0a-8f8f65e78b2e",
+      "name": "Subir CSV",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2420,
+        400
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "wdskuh13GGRn5W5D",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=http://api:8000/api/cuestionarios/{{ $('Webhook').first().json.body.id }}/drive",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ file_id: $json.id }) }}"
+      },
+      "id": "2fd2ffc6-5ab3-5952-abe2-8241bdca5676",
+      "name": "Guardar id de Drive",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2640,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($('Ingesta').first().json) }}",
+        "options": {}
+      },
+      "id": "ea847fe7-38eb-5e6f-996d-6e12cb197f48",
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        2860,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Cuestionario en la API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cuestionario en la API": {
+      "main": [
+        [
+          {
+            "node": "Buscar mails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar mails": {
+      "main": [
+        [
+          {
+            "node": "Armar lote",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Armar lote": {
+      "main": [
+        [
+          {
+            "node": "Ingesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ingesta": {
+      "main": [
+        [
+          {
+            "node": "¿Hay mails?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Hay mails?": {
+      "main": [
+        [
+          {
+            "node": "Crear etiqueta procesado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bajar CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Crear etiqueta procesado": {
+      "main": [
+        [
+          {
+            "node": "Etiquetas de Gmail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Etiquetas de Gmail": {
+      "main": [
+        [
+          {
+            "node": "Marcar procesados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar procesados": {
+      "main": [
+        [
+          {
+            "node": "Bajar CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bajar CSV": {
+      "main": [
+        [
+          {
+            "node": "¿Ya hay CSV en Drive?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "¿Ya hay CSV en Drive?": {
+      "main": [
+        [
+          {
+            "node": "Actualizar CSV",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Subir CSV",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Subir CSV": {
+      "main": [
+        [
+          {
+            "node": "Guardar id de Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Actualizar CSV": {
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Guardar id de Drive": {
+      "main": [
+        [
+          {
+            "node": "Responder",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

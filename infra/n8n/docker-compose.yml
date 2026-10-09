@@ -24,8 +24,8 @@ services:
       - HTTPS_PROXY=${HTTPS_PROXY:-}
       - http_proxy=${HTTP_PROXY:-}
       - https_proxy=${HTTPS_PROXY:-}
-      - NO_PROXY=localhost,127.0.0.1
-      - no_proxy=localhost,127.0.0.1
+      - NO_PROXY=localhost,127.0.0.1,api
+      - no_proxy=localhost,127.0.0.1,api
     extra_hosts:
       - "api.n8n.io:127.0.0.1"
       - "telemetry.n8n.io:127.0.0.1"
