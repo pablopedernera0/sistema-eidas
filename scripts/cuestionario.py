@@ -15,6 +15,8 @@ Formato del archivo de preguntas:
     semilla: 2026
     caso: bicirio              # carpeta casos/<caso>/caso.md del sitio
     comisiones: 3°1°, 3°2°
+    materia: ...               # opcional: pie de la página (si no, Diseño de Sistemas Web)
+    envio_mail: x@gmail.com    # opcional: el alumno manda las respuestas por mail
     ---
 
     ### 1. (2 pts) Enunciado
@@ -140,6 +142,11 @@ def generar(args):
         p['porque'] = c['porque']
     datos = dict(id=qid, titulo=meta.get('titulo', qid), caso=meta['caso'],
                  comisiones=comisiones, total=total, preguntas=publicas)
+    # Opcionales: `materia` va al pie de la página; con `envio_mail` el alumno manda sus
+    # respuestas por mail al finalizar (asunto "[<id>] Nombre – comisión").
+    for k in ('materia', 'envio_mail'):
+        if meta.get(k):
+            datos[k] = meta[k]
     sitio = Path(args.sitio)
     sitio.mkdir(parents=True, exist_ok=True)
     salida = sitio / f'{qid}.json'
