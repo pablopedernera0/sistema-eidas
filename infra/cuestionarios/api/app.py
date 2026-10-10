@@ -111,6 +111,9 @@ def extraer_datos(texto):
     salida, lineas = [], texto.replace('\r\n', '\n').split('\n')
     for i, linea in enumerate(lineas):
         m = DATOS_RE.search(linea)
+        if not m and linea.strip() == 'DATOS:' and lineas[i + 1:i + 2] and lineas[i + 1].lstrip().startswith('{'):
+            # Algunos clientes de correo cortan justo después de "DATOS:" y el JSON queda abajo.
+            m = DATOS_RE.search('DATOS: ' + lineas.pop(i + 1).strip())
         if not m:
             continue
         # Los correos parten en un espacio, así que se vuelve a juntar con un espacio.
