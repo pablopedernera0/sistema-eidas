@@ -40,7 +40,7 @@
         "returnAll": true,
         "simple": false,
         "filters": {
-          "q": "=subject:\"[{{ $('Webhook').first().json.body.id }}]\" -label:procesado"
+          "q": "={subject:\"[{{ $('Webhook').first().json.body.id }}]\" \"id {{ $('Webhook').first().json.body.id }}\"} -label:procesado"
         },
         "options": {
           "downloadAttachments": true
