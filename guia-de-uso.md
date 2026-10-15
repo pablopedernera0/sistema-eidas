@@ -10,6 +10,33 @@
 
 ---
 
+## Mapa: qué uso para qué
+
+Desde octubre de 2026 EIDAS dejó de ser solo "repos + devoluciones": también lee Classroom y
+Forms, tiene cuestionarios propios en github.io y un dashboard que junta todo. Si no sabés
+por dónde arrancar, buscá lo que querés hacer acá:
+
+| Quiero... | Voy a... | Detalle |
+|---|---|---|
+| Ver en qué estado está cada grupo (evaluado, aprobado, publicado) | Dashboard → **Grupos** (`/dashboard`, http://127.0.0.1:8420) | sección 6 |
+| Leer los repos de los grupos sin abrir GitHub | Dashboard → **Recorrer**: por grupo o por sección | sección 6 |
+| Traer los últimos cambios de los grupos | Botón **↻ actualizar** en Recorrer, o `/sync <materia>` | sección 2 |
+| Evaluar un grupo y publicarle la devolución | `/evaluar-grupo` → revisar el borrador → `/publicar` | sección 3 |
+| Ver las notas por alumno (cuestionario + repo, o tareas de Classroom) | Dashboard → **Notas** (botón **↻ traer de Classroom y Forms**) | sección 4 |
+| Consultar Classroom sin abrirlo (cursos, tareas, entregas, respuestas de un Form) | `scripts/classroom.py` | sección 4 |
+| Armar un cuestionario o simulacro para que practiquen | banco en `sistema-eidas-datos/cuestionarios/` + `scripts/cuestionario.py generar` | sección 5 |
+| Juntar las respuestas que los alumnos mandan por mail | colector `infra/cuestionarios/` (http://localhost:8430) | sección 5 |
+| Saber si esta máquina está al día | `/estado-eidas` | — |
+| Preparar una máquina nueva (la notebook) | checklist | sección 7 |
+
+**Dónde vive cada cosa, en una línea:** el código en `sistema-eidas` (público); todo lo que
+tiene datos de alumnos o la clave de algo en `sistema-eidas-datos` (privado: borradores,
+`grupos.json`, notas, bancos de cuestionarios, secretos de N8N y de Classroom); lo que ven
+los alumnos en `pablopedernera0.github.io` (cuestionarios publicados) y en el repo de cada
+grupo (devoluciones). Las notas y comentarios de Classroom/Forms siguen viviendo en Google.
+
+---
+
 ## Comandos, de un vistazo
 
 Hay dos familias de comandos que no hay que confundir: los que corrés en la terminal
@@ -33,8 +60,17 @@ esperando input, y ese prompt es el último freno antes de algo que no se puede 
 | Publicar la devolución y notificar al grupo | `python3 scripts/grupos.py publicar <materia> <grupo-id>` | Python | Sí — commit directo a `main` del repo del grupo y `git push` |
 | Reintentar solo la notificación (si publicar no la disparó) | `python3 scripts/grupos.py notificar <materia> <grupo-id> <fecha>` | Python | No sobre el repo — dispara el webhook de N8N |
 | Ver si esta máquina tiene todo al día (`sistema-eidas`, `sistema-eidas-datos`, `sistema-eidas-memory`, `eidas-template`) | `/estado-eidas` (sin argumentos) | Claude Code | Pullea solo lo que esté limpio y atrasado; lo demás solo lo reporta |
+| Abrir el dashboard (Grupos, Recorrer, Notas, Cronograma) | `/dashboard` | Claude Code | No, salvo los botones de actualizar (pull de los clones y regenerar la tabla de notas) |
+| Leer Classroom: cursos, tareas, entregas, respuestas de un Form | `classroom.py cursos` / `tareas <curso>` / `entregas <curso> [filtro]` / `form <form-id>` | Python | No: solo lectura (permisos `.readonly`) |
+| Regenerar la tabla de notas de una materia | `notas.py <materia>` (o el botón en Notas) | Python | Sí: el CSV de notas en `sistema-eidas-datos/<materia>/` (no hace commit) |
+| Publicar un cuestionario en github.io | `cuestionario.py generar <banco.md> --sitio <…/caso-bicirio/v2/cuestionarios>` | Python | Sí: el JSON en el repo de github.io (el commit es aparte) |
+| Corregir respuestas de un cuestionario (.txt) | `cuestionario.py corregir <banco.md> <archivos…>` | Python | No |
 
-Detalle de cada uno en la sección 3.
+**Ojo con el Python:** en la PC, la terminal tiene activado el venv de `santafe-gov-tools`,
+que no tiene Flask ni las librerías de Google. Los scripts de EIDAS se corren con
+`/usr/bin/python3` (así está en `/dashboard`).
+
+Detalle de cada uno en las secciones 3 a 6.
 
 ---
 
@@ -49,6 +85,14 @@ Detalle de cada uno en la sección 3.
 | Repos clonados de cada grupo | `materias/<materia>/grupos/grupo-XX-nombre/` (local, se puebla en el cuatrimestre) | — |
 | Borradores de devolución | `sistema-eidas-datos/<materia>/borradores/grupo-XX/AAAA-MM-DD.md` (repo privado, sincronizado entre máquinas — no vive en `sistema-eidas` ni en el repo del grupo, ver `CLAUDE.md`) | — |
 | Automatización N8N | `infra/n8n/` (Docker local, compartido entre materias) | Activo — se dispara solo desde `scripts/grupos.py publicar` (webhook local), no desplegado en Linode |
+| Dashboard | `scripts/dashboard.py`, http://127.0.0.1:8420 (solo local) | Activo — pestañas Grupos, Recorrer, Notas y Cronograma |
+| Lectura de Classroom y Forms | `scripts/classroom.py` (API, solo lectura) + cliente OAuth en `sistema-eidas-datos/classroom/oauth-client.json` + token por máquina en `~/.config/sistema-eidas/` | Activo desde 15/10/2026 |
+| Config de Classroom por materia | `sistema-eidas-datos/<materia>/classroom.json` (curso, tareas, Form del cuestionario) | 31, 32 e ITI-21 |
+| Tablas de notas | `sistema-eidas-datos/<materia>/notas-cierre-2c-2026.csv` (AF) y `iti-infra-redes-21/notas-classroom-2c-2026.csv` (ITI, la genera la API) | Se regeneran con `notas.py` o el botón del dashboard |
+| CSV docente de ITI | `sistema-eidas-datos/iti-infra-redes-21/cierre-2c-2026.csv` — **lo completás vos** (Trabajo 7, nota de proceso, observaciones); el dashboard lo lee, nunca lo escribe | — |
+| Cuestionarios propios | bancos en `sistema-eidas-datos/cuestionarios/<id>.md`, motor en github.io `caso-bicirio/v2/`, generador `scripts/cuestionario.py` | Activo — ver `sistema-eidas-datos/cuestionarios/README.md` |
+| Colector de respuestas por mail | `infra/cuestionarios/` (N8N + API, http://localhost:8430); la base vive solo en la máquina donde se procesa | Activo — se levanta con `infra/cuestionarios/levantar.sh` |
+| PlantUML local | `infra/plantuml/` (http://localhost:8090) — lo usa Recorrer para dibujar los `.puml` | Se levanta a demanda: `docker compose up -d` |
 
 ---
 
@@ -199,13 +243,104 @@ retomarla desde cualquiera de tus máquinas.
 
 ---
 
-## 4. Cuestionario individual
+## 4. Notas por alumno: Classroom, Forms y la pestaña Notas
 
-Vía Google Classroom/Forms — activo, sin cambios pendientes de este lado. La nota se combina con el puntaje del repo grupal según la `rubrica.md` de cada materia (típicamente 70 repo + 30 cuestionario = 100, pero puede variar por materia).
+El cuestionario individual (30 pts en AF) se toma con Google Forms y se asigna desde
+Classroom. La nota se combina con el repo grupal (70) según la `rubrica.md`.
+
+**De dónde sale cada nota.** `scripts/classroom.py` lee Classroom y Forms por API, **solo
+lectura**. La primera vez en cada máquina abre el navegador para autorizar con la cuenta del
+terciario. `scripts/notas.py <materia>` cruza todo y deja un CSV por materia; la pestaña
+**Notas** del dashboard lo muestra con filtros y tiene el botón **↻ traer de Classroom y Forms**.
+
+- **AF (31 y 32): cuestionario + repo.** Por alumno: nota del cuestionario (/100 y /30), grupo
+  (por el DNI del mail, o por apellido en `integrantes.md`), nota del repo (/70, de la última
+  devolución, aclarando si no está publicada) y total. La nota del cuestionario se toma de
+  Classroom si está ahí, o del Form si se corrigió en Forms; en el Form, 10 puntos o menos es
+  solo la parte autocorregida y cuenta como "falta corregir". Estados: *no respondió*, *falta
+  corregir*, *corregido en Forms, falta importar a Classroom*, *corregido, falta devolver en
+  Classroom*, *corregido y devuelto*.
+- **ITI (sin repo grupal): por tareas.** Una columna por tarea de Classroom (las que lista
+  `classroom.json`), más las columnas del CSV docente que completás vos (Trabajo 7, nota de
+  proceso, observaciones), promedio con 0 en lo no entregado y avisos (*entregada, falta
+  calificar*, *no está en Classroom*).
+
+**Lo que la API no puede hacer** (límites de Google, no nuestros):
+- **Calificar ni devolver** tareas creadas a mano en Classroom: solo las que crea nuestra app.
+  Por eso la carga de notas sigue siendo en Classroom (o "Importar calificaciones" desde un Form).
+- **Comentarios privados:** no existen en la API. La devolución en texto va por el repo o el mail.
+- **Rúbricas:** piden licencia Education Plus.
+
+Para sumar una materia: crear `sistema-eidas-datos/<materia>/classroom.json` (ids con
+`classroom.py cursos` y `tareas <curso>`; ver ejemplos de la 31 y de ITI-21).
 
 ---
 
-## 5. Pendientes para completar la automatización
+## 5. Cuestionarios propios y simulacros (github.io)
+
+Para práctica y simulacros con corrección y explicación por pregunta. El detalle completo está
+en `sistema-eidas-datos/cuestionarios/README.md`; el circuito corto:
+
+1. Banco en `sistema-eidas-datos/cuestionarios/<id>.md`: preguntas con `- [x]` en la correcta y
+   `> Por qué:`. El V/F se arma como opción múltiple de 2.
+2. `cuestionario.py generar <banco> --sitio …/pablopedernera0.github.io/caso-bicirio/v2/cuestionarios`
+   (si las correctas quedan amontonadas en una letra, cambiar la `semilla`). Crear
+   `casos/<caso>/caso.md` con la consigna. Commit y push de github.io.
+3. Link para los alumnos: `https://pablopedernera0.github.io/caso-bicirio/v2/?cuestionario=<id>`.
+   La corrección se ve recién con el **código del día** (en `&modo=docente`, con la clave
+   maestra). **Cambia a las 0 h**: el de hoy no sirve para quien lo haga mañana.
+4. Si el banco tiene `envio_mail:`, las respuestas llegan por mail y las junta el colector
+   (`infra/cuestionarios/levantar.sh`, http://localhost:8430). Su base vive **solo en la
+   máquina donde se procesó**: no proceses en una máquina con la base vacía, porque pisa la
+   planilla de Drive con lo poco que tenga. Los mails ya procesados quedan con la etiqueta
+   `procesado` en Gmail.
+
+Los mails de aviso de Classroom ("Enviado con retraso", "Se entregó nuevamente") se pueden
+ignorar: la misma información está en Notas y en `classroom.py entregas`.
+
+---
+
+## 6. El dashboard
+
+`/dashboard` lo levanta en http://127.0.0.1:8420, solo local. Pestañas:
+
+- **Grupos:** estado de evaluación de cada grupo de cada materia (sin evaluar, borrador,
+  revisado, publicado). El nombre del grupo lleva a Recorrer.
+- **Recorrer:** navegador de los clones locales. **Por grupo**: todos sus archivos en el orden
+  del template (← → archivo, Shift+← → grupo). **Por sección**: el mismo archivo en todos los
+  grupos (← → grupo, Shift+← → sección); si un grupo lo tiene en otra ruta, lo muestra igual.
+  Punto naranja = cambió después del último borrador. Dibuja `.puml` (con PlantUML local
+  prendido) y PDF, y avisa las tablas Markdown rotas. **↻ actualizar** hace pull de un grupo o
+  de toda la materia, como `/sync`.
+- **Notas:** ver sección 4.
+- **Cronograma:** ver y editar `cronograma*.md` de cada materia (guarda en disco, sin commit).
+
+En ITI-21, los "grupos" son los repos del Trabajo 7 (`t7-…` en su `grupos.json`): se recorren
+igual, y desde Notas el link "recorrer" de cada alumno lleva a su repo.
+
+---
+
+## 7. Máquina nueva (o la notebook después de mucho tiempo)
+
+1. `/estado-eidas` para traer `sistema-eidas`, `sistema-eidas-datos`, la memoria y los templates.
+2. Python del sistema con lo necesario:
+   `/usr/bin/python3 -m pip install --user flask markdown google-api-python-client google-auth-oauthlib`.
+3. N8N: `infra/n8n/setup.sh` (ver sección 3, paso 6).
+4. Symlinks de `grupos.json`: cada `materias/<materia>/grupos.json` apunta a
+   `sistema-eidas-datos/<materia>/grupos.json`. Están en `.gitignore`, así que en una máquina
+   nueva hay que crearlos, ej.:
+   `ln -s ../../../sistema-eidas-datos/iti-infra-redes-21/grupos.json materias/iti-infra-redes-21/grupos.json`.
+5. Classroom: el cliente OAuth está en `sistema-eidas-datos/classroom/oauth-client.json`
+   **solo si lo commiteaste a mano** (el modo automático de Claude Code no commitea
+   credenciales). Si no está, bajalo de nuevo desde la consola de Google Cloud (proyecto
+   `sistema-eidas` → Credenciales → "EIDAS Classroom lectura"). Después, `classroom.py cursos`
+   abre el navegador una vez para autorizar.
+6. `/sync <materia>` para clonar los repos de los grupos, y `docker compose up -d` en
+   `infra/plantuml/` si vas a recorrer diagramas.
+
+---
+
+## 8. Pendientes para completar la automatización
 
 - **Apps Script en Google Forms** — evaluado y descartado (ver `CLAUDE.md`, sección de
   pendientes): el cuestionario ya se autocalifica y es individual, no vale la pena meterlo
