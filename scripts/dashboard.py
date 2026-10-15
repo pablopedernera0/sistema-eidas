@@ -466,6 +466,30 @@ def visor_pdf(src):
     )
 
 
+SEPARADOR_TABLA_RE = re.compile(r"^\s*\|?\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|?\s*$")
+
+
+def avisos_markdown(texto):
+    """Errores de forma que GitHub tampoco muestra bien: se renderiza igual que GitHub y se avisa."""
+    avisos = []
+    lineas = texto.splitlines()
+    en_codigo = False
+    for n, linea in enumerate(lineas):
+        if linea.lstrip().startswith("```"):
+            en_codigo = not en_codigo
+        if en_codigo or not re.match(r"^\s*\|.*\|\s*$", linea):
+            continue
+        anterior = lineas[n - 1] if n > 0 else ""
+        siguiente = lineas[n + 1] if n + 1 < len(lineas) else ""
+        # Primera fila de un bloque de tabla sin la fila |---| debajo
+        if not re.match(r"^\s*\|", anterior) and not SEPARADOR_TABLA_RE.match(siguiente):
+            avisos.append(
+                f"Línea {n + 1}: tabla sin la fila separadora (<code>|---|---|</code>) debajo del "
+                "encabezado. GitHub tampoco la muestra como tabla."
+            )
+    return "".join(f'<p class="aviso">{a}</p>' for a in avisos)
+
+
 def render_archivo(materia, gid, path, repo_url, cambios, borrador):
     full = archivo_seguro(materia, gid, path)
     ext = full.suffix.lower()
@@ -495,7 +519,7 @@ def render_archivo(materia, gid, path, repo_url, cambios, borrador):
             return (f'{m.group(0)} <details class="pdf-inline"><summary>ver acá</summary>'
                     f'{visor_pdf(src)}</details>')
         cuerpo = re.sub(r'(<a href=")(?!https?:|/|#)([^"]+\.pdf)">.*?</a>', pdf_inline, cuerpo, flags=re.I)
-        contenido = f'<div class="md">{cuerpo}</div>'
+        contenido = avisos_markdown(texto) + f'<div class="md">{cuerpo}</div>'
     elif ext in PUML_EXT:
         aviso = "" if plantuml_prendido() else (
             '<p class="aviso">PlantUML local apagado: <code>cd infra/plantuml &amp;&amp; '
