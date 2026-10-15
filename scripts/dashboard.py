@@ -176,7 +176,7 @@ BASE_CSS = """
 
 
 def render_nav(activo):
-    items = [("/", "Grupos"), ("/recorrer", "Recorrer"), ("/cronograma", "Cronograma")]
+    items = [("/", "Grupos"), ("/recorrer", "Recorrer"), ("/notas", "Notas"), ("/cronograma", "Cronograma")]
     enlaces = "".join(
         f'<a href="{href}" class="{"activo" if href == activo else ""}">{label}</a>'
         for href, label in items
@@ -955,6 +955,126 @@ def recorrer_puml(materia, gid, path):
                '<text x="8" y="25" font-family="sans-serif" font-size="14">PlantUML local apagado '
                '(infra/plantuml: docker compose up -d)</text></svg>')
         return Response(svg, mimetype="image/svg+xml")
+
+
+# ---------------------------------------------------------------------------
+# Notas: cuestionario individual (Classroom + Forms) + repo grupal, por alumno.
+# Muestra el CSV que deja scripts/notas.py; el botón lo vuelve a traer por API (solo lectura).
+# ---------------------------------------------------------------------------
+
+ESTADO_NOTA_COLORES = {
+    "corregido y devuelto en Classroom": "#16a34a",
+    "corregido, falta devolver en Classroom": "#2563eb",
+    "corregido en Forms, falta importar a Classroom": "#2563eb",
+    "falta corregir": "#d97706",
+    "no respondió": "#9ca3af",
+}
+
+
+def materias_con_notas():
+    return [m for m in materias_con_grupos() if (DATOS_DIR / m / "classroom.json").exists()]
+
+
+def pagina_notas(materia, cuerpo):
+    return f"""<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Notas — {html.escape(materia or "")}</title>
+<style>{BASE_CSS}{RECORRER_CSS}
+  table.notas td, table.notas th {{ padding: 0.35rem 0.5rem; font-size: 0.85rem; }}
+  table.notas td.num {{ text-align: right; font-variant-numeric: tabular-nums; }}
+  .chips {{ display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.5rem 0 1rem; }}
+  .chips a {{ text-decoration: none; }}
+</style>
+</head>
+<body class="ancho">
+  <h1>Notas</h1>
+  {render_nav("/notas")}
+  {cuerpo}
+</body>
+</html>"""
+
+
+@app.route("/notas")
+def notas_index():
+    materias = materias_con_notas()
+    if not materias:
+        return Response(pagina_notas(None, "<p>Ninguna materia tiene <code>classroom.json</code> en sistema-eidas-datos.</p>"), mimetype="text/html")
+    return redirect(f"/notas/{materias[0]}")
+
+
+@app.route("/notas/<materia>")
+def notas_materia(materia):
+    import notas as notas_py  # perezoso: si faltan las librerías de Google, el resto del dashboard anda igual
+    if materia not in materias_con_notas():
+        abort(404)
+    tabs = '<div class="tabs-materia">' + "".join(
+        f'<a href="/notas/{m}" class="{"activo" if m == materia else ""}">{m}</a>' for m in materias_con_notas()
+    ) + "</div>"
+    filas = notas_py.leer(materia)
+    cfg = notas_py.config(materia)
+    path = notas_py.csv_path(materia)
+    boton = form_actualizar(f"/notas/{materia}/actualizar", "↻ traer de Classroom y Forms")
+    if filas is None:
+        cuerpo = f"{tabs}{banner_sync()}<p>Todavía no hay tabla para esta materia.</p>{boton}"
+        return Response(pagina_notas(materia, cuerpo), mimetype="text/html")
+
+    filtro = request.args.get("estado")
+    conteo = {}
+    for f in filas:
+        conteo[f["Estado del cuestionario"]] = conteo.get(f["Estado del cuestionario"], 0) + 1
+    chips = '<div class="chips">' + f'<a href="/notas/{materia}"><span class="badge" style="background:#1f2937">todos: {len(filas)}</span></a>' + "".join(
+        f'<a href="/notas/{materia}?estado={urllib.parse.quote(e)}"><span class="badge" style="background:{ESTADO_NOTA_COLORES.get(e, "#6b7280")}">{html.escape(e)}: {n}</span></a>'
+        for e, n in conteo.items()
+    ) + "</div>"
+
+    def celda(v, num=False):
+        return f'<td class="num">{html.escape(v)}</td>' if num else f"<td>{html.escape(v)}</td>"
+
+    cuerpo_tabla = ""
+    for f in filas:
+        if filtro and f["Estado del cuestionario"] != filtro:
+            continue
+        grupo = f["Grupo"]
+        enlace = f'<a href="/recorrer/{materia}/grupo/{q(grupo)}">{html.escape(grupo)}</a>' if grupo else '<span class="falta-box">sin grupo</span>'
+        color = ESTADO_NOTA_COLORES.get(f["Estado del cuestionario"], "#6b7280")
+        cuerpo_tabla += (
+            "<tr>" + celda(f["Alumno"]) + f"<td>{enlace}</td>"
+            + celda(f["Cuestionario (/100)"], True) + celda(f["Cuestionario (/30)"], True)
+            + celda(f["Repo grupal (/70)"], True) + celda(f["Repo: devolución"])
+            + f'<td class="num"><b>{html.escape(f["Total (/100)"])}</b></td>'
+            + f'<td><span class="badge" style="background:{color}">{html.escape(f["Estado del cuestionario"])}</span></td></tr>'
+        )
+    actualizado = datetime.fromtimestamp(path.stat().st_mtime).strftime("%d/%m %H:%M")
+    cuerpo = f"""
+    {tabs}
+    <p class="subtitulo">Cuestionario <b>{html.escape(cfg.get("nombre_cuestionario", ""))}</b> (Classroom + Forms, /30) más
+    la última devolución del repo (/70). Tabla del {actualizado}, en
+    <code>sistema-eidas-datos/{materia}/{path.name}</code>. Solo lectura: el botón vuelve a leer Classroom y Forms.</p>
+    <div class="botones">{boton}</div>
+    {banner_sync()}
+    {chips}
+    <table class="notas">
+      <thead><tr><th>Alumno</th><th>Grupo</th><th>Cuest. /100</th><th>Cuest. /30</th><th>Repo /70</th><th>Devolución</th><th>Total</th><th>Estado</th></tr></thead>
+      <tbody>{cuerpo_tabla}</tbody>
+    </table>"""
+    return Response(pagina_notas(materia, cuerpo), mimetype="text/html")
+
+
+@app.route("/notas/<materia>/actualizar", methods=["POST"])
+def notas_actualizar(materia):
+    import notas as notas_py
+    if materia not in materias_con_notas():
+        abort(404)
+    volver = f"/notas/{materia}"
+    try:
+        filas = notas_py.notas_cierre(materia)
+        notas_py.guardar(materia, filas)
+        nivel, msg = "ok", f"Tabla actualizada desde Classroom y Forms: {len(filas)} alumnos."
+    except Exception as e:  # token vencido, sin red, API caída: que se vea en la página
+        nivel, msg = "error", f"No se pudo leer Classroom/Forms: {e}"
+    return redirect(volver + "?" + urllib.parse.urlencode({"sync": nivel, "sync_msg": msg}))
 
 
 def ya_corriendo():

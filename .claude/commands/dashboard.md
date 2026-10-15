@@ -19,6 +19,12 @@ lo mismo que `/sync` (`sync_grupo` de `grupos.py`, pull de `main`; no tocan un c
 otra branch o con cambios sin commitear). Es la única acción del navegador, y no escribe nada
 en los repos de los grupos ni pushea.
 
+La pestaña **Notas** (`/notas`) muestra, por alumno, el cuestionario individual (Classroom +
+Forms, /30) más la última devolución del repo (/70), con filtro por estado. Lee el CSV que deja
+`scripts/notas.py <materia>`; el botón "↻ traer de Classroom y Forms" lo vuelve a generar por API
+(solo lectura). Requiere `sistema-eidas-datos/<materia>/classroom.json` y el token de
+`scripts/classroom.py` autorizado en esa máquina.
+
 Pasos:
 1. Corré, detached en background (así sigue corriendo aunque termine esta sesión de
    Claude Code):
