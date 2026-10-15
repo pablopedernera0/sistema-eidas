@@ -14,7 +14,10 @@ de los grupos, con dos formas: **por grupo** (todos sus archivos en el orden del
 tiene en otra ruta, muestra el archivo de nombre parecido). Flechas ← → y Shift + ← → para
 moverse. Marca los archivos que cambiaron después del último borrador. Los `.puml` se
 renderizan con el PlantUML local de `infra/plantuml/` (`docker compose up -d`, puerto 8090).
-Lee los clones tal como están: correr `/sync <materia>` antes.
+Tiene botones "↻ actualizar" (un grupo) y "↻ actualizar todos los grupos" (la materia): hacen
+lo mismo que `/sync` (`sync_grupo` de `grupos.py`, pull de `main`; no tocan un clon parado en
+otra branch o con cambios sin commitear). Es la única acción del navegador, y no escribe nada
+en los repos de los grupos ni pushea.
 
 Pasos:
 1. Corré, detached en background (así sigue corriendo aunque termine esta sesión de
@@ -29,6 +32,6 @@ Pasos:
 4. Solo si pregunta cómo pararlo: se mata con `pkill -f scripts/dashboard.py` (no hay un
    comando de stop todavía).
 
-**No es el lugar para acciones que modifiquen algo** (publicar, notificar, etc.) — esas
+**No es el lugar para acciones que modifiquen algo** (publicar, notificar, etc.; el único botón de acción es el "actualizar" de Recorrer, equivalente a `/sync`) — esas
 siguen siendo solo terminal, a propósito (ver `sync.md`). Si el dashboard suma botones de
 acción más adelante, van a necesitar su propia revisión de riesgo antes de agregarse acá.

@@ -27,6 +27,8 @@ import webbrowser
 from datetime import datetime
 from pathlib import Path
 
+import grupos as grupos_py
+
 try:
     from flask import Flask, Response, abort, redirect, request
 except ImportError:
@@ -578,6 +580,10 @@ RECORRER_CSS = """
   details.pdf-inline summary { display: inline; cursor: pointer; color: #2563eb; font-size: 0.85rem; }
   .aviso { background: #fef3c7; color: #92400e; padding: 0.5rem 0.9rem; border-radius: 6px; }
   .falta-box { color: #6b7280; }
+  .form-sync { display: inline; }
+  .form-sync button { font-size: 0.85rem; padding: 0.3rem 0.75rem; border-radius: 6px; border: 1px solid #d1d5db; background: white; cursor: pointer; }
+  .form-sync button:disabled { color: #9ca3af; cursor: wait; }
+  .banner-sync { padding: 0.5rem 0.9rem; border-radius: 6px; font-size: 0.9rem; }
   .columnas { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
   .columnas a { display: block; padding: 0.25rem 0; }
 """
@@ -712,8 +718,11 @@ def recorrer_materia(materia):
     )
     cuerpo = f"""
     {tabs_materias(materia)}
-    <p class="subtitulo">Lee los clones locales (corré <code>/sync {materia}</code> antes). Solo lectura.
+    <p class="subtitulo">Lee los clones locales. "↻ actualizar" hace lo mismo que <code>/sync</code>: pull de
+    <code>main</code>, sin tocar un clon que esté en otra branch o con cambios sin commitear.
     Un punto naranja marca los archivos que cambiaron después del último borrador del grupo.</p>
+    <div class="botones">{form_actualizar(f"/actualizar/{materia}", "↻ actualizar todos los grupos")}</div>
+    {banner_sync()}
     <div class="columnas">
       <div><h2>Por grupo</h2><p class="resumen">Todos los archivos de un grupo, en el orden del template.</p>{por_grupo}</div>
       <div><h2>Por sección</h2><p class="resumen">El mismo archivo en todos los grupos, uno detrás del otro.</p>{por_seccion}</div>
@@ -735,7 +744,8 @@ def recorrer_grupo(materia, gid):
     i = ids.index(gid)
     secciones = secciones_de(materia)
     if not repo.exists():
-        cuerpo = f"{tabs_materias(materia)}<p>El grupo <b>{html.escape(gid)}</b> no está clonado. Corré <code>/sync {materia}</code>.</p>"
+        cuerpo = (f"{tabs_materias(materia)}{banner_sync()}<p>El grupo <b>{html.escape(gid)}</b> no está clonado.</p>"
+                  + form_actualizar(f"/actualizar/{materia}/{q(gid)}", "↻ clonar"))
         return Response(pagina_recorrer(gid, cuerpo), mimetype="text/html")
 
     archivos = orden_archivos(ls_files(repo), secciones)
@@ -774,7 +784,9 @@ def recorrer_grupo(materia, gid):
     {tabs_materias(materia)}
     <div class="cab"><h2>{html.escape(gid)}</h2>
       <span class="meta">grupo {i + 1} de {len(ids)} · archivo {j + 1} de {len(archivos)} · {info_borrador(borrador)}</span>
-      <a href="{repo_web(grupo['repo'])}" target="_blank">repo ↗</a></div>
+      <a href="{repo_web(grupo['repo'])}" target="_blank">repo ↗</a>
+      {form_actualizar(f"/actualizar/{materia}/{q(gid)}", "↻ actualizar")}</div>
+    {banner_sync()}
     <div class="botones">{botones}</div>
     <div class="layout"><nav class="lateral">{lateral}</nav><main>{contenido}</main></div>"""
     return Response(pagina_recorrer(f"{gid} — {actual}", cuerpo), mimetype="text/html")
@@ -848,10 +860,72 @@ def recorrer_seccion(materia, n):
     cuerpo = f"""
     {tabs_materias(materia)}
     <div class="cab"><h2><code>{html.escape(seccion)}</code></h2> {selector}
-      <span class="meta">sección {n + 1} de {len(secciones)} · <b>{html.escape(gid)}</b> (grupo {i + 1} de {len(ids)})</span></div>
+      <span class="meta">sección {n + 1} de {len(secciones)} · <b>{html.escape(gid)}</b> (grupo {i + 1} de {len(ids)})</span>
+      {form_actualizar(f"/actualizar/{materia}/{q(gid)}", f"↻ actualizar {html.escape(gid)}")}</div>
+    {banner_sync()}
     <div class="botones">{botones}</div>
     <div class="layout"><nav class="lateral">{lateral}</nav><main>{contenido}</main></div>"""
     return Response(pagina_recorrer(f"{seccion} — {gid}", cuerpo), mimetype="text/html")
+
+
+def volver_aca():
+    """La URL actual sin el resultado del último actualizar, para volver después del POST."""
+    args = {k: v for k, v in request.args.items() if k not in ("sync", "sync_msg")}
+    return request.path + (f"?{urllib.parse.urlencode(args)}" if args else "")
+
+
+def form_actualizar(accion, texto):
+    # POST y no link: que no se dispare solo navegando con las flechas
+    return (
+        f'<form method="post" action="{accion}" class="form-sync" '
+        """onsubmit="const b=this.querySelector('button');b.disabled=true;b.textContent='actualizando…'">"""
+        f'<input type="hidden" name="volver" value="{html.escape(volver_aca())}">'
+        f'<button type="submit">{texto}</button></form>'
+    )
+
+
+SYNC_COLORES = {"ok": ("#dcfce7", "#166534"), "aviso": ("#fef3c7", "#92400e"), "error": ("#fee2e2", "#991b1b")}
+
+
+def banner_sync():
+    nivel = request.args.get("sync")
+    if nivel not in SYNC_COLORES:
+        return ""
+    fondo, color = SYNC_COLORES[nivel]
+    lineas = html.escape(request.args.get("sync_msg", "")).replace("\n", "<br>")
+    return f'<p class="banner-sync" style="background:{fondo};color:{color}">{lineas}</p>'
+
+
+def redirigir_con(resultados):
+    """resultados: [(grupo_id, estado, detalle)] → vuelve a la página con el resumen."""
+    if any(e == "error" for _, e, _ in resultados):
+        nivel = "error"
+    elif any(e == "salteado" for _, e, _ in resultados):
+        nivel = "aviso"
+    else:
+        nivel = "ok"
+    msg = "\n".join(f"{gid}: {detalle}" for gid, _, detalle in resultados)
+    volver = request.form.get("volver", "/recorrer")
+    if not volver.startswith("/recorrer"):
+        volver = "/recorrer"
+    sep = "&" if "?" in volver else "?"
+    return redirect(volver + sep + urllib.parse.urlencode({"sync": nivel, "sync_msg": msg}))
+
+
+@app.route("/actualizar/<materia>/<gid>", methods=["POST"])
+def actualizar_grupo(materia, gid):
+    grupo, _ = repo_de(materia, gid)
+    estado, detalle = grupos_py.sync_grupo(materia, gid, grupo["repo"])
+    return redirigir_con([(gid, estado, detalle)])
+
+
+@app.route("/actualizar/<materia>", methods=["POST"])
+def actualizar_materia(materia):
+    grupos = grupos_de(materia)
+    if not grupos:
+        abort(404)
+    (MATERIAS_DIR / materia / "grupos").mkdir(exist_ok=True)
+    return redirigir_con([(g["id"], *grupos_py.sync_grupo(materia, g["id"], g["repo"])) for g in grupos])
 
 
 @app.route("/raw/<materia>/<gid>/<path:path>")

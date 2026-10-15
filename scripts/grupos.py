@@ -2,6 +2,7 @@
 """Gestión de repos de grupos del Sistema EIDAS, por materia. Ver guia-de-uso.md."""
 
 import json
+import os
 import re
 import subprocess
 import sys
@@ -54,28 +55,50 @@ def run(cmd, cwd=None, check=True):
     return result
 
 
+def git_capturado(args, cwd=None):
+    # Sin prompt de credenciales: desde el dashboard no hay terminal donde tipearlas
+    env = {**os.environ, "GIT_TERMINAL_PROMPT": "0"}
+    return subprocess.run(["git", *args], cwd=cwd, capture_output=True, text=True, env=env, timeout=120)
+
+
+def sync_grupo(materia, grupo_id, repo_url):
+    """Clona o actualiza main de un grupo. Devuelve (estado, detalle), con estado
+    'clonado', 'actualizado', 'sin-cambios', 'salteado' o 'error'. La usan `sync` y el
+    botón de actualizar del dashboard."""
+    path = materia_dir(materia) / "grupos" / grupo_id
+    if not path.exists():
+        r = git_capturado(["clone", repo_url, str(path)])
+        return ("clonado", "clonado por primera vez") if r.returncode == 0 else ("error", r.stderr.strip())
+
+    actual = git_capturado(["branch", "--show-current"], path).stdout.strip()
+    if actual and actual != "main":
+        return ("salteado", f"está parado en la branch '{actual}', no en 'main' "
+                            "(no debería pasar en el flujo normal) — no lo toco, revisalo a mano")
+    if git_capturado(["status", "--porcelain", "--untracked-files=no"], path).stdout.strip():
+        return ("salteado", "tiene cambios sin commitear — no lo toco, revisalo a mano")
+
+    antes = git_capturado(["rev-parse", "HEAD"], path).stdout.strip()
+    for args in (["checkout", "main"], ["pull", "origin", "main"]):
+        r = git_capturado(args, path)
+        if r.returncode != 0:
+            return ("error", f"git {' '.join(args)}: {r.stderr.strip()}")
+    despues = git_capturado(["rev-parse", "HEAD"], path).stdout.strip()
+    if antes == despues:
+        return ("sin-cambios", "ya estaba al día")
+    n = git_capturado(["rev-list", "--count", f"{antes}..{despues}"], path).stdout.strip()
+    return ("actualizado", f"{n} commit{'s' if n != '1' else ''} nuevo{'s' if n != '1' else ''}")
+
+
 def sync(materia):
-    grupos_dir = materia_dir(materia) / "grupos"
-    grupos_dir.mkdir(exist_ok=True)
+    (materia_dir(materia) / "grupos").mkdir(exist_ok=True)
     config, _ = load_config(materia)
+    errores = 0
     for grupo_id, g in config.items():
-        path = grupos_dir / grupo_id
-        if path.exists():
-            actual = subprocess.run(
-                ["git", "branch", "--show-current"], cwd=path, capture_output=True, text=True
-            ).stdout.strip()
-            if actual and actual != "main":
-                print(
-                    f"\n== {grupo_id}: está parado en la branch '{actual}', no en 'main' "
-                    f"(no debería pasar en el flujo normal) — no lo toco, revisalo a mano =="
-                )
-                continue
-            print(f"\n== {grupo_id}: ya clonado, actualizando main ==")
-            run(["git", "checkout", "main"], cwd=path)
-            run(["git", "pull", "origin", "main"], cwd=path)
-        else:
-            print(f"\n== {grupo_id}: clonando ==")
-            run(["git", "clone", g["repo"], str(path)])
+        estado, detalle = sync_grupo(materia, grupo_id, g["repo"])
+        errores += estado == "error"
+        print(f"== {grupo_id}: {estado} — {detalle}")
+    if errores:
+        raise SystemExit(f"\n{errores} grupo(s) con error, ver arriba")
 
 
 def borradores_dir(materia, grupo_id):
