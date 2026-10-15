@@ -12,6 +12,7 @@ Uso (con /usr/bin/python3, ver dashboard.md):
   classroom.py tareas <curso-id>            tareas del curso, con fecha de entrega
   classroom.py entregas <curso-id> [filtro] estado de entrega y nota por alumno, de cada tarea
                                             (filtro: parte del título de la tarea)
+  classroom.py form <form-id>               respuestas de un Form (cuestionario) con su puntaje
 """
 import os
 import sys
@@ -30,12 +31,15 @@ from googleapiclient.discovery import build
 
 ROOT = Path(__file__).resolve().parent.parent
 CLIENTE = ROOT.parent / "sistema-eidas-datos" / "classroom" / "oauth-client.json"
-TOKEN = Path.home() / ".config" / "sistema-eidas" / "classroom-token.json"
+# El nombre cambia cuando cambian los SCOPES, así se vuelve a autorizar solo
+TOKEN = Path.home() / ".config" / "sistema-eidas" / "classroom-token-v2.json"
 SCOPES = [
     "https://www.googleapis.com/auth/classroom.courses.readonly",
     "https://www.googleapis.com/auth/classroom.rosters.readonly",
     "https://www.googleapis.com/auth/classroom.profile.emails",
     "https://www.googleapis.com/auth/classroom.coursework.students.readonly",
+    "https://www.googleapis.com/auth/forms.body.readonly",
+    "https://www.googleapis.com/auth/forms.responses.readonly",
 ]
 
 ESTADOS = {
@@ -47,7 +51,7 @@ ESTADOS = {
 }
 
 
-def servicio():
+def credenciales():
     creds = Credentials.from_authorized_user_file(TOKEN, SCOPES) if TOKEN.exists() else None
     if creds and creds.expired and creds.refresh_token:
         creds.refresh(Request())
@@ -59,7 +63,35 @@ def servicio():
     TOKEN.parent.mkdir(parents=True, exist_ok=True)
     TOKEN.write_text(creds.to_json())
     TOKEN.chmod(0o600)
-    return build("classroom", "v1", credentials=creds, cache_discovery=False)
+    return creds
+
+
+def servicio():
+    return build("classroom", "v1", credentials=credenciales(), cache_discovery=False)
+
+
+def servicio_forms():
+    return build("forms", "v1", credentials=credenciales(), cache_discovery=False)
+
+
+def respuestas_form(form_id):
+    """[(email, puntaje total, fecha)] de un Form en modo cuestionario, más el puntaje máximo."""
+    fs = servicio_forms()
+    form = fs.forms().get(formId=form_id).execute()
+    maximo = sum(
+        i["questionItem"]["question"].get("grading", {}).get("pointValue", 0)
+        for i in form.get("items", []) if "questionItem" in i
+    )
+    resps = todas(lambda **kw: fs.forms().responses().list(formId=form_id, **kw), "responses")
+    return [(r.get("respondentEmail", "?"), r.get("totalScore"), r.get("lastSubmittedTime", "")[:10])
+            for r in resps], maximo, form["info"]["title"]
+
+
+def form(form_id):
+    filas, maximo, titulo = respuestas_form(form_id)
+    print(f"## {titulo}  ({len(filas)} respuestas, puntaje máximo {maximo})")
+    for email, puntaje, cuando in sorted(filas):
+        print(f"  {email:45} {'—' if puntaje is None else puntaje:>6}  {cuando}")
 
 
 def todas(pedido, clave):
@@ -113,8 +145,12 @@ def entregas(cr, curso, filtro=None):
 
 
 def main():
-    if len(sys.argv) < 2 or sys.argv[1] not in {"cursos", "tareas", "entregas"}:
+    if len(sys.argv) < 2 or sys.argv[1] not in {"cursos", "tareas", "entregas", "form"}:
         raise SystemExit(__doc__)
+    if sys.argv[1] == "form":
+        if len(sys.argv) < 3:
+            raise SystemExit(__doc__)
+        return form(sys.argv[2])
     cr = servicio()
     if sys.argv[1] == "cursos":
         cursos(cr)
