@@ -38,7 +38,8 @@ def config(materia):
 
 
 def csv_path(materia):
-    return DATOS_DIR / materia / "notas-cierre-2c-2026.csv"
+    cfg = config(materia) or {}
+    return DATOS_DIR / materia / cfg.get("csv_salida", "notas-cierre-2c-2026.csv")
 
 
 def normalizar(texto):
@@ -145,9 +146,117 @@ def notas_cierre(materia):
     return filas
 
 
+# ---------------------------------------------------------------------------
+# Modo "por tareas" (materias sin repo grupal, como ITI): classroom.json trae
+#   "tareas": [{"id", "columna"}], y opcionalmente "csv_docente" (el CSV de cierre que
+#   completa el docente: de ahí salen "columnas_docente", p. ej. el trabajo que llegó por
+#   mail y la nota de proceso), "nota_trabajo_docente" (la columna de ese CSV que entra al
+#   promedio) y "csv_salida". Nunca escribe en el csv_docente.
+# ---------------------------------------------------------------------------
+
+def valor_entrega(s):
+    """Texto de la celda para una entrega de Classroom, en el formato del CSV de cierre."""
+    estado = s.get("state")
+    tarde = " (tardía)" if s.get("late") else ""
+    if estado == "RETURNED" and "assignedGrade" in s:
+        return f"{s['assignedGrade']:g}{tarde}"
+    if estado == "TURNED_IN":
+        return f"{s['draftGrade']:g} (sin devolver)" if "draftGrade" in s else f"sin calificar{tarde}"
+    return "no entregó"
+
+
+def numero(texto):
+    m = re.match(r"\s*(\d+(?:\.\d+)?)", texto or "")
+    return float(m.group(1)) if m else 0.0
+
+
+def palabras_nombre(nombre):
+    return {w for w in normalizar(nombre).replace(",", " ").split() if len(w) > 2}
+
+
+def notas_tareas(materia):
+    cfg = config(materia)
+    cr = classroom.servicio()
+    curso = cfg["curso"]
+    alumnos = {
+        a["userId"]: a["profile"]["name"]["fullName"]
+        for a in classroom.todas(lambda **kw: cr.courses().students().list(courseId=curso, **kw), "students")
+    }
+    entregas = {}
+    for t in cfg["tareas"]:
+        for s in classroom.todas(
+            lambda **kw: cr.courses().courseWork().studentSubmissions().list(
+                courseId=curso, courseWorkId=t["id"], **kw),
+            "studentSubmissions",
+        ):
+            entregas[(t["columna"], s["userId"])] = s
+
+    docente = []
+    if cfg.get("csv_docente"):
+        with open(DATOS_DIR / materia / cfg["csv_docente"]) as f:
+            docente = list(csv.DictReader(f))
+    columnas_docente = cfg.get("columnas_docente", [])
+    nota_docente = cfg.get("nota_trabajo_docente")
+
+    def fila_docente(nombre):
+        p = palabras_nombre(nombre)
+        candidatas = [r for r in docente if len(palabras_nombre(r["Alumno"]) & p) >= 2]
+        return candidatas[0] if len(candidatas) == 1 else None
+
+    filas, usadas = [], []
+    for uid, nombre in sorted(alumnos.items(), key=lambda x: x[1]):
+        fila = {"Alumno": nombre}
+        avisos = []
+        for t in cfg["tareas"]:
+            s = entregas.get((t["columna"], uid), {})
+            fila[t["columna"]] = valor_entrega(s)
+            if s.get("state") == "TURNED_IN":
+                avisos.append(f"{t['columna']}: entregada, falta {'devolver' if 'draftGrade' in s else 'calificar'}")
+        d = fila_docente(nombre)
+        if d is not None:
+            usadas.append(id(d))
+        elif docente:
+            avisos.append("no está en el CSV docente")
+        for c in columnas_docente:
+            fila[c] = d.get(c, "") if d else ""
+        notas = [numero(fila[t["columna"]]) for t in cfg["tareas"]]
+        if nota_docente:
+            notas.append(numero(fila.get(nota_docente, "")))
+        fila["Promedio"] = round(sum(notas) / len(notas), 1)
+        fila["Avisos"] = "; ".join(avisos)
+        filas.append(fila)
+
+    # Los del CSV docente que no aparecen en Classroom (ej. alumnos que no están en el curso)
+    for d in docente:
+        if id(d) in usadas:
+            continue
+        fila = {"Alumno": d["Alumno"]}
+        for t in cfg["tareas"]:
+            fila[t["columna"]] = d.get(t["columna"], "")
+        for c in columnas_docente:
+            fila[c] = d.get(c, "")
+        fila["Promedio"] = ""
+        fila["Avisos"] = "no está en Classroom"
+        filas.append(fila)
+    return filas
+
+
+def campos_de(materia):
+    cfg = config(materia)
+    if "tareas" not in cfg:
+        return CAMPOS
+    return (["Alumno"] + [t["columna"] for t in cfg["tareas"]]
+            + cfg.get("columnas_docente", []) + ["Promedio", "Avisos"])
+
+
+def generar(materia):
+    """Lo que use la materia según su classroom.json: cuestionario + repo, o por tareas."""
+    return notas_tareas(materia) if "tareas" in config(materia) else notas_cierre(materia)
+
+
 def guardar(materia, filas):
     with open(csv_path(materia), "w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=CAMPOS)
+        w = csv.DictWriter(f, fieldnames=campos_de(materia))
         w.writeheader()
         w.writerows(filas)
 
@@ -164,12 +273,14 @@ def main():
     if len(sys.argv) < 2:
         raise SystemExit(__doc__)
     materia = sys.argv[1]
-    filas = notas_cierre(materia)
+    filas = generar(materia)
     guardar(materia, filas)
+    print(f"{len(filas)} alumnos → {csv_path(materia)}")
+    clave = "Estado del cuestionario" if "Estado del cuestionario" in filas[0] else "Avisos"
     estados = {}
     for f in filas:
-        estados[f["Estado del cuestionario"]] = estados.get(f["Estado del cuestionario"], 0) + 1
-    print(f"{len(filas)} alumnos → {csv_path(materia)}")
+        for e in (f[clave].split("; ") if f[clave] else ["(sin avisos)"]):
+            estados[e] = estados.get(e, 0) + 1
     for e, n in estados.items():
         print(f"  {n:3}  {e}")
 

@@ -766,7 +766,7 @@ def recorrer_grupo(materia, gid):
     lateral, seccion_previa = "", None
     for path in archivos:
         sec = next((s for s in secciones if pertenece(path, s)), None)
-        if sec is None and seccion_previa != "otros":
+        if sec is None and secciones and seccion_previa != "otros":
             lateral += '<div class="grupo-sep">fuera del template</div>'
             seccion_previa = "otros"
         punto = '<span class="punto" title="cambió después del borrador"></span>' if cambio_desde(cambios.get(path), borrador) else ""
@@ -972,7 +972,8 @@ ESTADO_NOTA_COLORES = {
 
 
 def materias_con_notas():
-    return [m for m in materias_con_grupos() if (DATOS_DIR / m / "classroom.json").exists()]
+    return [p.name for p in sorted(MATERIAS_DIR.iterdir())
+            if p.is_dir() and (DATOS_DIR / p.name / "classroom.json").exists()]
 
 
 def pagina_notas(materia, cuerpo):
@@ -1020,6 +1021,9 @@ def notas_materia(materia):
         cuerpo = f"{tabs}{banner_sync()}<p>Todavía no hay tabla para esta materia.</p>{boton}"
         return Response(pagina_notas(materia, cuerpo), mimetype="text/html")
 
+    if "tareas" in cfg:
+        return Response(pagina_notas(materia, notas_por_tareas(materia, tabs, filas, cfg, path, boton)), mimetype="text/html")
+
     filtro = request.args.get("estado")
     conteo = {}
     for f in filas:
@@ -1062,6 +1066,52 @@ def notas_materia(materia):
     return Response(pagina_notas(materia, cuerpo), mimetype="text/html")
 
 
+def notas_por_tareas(materia, tabs, filas, cfg, path, boton):
+    """Materias sin repo grupal (ITI): una columna por tarea de Classroom + las del CSV docente."""
+    tareas = [t["columna"] for t in cfg["tareas"]]
+    docente = cfg.get("columnas_docente", [])
+    solo_avisos = request.args.get("avisos") == "1"
+    con_avisos = sum(1 for f in filas if f["Avisos"])
+    chips = (
+        '<div class="chips">'
+        f'<a href="/notas/{materia}"><span class="badge" style="background:#1f2937">todos: {len(filas)}</span></a>'
+        f'<a href="/notas/{materia}?avisos=1"><span class="badge" style="background:#d97706">con avisos: {con_avisos}</span></a>'
+        "</div>"
+    )
+    grupos = {g["email"]: g["id"] for g in grupos_de(materia)} if (MATERIAS_DIR / materia / "grupos.json").exists() else {}
+
+    def celda(col, v):
+        if col in tareas or col in ("Promedio",) or col.endswith("- nota"):
+            color = "#9ca3af" if v.startswith(("no entregó", "sin calificar")) else "inherit"
+            return f'<td class="num" style="color:{color}">{html.escape(v)}</td>'
+        if col.endswith("- entrega") and v.startswith("http"):
+            # Si el repo está clonado como grupo, se recorre en el dashboard
+            gid = next((g["id"] for g in grupos_de(materia) if g["repo"].rstrip("/") == v.rstrip("/")), None) if grupos else None
+            local = f' · <a href="/recorrer/{materia}/grupo/{q(gid)}">recorrer</a>' if gid else ""
+            return f'<td><a href="{html.escape(v)}" target="_blank">repo ↗</a>{local}</td>'
+        if col == "Avisos" and v:
+            return f'<td><span class="badge" style="background:#d97706">{html.escape(v)}</span></td>'
+        return f"<td>{html.escape(v)}</td>"
+
+    columnas = ["Alumno"] + tareas + docente + ["Promedio", "Avisos"]
+    encabezado = "".join(f"<th>{html.escape(c.replace('Trabajo n°7 / Etapa 6', 'T7').replace('Trabajo n°7', 'T7'))}</th>" for c in columnas)
+    cuerpo_tabla = "".join(
+        "<tr>" + "".join(celda(c, f.get(c, "")) for c in columnas) + "</tr>"
+        for f in filas if not solo_avisos or f["Avisos"]
+    )
+    actualizado = datetime.fromtimestamp(path.stat().st_mtime).strftime("%d/%m %H:%M")
+    return f"""
+    {tabs}
+    <p class="subtitulo">Notas de las tareas de Classroom, más lo que completás vos en
+    <code>sistema-eidas-datos/{materia}/{html.escape(cfg.get("csv_docente", ""))}</code> (trabajos que llegaron por mail,
+    nota de proceso, observaciones). El promedio toma {len(tareas) + (1 if cfg.get("nota_trabajo_docente") else 0)} trabajos,
+    con 0 en lo no entregado. Tabla del {actualizado}.</p>
+    <div class="botones">{boton}</div>
+    {banner_sync()}
+    {chips}
+    <table class="notas"><thead><tr>{encabezado}</tr></thead><tbody>{cuerpo_tabla}</tbody></table>"""
+
+
 @app.route("/notas/<materia>/actualizar", methods=["POST"])
 def notas_actualizar(materia):
     import notas as notas_py
@@ -1069,7 +1119,7 @@ def notas_actualizar(materia):
         abort(404)
     volver = f"/notas/{materia}"
     try:
-        filas = notas_py.notas_cierre(materia)
+        filas = notas_py.generar(materia)
         notas_py.guardar(materia, filas)
         nivel, msg = "ok", f"Tabla actualizada desde Classroom y Forms: {len(filas)} alumnos."
     except Exception as e:  # token vencido, sin red, API caída: que se vea en la página
