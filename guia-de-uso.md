@@ -295,8 +295,10 @@ en `sistema-eidas-datos/cuestionarios/README.md`; el circuito corto:
    planilla de Drive con lo poco que tenga. Los mails ya procesados quedan con la etiqueta
    `procesado` en Gmail.
 
-Los mails de aviso de Classroom ("Enviado con retraso", "Se entregó nuevamente") se pueden
-ignorar: la misma información está en Notas y en `classroom.py entregas`.
+Mails de aviso de Classroom: "Enviado con retraso" se puede ignorar (está en Notas y en
+`classroom.py entregas`). **"Se agregó un comentario privado" y "Se entregó nuevamente" no**:
+los comentarios privados no se pueden leer por API, y una reentrega suele ser un alumno que
+corrigió lo que le pediste y espera otra revisión (caso Sanfilippo, Medición de servidores, 05/10).
 
 ---
 
