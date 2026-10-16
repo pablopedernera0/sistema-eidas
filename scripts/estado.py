@@ -98,9 +98,12 @@ def main():
     check_repo("sistema-eidas", ROOT)
     check_repo("sistema-eidas-datos", ROOT.parent / "sistema-eidas-datos")
     check_repo("eidas-template (edición)", ROOT.parent / "eidas-template")
+    # El clon del sitio no está en el mismo lugar en las dos máquinas: en la notebook vive en
+    # ~/trabajos/pablo/, en la PC en terciario-urquiza/. Se usa el primero que exista.
+    candidatos = [ROOT.parent.parent / "pablopedernera0.github.io", ROOT.parent / "pablopedernera0.github.io"]
     check_repo(
         "pablopedernera0.github.io (sitio docente, no exclusivo de EIDAS)",
-        ROOT.parent.parent / "pablopedernera0.github.io",
+        next((c for c in candidatos if c.exists()), candidatos[0]),
     )
 
     memory_path = find_memory_repo()
@@ -112,7 +115,8 @@ def main():
 
     if not MATERIAS_DIR.exists():
         return
-    for materia_path in sorted(p for p in MATERIAS_DIR.iterdir() if p.is_dir()):
+    # Las materias sin template propio (ITI, sin repos de grupo con template) se saltean
+    for materia_path in sorted(p for p in MATERIAS_DIR.iterdir() if (p / "template").exists()):
         check_repo(f"eidas-template ({materia_path.name}, mirror)", materia_path / "template")
 
 
