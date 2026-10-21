@@ -79,16 +79,49 @@ def grupos(com):
     return [r.name[len(com) + 1:-3] for r in sorted(PARCIAL_DIR.glob(f"bancos/{com}-*.md"), key=lambda r: r.name.lower())]
 
 
+def leer_integrantes_md(texto):
+    """['Apellido, Nombre'] desde integrantes.md. Solo cuentan las tablas cuyo encabezado tiene
+    columnas Nombre + Apellido (la del template) o una columna Integrante ('Apellido, Nombre');
+    el resto de las tablas del archivo se ignora. Si no hay ninguna, se usa una lista
+    '- Nombre Apellido'."""
+    nombres, viñetas = [], []
+    columnas = None  # (i_nombre, i_apellido) o (i_integrante, None) de la tabla actual
+    for linea in texto.splitlines():
+        linea = linea.strip()
+        if not linea.startswith("|"):
+            columnas = None
+            m = re.fullmatch(r"[-*]\s+([^\W\d_][\w.'\s-]*)", linea)
+            if m and 2 <= len(m.group(1).split()) <= 4:
+                partes = m.group(1).split()
+                viñetas.append(f"{partes[-1]}, {' '.join(partes[:-1])}")
+            continue
+        celdas = [c.strip().strip("*").strip() for c in linea.strip("|").split("|")]
+        if set("".join(celdas)) <= set("-: "):
+            continue
+        if columnas is None:
+            enc = [normalizar(c) for c in celdas]
+            if "nombre" in enc and "apellido" in enc:
+                columnas = (enc.index("nombre"), enc.index("apellido"))
+            elif "integrante" in enc:
+                columnas = (enc.index("integrante"), None)
+            else:
+                columnas = False  # tabla que no es de integrantes
+            continue
+        if not columnas or len(celdas) <= max(i for i in columnas if i is not None):
+            continue
+        i, j = columnas
+        nombre = celdas[i] if j is None else f"{celdas[j]}, {celdas[i]}"
+        if nombre.strip(", "):
+            nombres.append(nombre)
+    return nombres or viñetas
+
+
 def integrantes(com, gid):
-    """[(slug, 'Apellido, Nombre')] desde la tabla de integrantes.md, más los cargados a mano."""
+    """[(slug, 'Apellido, Nombre')] desde integrantes.md, más los cargados a mano."""
     ruta = MATERIAS_DIR / COMISIONES[com] / "grupos" / gid / "integrantes.md"
     lista = []
     if ruta.exists():
-        for linea in ruta.read_text().splitlines():
-            celdas = [c.strip() for c in linea.strip().strip("|").split("|")]
-            if len(celdas) < 2 or not celdas[0] or set(celdas[0]) <= set("-: ") or celdas[0].lower() == "nombre":
-                continue
-            nombre = f"{celdas[1]}, {celdas[0]}"
+        for nombre in leer_integrantes_md(ruta.read_text()):
             lista.append((slug(nombre), nombre))
     vistos = {s for s, _ in lista}
     carpeta = RESP_DIR / com / gid
