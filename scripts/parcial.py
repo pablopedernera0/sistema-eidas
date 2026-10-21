@@ -269,7 +269,11 @@ CSS = """
 :root { --bg:#f6f5f2; --card:#fff; --tx:#1b1b1b; --mut:#666; --bd:#ddd; --ok:#1d7a3a; --mal:#b3261e; --duda:#a86400; --acc:#24527a; }
 @media (prefers-color-scheme: dark) { :root { --bg:#151515; --card:#202020; --tx:#eee; --mut:#aaa; --bd:#3a3a3a; --ok:#5cc47a; --mal:#ff8a80; --duda:#f0b44c; --acc:#8cb8e0; } }
 * { box-sizing:border-box; }
-body { margin:0; padding:12px 16px 40px; background:var(--bg); color:var(--tx); font:16px/1.4 system-ui, sans-serif; max-width:760px; margin-inline:auto; }
+body { margin:0; padding:12px 16px 40px; background:var(--bg); color:var(--tx); font:16px/1.4 system-ui, sans-serif; max-width:760px; margin-inline:auto;
+       overflow-wrap:anywhere; }
+.fila > span:first-child { min-width:0; }
+[hidden] { display:none !important; }
+.buscar { position:sticky; top:0; z-index:1; background:var(--bg); padding:8px 0; }
 a { color:var(--acc); }
 h1 { font-size:1.25rem; margin:4px 0 12px; } h2 { font-size:1.05rem; margin:18px 0 8px; }
 .card { background:var(--card); border:1px solid var(--bd); border-radius:10px; padding:12px; margin:8px 0; }
@@ -282,7 +286,7 @@ h1 { font-size:1.25rem; margin:4px 0 12px; } h2 { font-size:1.05rem; margin:18px
 button, .btn { font:inherit; padding:12px 16px; border-radius:10px; border:1px solid var(--acc); background:var(--acc); color:#fff;
                width:100%; margin-top:10px; text-align:center; display:block; text-decoration:none; }
 .btn.sec { background:transparent; color:var(--acc); }
-input[type=file], input[type=text], input[type=number], textarea, select { font:inherit; width:100%; padding:10px; border-radius:8px;
+input[type=file], input[type=text], input[type=search], input[type=number], textarea, select { font:inherit; width:100%; padding:10px; border-radius:8px;
                border:1px solid var(--bd); background:var(--card); color:var(--tx); }
 label { display:block; margin:10px 0 4px; font-weight:600; }
 .fotos { display:flex; gap:8px; overflow-x:auto; } .fotos img { height:180px; border-radius:6px; border:1px solid var(--bd); }
@@ -362,19 +366,48 @@ def inicio():
 def comision(com):
     if com not in COMISIONES:
         abort(404)
-    cuerpo = f'<p><a href="/">← inicio</a></p><h1>{ETIQUETAS[com]}</h1>'
+    cuerpo = (f'<p><a href="/">← inicio</a></p><h1>{ETIQUETAS[com]}</h1>'
+              f'<div class="buscar"><input type="search" id="buscar" placeholder="Buscar apellido…" autocomplete="off"></div>')
     pendientes = 0
     for gid in grupos(com):
-        cuerpo += f"<h2>{e(gid)}</h2>"
+        cuerpo += f'<section class="grupo"><h2>{e(gid)}</h2>'
         for sid, nombre in integrantes(com, gid):
             est = leer_estado(com, gid, sid)
             pendientes += est.get("estado") == "corrigiendo"
             cuerpo += f'<a class="fila" href="/{com}/{gid}/{sid}"><span>{e(nombre)}</span>{chip(est)}</a>'
         cuerpo += (f'<form method="post" action="/{com}/{gid}/nuevo" class="res"><input type="text" name="nombre" '
                    f'placeholder="Otro estudiante (Apellido, Nombre)" style="flex:1;width:auto">'
-                   f'<button style="width:auto;margin:0">+</button></form>')
-    cuerpo += f'<a class="btn sec" href="/{com}/tabla">Tabla de notas</a>'
-    return pagina(ETIQUETAS[com], cuerpo, refrescar=pendientes > 0)
+                   f'<button style="width:auto;margin:0">+</button></form></section>')
+    cuerpo += f'<p id="nada" class="mut" hidden>Nadie con ese apellido.</p><a class="btn sec" href="/{com}/tabla">Tabla de notas</a>'
+    return pagina(ETIQUETAS[com], cuerpo + BUSCADOR.replace("CLAVE", com), refrescar=pendientes > 0)
+
+
+# Filtra las filas por texto sin tildes; el texto queda en sessionStorage para sobrevivir al refresco automático.
+BUSCADOR = """<script>
+(() => {
+  const q = document.getElementById("buscar"), clave = "buscar-CLAVE";
+  const norm = t => t.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLowerCase();
+  function filtrar() {
+    const t = norm(q.value.trim());
+    let hay = false;
+    try { sessionStorage.setItem(clave, q.value); } catch (_) {}
+    for (const g of document.querySelectorAll(".grupo")) {
+      let visibles = 0;
+      for (const f of g.querySelectorAll(".fila")) {
+        const ok = !t || norm(f.firstElementChild.textContent).includes(t);
+        f.hidden = !ok; visibles += ok;
+      }
+      g.hidden = t && !visibles;
+      g.querySelector("form").hidden = !!t;
+      hay ||= visibles > 0;
+    }
+    document.getElementById("nada").hidden = !t || hay;
+  }
+  try { q.value = sessionStorage.getItem(clave) || ""; } catch (_) {}
+  q.addEventListener("input", filtrar);
+  filtrar();
+})();
+</script>"""
 
 
 @app.route("/<com>/<gid>/nuevo", methods=["POST"])
@@ -428,14 +461,14 @@ def revision(com, gid, sid, est):
             bloques += f"""<div class="preg"><div class="enun"><b>{p['n']}.</b> {e(p['texto'])}</div>
 <p class="mut"><i>Escribió:</i> {e(det.get('abierta_transcripcion', ''))}</p>
 <p class="mut"><i>Se espera:</i> {e(p['se_espera'])}</p>
-<div class="res"><span>Puntaje</span><input type="number" name="abierta_pts" min="0" max="{p['pts']}" value="{pts}"></div>
+<div class="res"><span>Puntaje</span><input type="number" name="abierta_pts" min="0" max="{p['pts']}" value="{pts}" data-pts="{p['pts']}"></div>
 <label>Comentario para el estudiante</label><textarea name="abierta_comentario" rows="3">{e(est.get('abierta_comentario', ''))}</textarea></div>"""
             continue
         clase = "duda" if (p["n"] in dudosas or r == "?") else ("ok" if ok else "mal")
         marca = "✓" if ok else "✗"
-        bloques += f"""<div class="preg {clase}"><div class="enun"><b>{p['n']}.</b> {e(p['texto'][:140])}{'…' if len(p['texto']) > 140 else ''}</div>
+        bloques += f"""<div class="preg {clase}" data-tipo="{p['tipo']}" data-correcta="{correcta(p)}" data-pts="{p['pts']}"><div class="enun"><b>{p['n']}.</b> {e(p['texto'][:140])}{'…' if len(p['texto']) > 140 else ''}</div>
 <div class="res"><span>Marcó</span><input type="text" name="r{p['n']}" value="{e(r)}" autocapitalize="off">
-<span>{marca} correcta: <b>{correcta(p)}</b></span>{' <span class="chip revisar">dudosa</span>' if clase == 'duda' else ''}</div></div>"""
+<span><span class="marca">{marca}</span> correcta: <b>{correcta(p)}</b></span>{' <span class="chip revisar">dudosa</span>' if clase == 'duda' else ''}</div></div>"""
     obs = det.get("observaciones") or ""
     escrito = det.get("nombre_escrito") or ""
     avisos = ""
@@ -444,10 +477,40 @@ def revision(com, gid, sid, est):
     if escrito:
         avisos += f'<p class="mut">Nombre en la hoja: {e(escrito)}</p>'
     confirmado = est.get("estado") == "confirmado"
-    return f"""<div class="card"><span class="nota">{total}/30</span> {chip(est)}{avisos}</div>
+    return f"""<div class="card"><span class="nota"><span id="total">{total}</span>/30</span> {chip(est)}
+<span id="sin-guardar" class="chip revisar" hidden>sin guardar</span>{avisos}</div>
 <form method="post" action="/{com}/{gid}/{sid}/confirmar">{bloques}
 <button>{'Guardar cambios' if confirmado else 'Confirmar nota'}</button></form>
-<a class="btn sec" href="/{com}/{gid}/{sid}/alumno">Vista para el estudiante</a>"""
+<a class="btn sec" href="/{com}/{gid}/{sid}/alumno">Vista para el estudiante</a>{RECALCULO}"""
+
+
+# Recalcula el total mientras se corrige; misma normalización que normal_resp() y puntuar().
+RECALCULO = """<script>
+(() => {
+  const form = document.querySelector("form[action$='/confirmar']");
+  function normal(tipo, r) {
+    r = (r || "").trim();
+    if (tipo === "vf") { r = r.slice(0, 1).toUpperCase(); return r === "V" || r === "F" ? r : "?"; }
+    const letras = [...new Set(r.toLowerCase().match(/[a-h]/g) || [])].sort();
+    return letras.length ? letras.join(",") : "?";
+  }
+  function recalcular() {
+    let total = 0;
+    for (const p of form.querySelectorAll(".preg[data-correcta]")) {
+      const ok = normal(p.dataset.tipo, p.querySelector("input").value) === p.dataset.correcta;
+      p.classList.remove("ok", "mal", "duda");
+      p.classList.add(ok ? "ok" : "mal");
+      p.querySelector(".marca").textContent = ok ? "✓" : "✗";
+      total += ok ? +p.dataset.pts : 0;
+    }
+    const abierta = form.querySelector("input[name=abierta_pts]");
+    if (abierta) total += Math.max(0, Math.min(+abierta.dataset.pts, parseInt(abierta.value) || 0));
+    document.getElementById("total").textContent = total;
+    document.getElementById("sin-guardar").hidden = false;
+  }
+  form.addEventListener("input", e => { if (e.target.matches("input")) recalcular(); });
+})();
+</script>"""
 
 
 @app.route("/foto/<com>/<gid>/<sid>/<nombre>")
