@@ -307,6 +307,10 @@ body { margin:0; padding:12px 16px 40px; background:var(--bg); color:var(--tx); 
 .nav-btn { flex:1; text-align:center; padding:10px 6px; border:1px solid var(--acc); border-radius:10px; color:var(--acc);
            text-decoration:none; font-size:.9rem; }
 .nav-btn.pend { background:var(--acc); color:#fff; } .nav-btn.off { opacity:.35; border-color:var(--bd); color:var(--mut); background:none; }
+.spin { display:inline-block; width:1em; height:1em; margin-right:8px; vertical-align:-2px; border:2px solid currentColor;
+        border-right-color:transparent; border-radius:50%; animation:girar .7s linear infinite; }
+@keyframes girar { to { transform:rotate(360deg); } }
+button:disabled { opacity:.75; }
 .buscar { position:sticky; top:0; z-index:1; background:var(--bg); padding:8px 0; }
 a { color:var(--acc); }
 h1 { font-size:1.25rem; margin:4px 0 12px; } h2 { font-size:1.05rem; margin:18px 0 8px; }
@@ -340,7 +344,21 @@ def pagina(titulo, cuerpo, refrescar=False):
     meta = '<meta http-equiv="refresh" content="5">' if refrescar else ""
     return (f'<!doctype html><html lang="es"><head><meta charset="utf-8">'
             f'<meta name="viewport" content="width=device-width, initial-scale=1">{meta}'
-            f'<title>{html.escape(titulo)}</title><style>{CSS}</style></head><body>{cuerpo}</body></html>')
+            f'<title>{html.escape(titulo)}</title><style>{CSS}</style></head><body>{cuerpo}{CARGANDO}</body></html>')
+
+
+# Al mandar un formulario: botón deshabilitado (evita doble envío) con spinner hasta que cargue la página siguiente.
+CARGANDO = """<script>
+document.addEventListener("submit", ev => {
+  const b = ev.target.querySelector("button");
+  if (!b || ev.defaultPrevented) return;
+  b.disabled = true;
+  b.innerHTML = '<span class="spin"></span>' + (b.dataset.cargando || "Guardando…");
+});
+window.addEventListener("pageshow", ev => {  // volver atrás desde el celular: que el botón no quede trabado
+  if (ev.persisted) location.reload();
+});
+</script>"""
 
 
 def e(t):
@@ -481,7 +499,7 @@ def estudiante(com, gid, sid):
     subir = f"""<form method="post" action="/{com}/{gid}/{sid}/fotos" enctype="multipart/form-data" class="card">
 <label>Carilla 1</label><input type="file" name="foto1" accept="image/*" capture="environment" required>
 <label>Carilla 2</label><input type="file" name="foto2" accept="image/*" capture="environment">
-<button>{'Reemplazar fotos y corregir de nuevo' if fotos else 'Subir y corregir'}</button></form>"""
+<button data-cargando="Subiendo fotos…">{'Reemplazar fotos y corregir de nuevo' if fotos else 'Subir y corregir'}</button></form>"""
     estado = est.get("estado")
     nav = navegacion(com, gid, sid)
     if estado == "corrigiendo":
