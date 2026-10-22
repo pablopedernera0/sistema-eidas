@@ -197,8 +197,9 @@ def normal_resp(p, r):
     return ",".join(letras)
 
 
-def puntuar(preguntas, respuestas, abierta_pts):
-    total, detalle = 0, []
+def puntuar(preguntas, respuestas, abierta_pts, manual=None):
+    """manual: {n: pts} puestos a mano por el docente (crédito parcial); pisan el todo-o-nada."""
+    total, detalle, manual = 0, [], manual or {}
     for p in preguntas:
         if p["tipo"] == "abierta":
             pts = max(0, min(p["pts"], int(abierta_pts or 0)))
@@ -207,6 +208,8 @@ def puntuar(preguntas, respuestas, abierta_pts):
             r = normal_resp(p, respuestas.get(str(p["n"])))
             ok = r == correcta(p)
             pts = p["pts"] if ok else 0
+            if str(p["n"]) in manual:
+                pts = max(0, min(p["pts"], int(manual[str(p["n"])])))
             detalle.append((p, r, ok, pts))
         total += pts
     return total, detalle
@@ -318,7 +321,7 @@ input[type=file], input[type=text], input[type=search], input[type=number], text
 label { display:block; margin:10px 0 4px; font-weight:600; }
 .fotos { display:flex; gap:8px; overflow-x:auto; } .fotos img { height:180px; border-radius:6px; border:1px solid var(--bd); }
 .preg { border-left:4px solid var(--bd); padding:6px 10px; margin:8px 0; background:var(--card); border-radius:6px; }
-.preg.ok { border-color:var(--ok); } .preg.mal { border-color:var(--mal); } .preg.duda { border-color:var(--duda); }
+.preg.ok { border-color:var(--ok); } .preg.mal { border-color:var(--mal); } .preg.duda, .preg.parcial { border-color:var(--duda); }
 .preg .enun { font-size:.92rem; }
 .res { display:flex; gap:8px; align-items:center; margin-top:6px; flex-wrap:wrap; }
 .res input { width:90px; }
@@ -408,7 +411,7 @@ def comision(com):
             pendientes += est.get("estado") == "corrigiendo"
             nota = otro = None
             if est.get("estado") in ("revisar", "confirmado"):
-                nota, _ = puntuar(preguntas, est.get("respuestas", {}), est.get("abierta_pts", 0))
+                nota, _ = puntuar(preguntas, est.get("respuestas", {}), est.get("abierta_pts", 0), est.get("pts_manual"))
                 otro = bool(sospecha(com, gid, nombre, est)[0])
             cuerpo += f'<a class="fila" href="/{com}/{gid}/{sid}"><span>{e(nombre)}</span>{chip(est, nota, otro)}</a>'
         cuerpo += (f'<form method="post" action="/{com}/{gid}/nuevo" class="res"><input type="text" name="nombre" '
@@ -490,7 +493,7 @@ def revision(com, gid, sid, est):
     _, preguntas = banco(com, gid)
     det = est.get("deteccion", {})
     dudosas = set(det.get("dudosas", []))
-    total, detalle = puntuar(preguntas, est.get("respuestas", {}), est.get("abierta_pts", 0))
+    total, detalle = puntuar(preguntas, est.get("respuestas", {}), est.get("abierta_pts", 0), est.get("pts_manual"))
     bloques = ""
     for p, r, ok, pts in detalle:
         if p["tipo"] == "abierta":
@@ -500,11 +503,12 @@ def revision(com, gid, sid, est):
 <div class="res"><span>Puntaje</span><input type="number" name="abierta_pts" min="0" max="{p['pts']}" value="{pts}" data-pts="{p['pts']}"></div>
 <label>Comentario para el estudiante</label><textarea name="abierta_comentario" rows="3">{e(est.get('abierta_comentario', ''))}</textarea></div>"""
             continue
-        clase = "duda" if (p["n"] in dudosas or r == "?") else ("ok" if ok else "mal")
+        clase = "duda" if (p["n"] in dudosas or r == "?") else ("ok" if pts == p["pts"] else "parcial" if pts else "mal")
         marca = "✓" if ok else "✗"
         bloques += f"""<div class="preg {clase}" data-tipo="{p['tipo']}" data-correcta="{correcta(p)}" data-pts="{p['pts']}"><div class="enun"><b>{p['n']}.</b> {e(p['texto'][:140])}{'…' if len(p['texto']) > 140 else ''}</div>
 <div class="res"><span>Marcó</span><input type="text" name="r{p['n']}" value="{e(r)}" autocapitalize="off">
-<span><span class="marca">{marca}</span> correcta: <b>{correcta(p)}</b></span>{' <span class="chip revisar">dudosa</span>' if clase == 'duda' else ''}</div></div>"""
+<span><span class="marca">{marca}</span> correcta: <b>{correcta(p)}</b></span>
+<span>Puntaje <input type="number" name="p{p['n']}" class="pts" min="0" max="{p['pts']}" value="{pts}" style="width:64px">/{p['pts']}</span>{' <span class="chip revisar">dudosa</span>' if clase == 'duda' else ''}</div></div>"""
     obs = det.get("observaciones") or ""
     escrito = det.get("nombre_escrito") or ""
     avisos = ""
@@ -544,21 +548,24 @@ RECALCULO = """<script>
     const letras = [...new Set(r.toLowerCase().match(/[a-h]/g) || [])].sort();
     return letras.length ? letras.join(",") : "?";
   }
-  function recalcular() {
+  function recalcular(cambio) {
     let total = 0;
     for (const p of form.querySelectorAll(".preg[data-correcta]")) {
-      const ok = normal(p.dataset.tipo, p.querySelector("input").value) === p.dataset.correcta;
-      p.classList.remove("ok", "mal", "duda");
-      p.classList.add(ok ? "ok" : "mal");
+      const ok = normal(p.dataset.tipo, p.querySelector("input[type=text]").value) === p.dataset.correcta;
+      const caja = p.querySelector("input.pts");
+      if (cambio === p.querySelector("input[type=text]")) caja.value = ok ? p.dataset.pts : 0;  // nueva respuesta: vuelve al automático
+      const pts = Math.max(0, Math.min(+p.dataset.pts, parseInt(caja.value) || 0));
+      p.classList.remove("ok", "mal", "duda", "parcial");
+      p.classList.add(pts == p.dataset.pts ? "ok" : pts ? "parcial" : "mal");
       p.querySelector(".marca").textContent = ok ? "✓" : "✗";
-      total += ok ? +p.dataset.pts : 0;
+      total += pts;
     }
     const abierta = form.querySelector("input[name=abierta_pts]");
     if (abierta) total += Math.max(0, Math.min(+abierta.dataset.pts, parseInt(abierta.value) || 0));
     document.getElementById("total").textContent = total;
     document.getElementById("sin-guardar").hidden = false;
   }
-  form.addEventListener("input", e => { if (e.target.matches("input")) recalcular(); });
+  form.addEventListener("input", e => { if (e.target.matches("input")) recalcular(e.target); });
 })();
 </script>"""
 
@@ -667,9 +674,16 @@ def confirmar(com, gid, sid):
         pts = int(request.form.get("abierta_pts") or 0)
     except ValueError:
         pts = 0
-    total, _ = puntuar(preguntas, respuestas, pts)
+    manual = {}
+    for p in preguntas:
+        valor = request.form.get(f"p{p['n']}", "")
+        if p["tipo"] != "abierta" and valor.strip().isdigit():
+            auto = p["pts"] if respuestas[str(p["n"])] == correcta(p) else 0
+            if int(valor) != auto:
+                manual[str(p["n"])] = max(0, min(p["pts"], int(valor)))
+    total, _ = puntuar(preguntas, respuestas, pts, manual)
     guardar_estado(com, gid, sid, {
-        "estado": "confirmado", "respuestas": respuestas, "abierta_pts": pts,
+        "estado": "confirmado", "respuestas": respuestas, "abierta_pts": pts, "pts_manual": manual,
         "abierta_comentario": request.form.get("abierta_comentario", "").strip(), "nota": total,
         "confirmado": datetime.now().isoformat(timespec="seconds"),
     })
@@ -683,7 +697,7 @@ def vista_alumno(com, gid, sid):
     if est.get("estado") not in ("revisar", "confirmado"):
         return redirect(f"/{com}/{gid}/{sid}")
     _, preguntas = banco(com, gid)
-    total, detalle = puntuar(preguntas, est.get("respuestas", {}), est.get("abierta_pts", 0))
+    total, detalle = puntuar(preguntas, est.get("respuestas", {}), est.get("abierta_pts", 0), est.get("pts_manual"))
     bloques = ""
     for p, r, ok, pts in detalle:
         if p["tipo"] == "abierta":
@@ -701,8 +715,11 @@ def vista_alumno(com, gid, sid):
         cuerpo = f'<p class="mut">Tu respuesta: {e(txt(r))}</p>'
         if not ok:
             cuerpo += f'<p>Correcta: <b>{e(txt(correcta(p)))}</b></p><p class="mut">{e(p["por_que"])}</p>'
-        bloques += (f'<div class="preg {"ok" if ok else "mal"}"><div class="enun"><b>{p["n"]}.</b> {e(p["texto"])} '
-                    f'<b>{"✓" if ok else "✗"}</b></div>{cuerpo}</div>')
+        if pts and not ok:
+            cuerpo += f'<p><b>Parcialmente correcta: {pts}/{p["pts"]}</b></p>'
+        clase, marca = ("ok", "✓") if pts == p["pts"] else ("parcial", "◐") if pts else ("mal", "✗")
+        bloques += (f'<div class="preg {clase}"><div class="enun"><b>{p["n"]}.</b> {e(p["texto"])} '
+                    f'<b>{marca}</b></div>{cuerpo}</div>')
     aviso = "" if est.get("estado") == "confirmado" else '<p class="err">Todavía sin confirmar por el docente.</p>'
     return pagina("Tu resultado", f"""<h1>{e(nombre_de(com, gid, sid))}</h1><p class="mut">Cuestionario individual · {e(gid)}</p>
 <div class="card"><span class="nota">{total}/30</span>{aviso}</div>{bloques}
@@ -717,7 +734,7 @@ def filas_tabla(com):
             est = leer_estado(com, gid, sid)
             nota = ""
             if est.get("estado") in ("revisar", "confirmado"):
-                nota, _ = puntuar(preguntas, est.get("respuestas", {}), est.get("abierta_pts", 0))
+                nota, _ = puntuar(preguntas, est.get("respuestas", {}), est.get("abierta_pts", 0), est.get("pts_manual"))
             filas.append({"grupo": gid, "estudiante": nombre, "estado": est.get("estado", "sin foto"), "nota": nota,
                           "abierta": est.get("abierta_pts", "") if est.get("estado") else ""})
     return filas
