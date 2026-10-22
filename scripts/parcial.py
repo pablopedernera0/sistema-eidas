@@ -303,6 +303,10 @@ body { margin:0; padding:12px 16px 40px; background:var(--bg); color:var(--tx); 
        overflow-wrap:anywhere; }
 .fila > span:first-child { min-width:0; }
 [hidden] { display:none !important; }
+.nav { display:flex; gap:6px; margin:8px 0; }
+.nav-btn { flex:1; text-align:center; padding:10px 6px; border:1px solid var(--acc); border-radius:10px; color:var(--acc);
+           text-decoration:none; font-size:.9rem; }
+.nav-btn.pend { background:var(--acc); color:#fff; } .nav-btn.off { opacity:.35; border-color:var(--bd); color:var(--mut); background:none; }
 .buscar { position:sticky; top:0; z-index:1; background:var(--bg); padding:8px 0; }
 a { color:var(--acc); }
 h1 { font-size:1.25rem; margin:4px 0 12px; } h2 { font-size:1.05rem; margin:18px 0 8px; }
@@ -479,14 +483,41 @@ def estudiante(com, gid, sid):
 <label>Carilla 2</label><input type="file" name="foto2" accept="image/*" capture="environment">
 <button>{'Reemplazar fotos y corregir de nuevo' if fotos else 'Subir y corregir'}</button></form>"""
     estado = est.get("estado")
+    nav = navegacion(com, gid, sid)
     if estado == "corrigiendo":
-        return pagina(nombre, volver + galeria + '<div class="card">Corrigiendo… (se actualiza solo)</div>', refrescar=True)
+        return pagina(nombre, nav + volver + galeria + '<div class="card">Corrigiendo… (se actualiza solo)</div>' + nav, refrescar=True)
     if estado == "error":
-        return pagina(nombre, volver + galeria + f'<div class="card"><b>Falló la lectura</b><p class="err">{e(est.get("error", ""))}</p>'
-                      f'<form method="post" action="/{com}/{gid}/{sid}/reintentar"><button>Reintentar</button></form></div>' + subir)
+        return pagina(nombre, nav + volver + galeria + f'<div class="card"><b>Falló la lectura</b><p class="err">{e(est.get("error", ""))}</p>'
+                      f'<form method="post" action="/{com}/{gid}/{sid}/reintentar"><button>Reintentar</button></form></div>' + subir + nav)
     if estado in ("revisar", "confirmado"):
-        return pagina(nombre, volver + galeria + revision(com, gid, sid, est) + f"<details><summary>Cambiar fotos</summary>{subir}</details>")
-    return pagina(nombre, volver + subir)
+        return pagina(nombre, nav + volver + galeria + revision(com, gid, sid, est)
+                      + f"<details><summary>Cambiar fotos</summary>{subir}</details>" + nav)
+    return pagina(nombre, nav + volver + subir + nav)
+
+
+def navegacion(com, gid, sid):
+    """Anterior / siguiente en el orden de la lista de la comisión, y el próximo que falta revisar."""
+    orden = [(g, s) for g in grupos(com) for s, _ in integrantes(com, g)]
+    i = orden.index((gid, sid)) if (gid, sid) in orden else -1
+    pendiente = next((x for x in orden[i + 1:] + orden[:max(i, 0)]
+                      if leer_estado(com, *x).get("estado") == "revisar"), None)
+
+    def link(x, texto, extra=""):
+        if not x:
+            return f'<span class="nav-btn off{extra}">{texto}</span>'
+        return f'<a class="nav-btn{extra}" href="/{com}/{x[0]}/{x[1]}">{texto}</a>'
+    return (f'<nav class="nav">{link(orden[i - 1] if i > 0 else None, "← Anterior")}'
+            f'{link(pendiente, "Próximo para revisar", " pend")}'
+            f'{link(orden[i + 1] if 0 <= i < len(orden) - 1 else None, "Siguiente →")}</nav>' + AVISO_SALIDA)
+
+
+# Si hay cambios sin guardar en la revisión, pregunta antes de irse con la navegación.
+AVISO_SALIDA = """<script>
+document.currentScript.previousElementSibling.addEventListener("click", ev => {
+  const pend = document.getElementById("sin-guardar");
+  if (ev.target.closest("a") && pend && !pend.hidden && !confirm("Hay cambios sin guardar. ¿Salir igual?")) ev.preventDefault();
+});
+</script>"""
 
 
 def revision(com, gid, sid, est):
@@ -730,7 +761,7 @@ def vista_alumno(com, gid, sid):
     aviso = "" if est.get("estado") == "confirmado" else '<p class="err">Todavía sin confirmar por el docente.</p>'
     return pagina("Tu resultado", f"""<h1>{e(nombre_de(com, gid, sid))}</h1><p class="mut">Cuestionario individual · {e(gid)}</p>
 <div class="card"><span class="nota">{total}/30</span>{aviso}</div>{bloques}
-<a class="btn sec" href="/{com}/{gid}/{sid}">← volver a la revisión</a>""")
+<a class="btn sec" href="/{com}/{gid}/{sid}">← volver a la revisión</a>{navegacion(com, gid, sid)}""")
 
 
 def filas_tabla(com):
