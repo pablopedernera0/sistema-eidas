@@ -25,12 +25,14 @@ import os
 import random
 import re
 import secrets
+import shutil
 import subprocess
 import sys
 import threading
 import unicodedata
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
+from difflib import SequenceMatcher
 from pathlib import Path
 
 from flask import Flask, Response, abort, redirect, request, send_file
@@ -154,6 +156,30 @@ def guardar_estado(com, gid, sid, cambios):
         return est
 
 
+def apellido_en(nombre, escrito):
+    """True si alguna palabra del apellido ('Apellido, Nombre') aparece, con tolerancia a la letra
+    manuscrita, en el nombre escrito en la hoja."""
+    palabras = re.findall(r"[a-z]+", normalizar(escrito))
+    apellido = [a for a in re.findall(r"[a-z]+", normalizar(nombre.split(",")[0])) if len(a) >= 3]
+    return any(SequenceMatcher(None, a, w).ratio() >= 0.8 for a in apellido for w in palabras)
+
+
+def sospecha(com, gid, nombre, est):
+    """(aviso, [(gid, sid, nombre)] candidatos) si las fotos parecen de otro estudiante o grupo; ('', []) si no."""
+    det = est.get("deteccion") or {}
+    escrito, impreso = det.get("nombre_escrito") or "", det.get("grupo_impreso") or ""
+    avisos = []
+    if impreso and slug(impreso) != slug(gid):
+        avisos.append(f"La hoja es del grupo «{impreso}», no de {gid}.")
+    if escrito and not apellido_en(nombre, escrito):
+        avisos.append(f"En la hoja dice «{escrito}», no {nombre}.")
+    if not avisos:
+        return "", []
+    candidatos = [(g, s, n) for g in grupos(com) for s, n in integrantes(com, g)
+                  if escrito and apellido_en(n, escrito) and (not impreso or slug(impreso) == slug(g))]
+    return " ".join(avisos), candidatos
+
+
 def correcta(p):
     if p["tipo"] == "vf":
         return "V" if p["opciones"][0][1] else "F"
@@ -198,6 +224,7 @@ ESQUEMA = {
         "abierta_puntaje": {"type": "integer", "minimum": 0, "maximum": 3},
         "abierta_comentario": {"type": "string"},
         "nombre_escrito": {"type": "string"},
+        "grupo_impreso": {"type": "string", "description": "lo que dice 'Grupo:' en el encabezado impreso"},
         "observaciones": {"type": "string"},
     },
     "required": ["respuestas", "dudosas", "abierta_transcripcion", "abierta_puntaje", "abierta_comentario"],
@@ -227,7 +254,7 @@ Para cada pregunta 1 a 9 informá SOLO lo que el estudiante marcó (no lo que se
 - Vale cualquier marca clara (cruz, tilde, círculo relleno o rodeado). Si tachó una y aclaró otra, vale la aclarada.
 - Si no marcó nada, o no se puede leer con seguridad, poné "?" y agregá el número a "dudosas". Si dudás entre dos lecturas, poné la más probable y agregala a "dudosas".
 Pregunta 10: transcribí lo que escribió, puntuala de 0 a 3 con el criterio del docente y escribí un comentario de 1 o 2 oraciones para el estudiante, en voseo rioplatense: qué estuvo bien y qué le faltó. Si está en blanco, 0 y decilo.
-"nombre_escrito": el nombre que figura en la hoja, si se lee. "observaciones": algo raro de la foto (borrosa, falta una carilla, es de otro grupo), o vacío."""
+"nombre_escrito": el nombre que figura en la hoja, si se lee. "grupo_impreso": lo que dice "Grupo:" en el encabezado impreso de la hoja. "observaciones": algo raro de la foto (borrosa, falta una carilla, es de otro grupo), o vacío."""
 
 
 def preparar_foto(origen, destino):
@@ -339,12 +366,16 @@ def login():
 <button>Entrar</button></form>""")
 
 
-def chip(est):
+def chip(est, nota=None, otro=False):
     estado = est.get("estado")
     if not estado:
         return '<span class="chip">sin foto</span>'
+    if otro:
+        return '<span class="chip error">¿fotos de otro?</span>'
     if estado == "confirmado":
         return f'<span class="chip confirmado">{est.get("nota", "")}/30</span>'
+    if estado == "revisar" and nota is not None:
+        return f'<span class="chip revisar">{nota}/30 · revisar</span>'
     texto = {"corrigiendo": "corrigiendo…", "revisar": "para revisar", "error": "error"}[estado]
     return f'<span class="chip {estado}">{texto}</span>'
 
@@ -371,10 +402,15 @@ def comision(com):
     pendientes = 0
     for gid in grupos(com):
         cuerpo += f'<section class="grupo"><h2>{e(gid)}</h2>'
+        _, preguntas = banco(com, gid)
         for sid, nombre in integrantes(com, gid):
             est = leer_estado(com, gid, sid)
             pendientes += est.get("estado") == "corrigiendo"
-            cuerpo += f'<a class="fila" href="/{com}/{gid}/{sid}"><span>{e(nombre)}</span>{chip(est)}</a>'
+            nota = otro = None
+            if est.get("estado") in ("revisar", "confirmado"):
+                nota, _ = puntuar(preguntas, est.get("respuestas", {}), est.get("abierta_pts", 0))
+                otro = bool(sospecha(com, gid, nombre, est)[0])
+            cuerpo += f'<a class="fila" href="/{com}/{gid}/{sid}"><span>{e(nombre)}</span>{chip(est, nota, otro)}</a>'
         cuerpo += (f'<form method="post" action="/{com}/{gid}/nuevo" class="res"><input type="text" name="nombre" '
                    f'placeholder="Otro estudiante (Apellido, Nombre)" style="flex:1;width:auto">'
                    f'<button style="width:auto;margin:0">+</button></form></section>')
@@ -476,6 +512,20 @@ def revision(com, gid, sid, est):
         avisos += f'<p class="err">{e(obs)}</p>'
     if escrito:
         avisos += f'<p class="mut">Nombre en la hoja: {e(escrito)}</p>'
+    aviso, candidatos = sospecha(com, gid, nombre_de(com, gid, sid), est)
+    if aviso:
+        opciones = "".join(f'<option value="{g}/{s}">{e(n)} — {e(g)}</option>'
+                           for g in grupos(com) for s, n in integrantes(com, g) if (g, s) != (gid, sid))
+        for g, s, _ in candidatos[:1]:
+            opciones = opciones.replace(f'value="{g}/{s}"', f'value="{g}/{s}" selected', 1)
+        if not candidatos:
+            opciones = '<option value="">— elegir —</option>' + opciones
+        avisos = (f'<div class="card" style="border-color:var(--mal)"><b class="err">⚠ ¿Fotos de otro estudiante?</b>'
+                  f'<p class="err">{e(aviso)}</p><form method="post" action="/{com}/{gid}/{sid}/mover">'
+                  f'<label>Mover estas fotos a</label><select name="destino">{opciones}</select>'
+                  f'<button>Mover</button></form>'
+                  f'<form method="post" action="/{com}/{gid}/{sid}/descartar"><button class="btn sec">'
+                  f'Descartar (duplicado de algo ya cargado)</button></form></div>') + avisos
     confirmado = est.get("estado") == "confirmado"
     return f"""<div class="card"><span class="nota"><span id="total">{total}</span>/30</span> {chip(est)}
 <span id="sin-guardar" class="chip revisar" hidden>sin guardar</span>{avisos}</div>
@@ -539,6 +589,64 @@ def subir_fotos(com, gid, sid):
                                    "subido": datetime.now().isoformat(timespec="seconds"), "error": ""})
     motor.submit(correr_motor, com, gid, sid)
     return redirect(f"/{com}")
+
+
+@app.route("/<com>/<gid>/<sid>/mover", methods=["POST"])
+def mover(com, gid, sid):
+    """Pasa fotos y lectura a otro estudiante. Si cambia el grupo, cambia el banco: se vuelve a leer."""
+    origen = carpeta(com, gid, sid)
+    g2, _, s2 = request.form.get("destino", "").partition("/")
+    if not s2:
+        return redirect(f"/{com}/{gid}/{sid}")
+    destino = carpeta(com, g2, s2)
+    nombre = nombre_de(com, g2, s2)
+    fotos_destino = sorted(destino.glob("foto-*.jpg"))
+    if fotos_destino and not request.form.get("reemplazar"):
+        def galeria(g, s_, fotos):
+            return '<div class="fotos">' + "".join(f'<a href="/foto/{com}/{g}/{s_}/{f.name}"><img src="/foto/{com}/{g}/{s_}/{f.name}"></a>'
+                                                   for f in fotos) + "</div>"
+        est_d = leer_estado(com, g2, s2)
+        return pagina("¿Reemplazar?", f"""<h1>{e(nombre)} ya tiene fotos</h1>
+<p class="mut">Cargadas {e(est_d.get('subido', ''))} · {chip(est_d)}</p>{galeria(g2, s2, fotos_destino)}
+<h2>Las que querés mover (de {e(nombre_de(com, gid, sid))})</h2>{galeria(gid, sid, sorted(origen.glob('foto-*.jpg')))}
+<p>Si las reemplazás, las fotos y la corrección que ya tenía {e(nombre)} van a <code>_duplicados/</code> (no se borran).
+Si son el mismo examen, mejor descartá estas.</p>
+<form method="post"><input type="hidden" name="destino" value="{g2}/{s2}"><input type="hidden" name="reemplazar" value="1">
+<button>Reemplazar las de {e(nombre)}</button></form>
+<form method="post" action="/{com}/{gid}/{sid}/descartar"><button class="btn sec">Descartar estas (duplicado)</button></form>
+<a class="btn sec" href="/{com}/{gid}/{sid}">← volver</a>""")
+    if fotos_destino:
+        apartar(com, g2, s2)
+    est = leer_estado(com, gid, sid)
+    destino.mkdir(parents=True, exist_ok=True)
+    for f in origen.glob("foto-*.jpg"):
+        shutil.move(f, destino / f.name)
+    (origen / "estado.json").unlink(missing_ok=True)
+    if not any(origen.iterdir()):
+        origen.rmdir()
+    with candado:
+        (destino / "estado.json").unlink(missing_ok=True)
+    guardar_estado(com, g2, s2, {**est, "nombre": nombre, "movido_de": f"{gid}/{sid}"})
+    if g2 != gid:
+        guardar_estado(com, g2, s2, {"estado": "corrigiendo", "error": ""})
+        motor.submit(correr_motor, com, g2, s2)
+    return redirect(f"/{com}/{g2}/{s2}")
+
+
+@app.route("/<com>/<gid>/<sid>/descartar", methods=["POST"])
+def descartar(com, gid, sid):
+    """Aparta fotos y lectura en respuestas/<com>/_duplicados/ (no se borran); el estudiante queda sin foto."""
+    apartar(com, gid, sid)
+    return redirect(f"/{com}")
+
+
+def apartar(com, gid, sid):
+    origen = carpeta(com, gid, sid)
+    if origen.exists():
+        destino = RESP_DIR / com / "_duplicados" / f"{gid}-{sid}-{datetime.now():%Y%m%d-%H%M%S}"
+        destino.parent.mkdir(parents=True, exist_ok=True)
+        with candado:
+            shutil.move(origen, destino)
 
 
 @app.route("/<com>/<gid>/<sid>/reintentar", methods=["POST"])
