@@ -9,11 +9,16 @@ de la terminal) lee las marcas y propone el puntaje de la abierta en segundo pla
 docente revisa al lado de la foto, corrige si hace falta y confirma. Queda una vista para
 mostrarle al estudiante y una tabla/CSV por comisión.
 
-  python3 scripts/parcial.py [--puerto 8421]      (PIN: variable PARCIAL_PIN o uno al azar)
+  python3 scripts/parcial.py [--parcial iti] [--puerto 8421]      (PIN: variable PARCIAL_PIN o uno al azar)
 
 Bancos y clave: sistema-eidas-datos/cuestionarios/parcial-b-2c-2026/ (se usa su generar.py
 para que las letras sean las mismas que las impresas). Fotos y resultados quedan en
 respuestas/<com>/<grupo>/<estudiante>/ dentro de esa carpeta.
+
+Con --parcial iti corrige el parcial de Infraestructura de Redes II (cuestionarios/parcial-iti21-2c-2026/):
+un solo banco en dos versiones (A/B, mismas preguntas con otro orden de opciones). Hay un único
+"grupo" con la lista del curso (cierre-2c-2026.csv de ITI); la versión se elige al subir las fotos y
+queda en el estado de cada estudiante. La abierta admite medio punto.
 """
 import csv
 import hashlib
@@ -39,10 +44,21 @@ from flask import Flask, Response, abort, redirect, request, send_file
 
 ROOT = Path(__file__).resolve().parent.parent
 MATERIAS_DIR = ROOT / "materias"
-PARCIAL_DIR = ROOT.parent / "sistema-eidas-datos" / "cuestionarios" / "parcial-b-2c-2026"
+DATOS_DIR = ROOT.parent / "sistema-eidas-datos"
+ITI = "--parcial" in sys.argv and sys.argv[sys.argv.index("--parcial") + 1] == "iti"
+if ITI:
+    PARCIAL_DIR = DATOS_DIR / "cuestionarios" / "parcial-iti21-2c-2026"
+    COMISIONES = {"iti": "iti-infra-redes-21"}
+    ETIQUETAS = {"iti": "ITI-21"}
+    TITULO, MATERIA, TOTAL, IMPRESO = "Parcial ITI-21", "Infraestructura de Redes II", 10, "Versión"
+    ROSTER_ITI = DATOS_DIR / "iti-infra-redes-21" / "cierre-2c-2026.csv"
+    GRUPO_ITI = "iti21"
+else:
+    PARCIAL_DIR = DATOS_DIR / "cuestionarios" / "parcial-b-2c-2026"
+    COMISIONES = {"c31": "af-diseno-sistemas-web-31", "c32": "af-diseno-sistemas-web-32"}
+    ETIQUETAS = {"c31": "3.° 1.ª", "c32": "3.° 2.ª"}
+    TITULO, MATERIA, TOTAL, IMPRESO = "Parcial B", "Diseño de Sistemas Web", 30, "Grupo"
 RESP_DIR = PARCIAL_DIR / "respuestas"
-COMISIONES = {"c31": "af-diseno-sistemas-web-31", "c32": "af-diseno-sistemas-web-32"}
-ETIQUETAS = {"c31": "3.° 1.ª", "c32": "3.° 2.ª"}
 PIN = os.environ.get("PARCIAL_PIN") or f"{random.randint(0, 9999):04d}"
 COOKIE = "parcial_pin"
 LETRAS = "abcdefgh"
@@ -68,8 +84,11 @@ def slug(texto):
     return re.sub(r"[^a-z0-9]+", "-", normalizar(texto)).strip("-")
 
 
-def banco(com, gid):
-    """(meta, preguntas) con las opciones en el mismo orden que el PDF impreso."""
+def banco(com, gid, sid=None):
+    """(meta, preguntas) con las opciones en el mismo orden que el PDF impreso.
+    En ITI depende de la versión (A/B) que tiene cargada el estudiante."""
+    if ITI:
+        return generar.version(version_de(com, gid, sid))
     ruta = PARCIAL_DIR / "bancos" / f"{com}-{gid}.md"
     if not ruta.exists():
         abort(404)
@@ -78,8 +97,24 @@ def banco(com, gid):
     return meta, preguntas
 
 
+def version_de(com, gid, sid):
+    v = leer_estado(com, gid, sid).get("version") if sid else None
+    return v if v in generar.VERSIONES else "A"
+
+
 def grupos(com):
+    if ITI:
+        return [GRUPO_ITI]
     return [r.name[len(com) + 1:-3] for r in sorted(PARCIAL_DIR.glob(f"bancos/{com}-*.md"), key=lambda r: r.name.lower())]
+
+
+def num(x):
+    """Puntaje como número (admite medio punto); 1.0 → 1 para mostrarlo sin decimales."""
+    try:
+        x = round(float(str(x).replace(",", ".")) * 2) / 2
+    except ValueError:
+        return 0
+    return int(x) if x == int(x) else x
 
 
 def leer_integrantes_md(texto):
@@ -120,12 +155,19 @@ def leer_integrantes_md(texto):
 
 
 def integrantes(com, gid):
-    """[(slug, 'Apellido, Nombre')] desde integrantes.md, más los cargados a mano."""
-    ruta = MATERIAS_DIR / COMISIONES[com] / "grupos" / gid / "integrantes.md"
+    """[(slug, 'Apellido, Nombre')] desde integrantes.md (en ITI, la lista del curso), más los cargados a mano."""
     lista = []
-    if ruta.exists():
-        for nombre in leer_integrantes_md(ruta.read_text()):
-            lista.append((slug(nombre), nombre))
+    if ITI:
+        with open(ROSTER_ITI, newline="", encoding="utf-8") as f:
+            for fila in csv.DictReader(f):
+                nombre = fila["Alumno"].strip().title()
+                if nombre:
+                    lista.append((slug(nombre), nombre))
+    else:
+        ruta = MATERIAS_DIR / COMISIONES[com] / "grupos" / gid / "integrantes.md"
+        if ruta.exists():
+            for nombre in leer_integrantes_md(ruta.read_text()):
+                lista.append((slug(nombre), nombre))
     vistos = {s for s, _ in lista}
     carpeta = RESP_DIR / com / gid
     if carpeta.exists():
@@ -170,6 +212,8 @@ def sospecha(com, gid, nombre, est):
     det = est.get("deteccion") or {}
     escrito, impreso = det.get("nombre_escrito") or "", det.get("grupo_impreso") or ""
     avisos = []
+    if ITI:
+        impreso = ""  # la versión distinta se avisa aparte (version_impresa), no es otro estudiante
     if impreso and slug(impreso) != slug(gid):
         avisos.append(f"La hoja es del grupo «{impreso}», no de {gid}.")
     if escrito and not apellido_en(nombre, escrito):
@@ -179,6 +223,12 @@ def sospecha(com, gid, nombre, est):
     candidatos = [(g, s, n) for g in grupos(com) for s, n in integrantes(com, g)
                   if escrito and apellido_en(n, escrito) and (not impreso or slug(impreso) == slug(g))]
     return " ".join(avisos), candidatos
+
+
+def version_impresa(est):
+    """En ITI, la versión que dice la hoja si es A o B y no coincide con la cargada; '' si no."""
+    v = re.sub(r"[^AB]", "", ((est.get("deteccion") or {}).get("grupo_impreso") or "").upper()[-1:])
+    return v if ITI and v and v != (est.get("version") or "A") else ""
 
 
 def correcta(p):
@@ -203,17 +253,17 @@ def puntuar(preguntas, respuestas, abierta_pts, manual=None):
     total, detalle, manual = 0, [], manual or {}
     for p in preguntas:
         if p["tipo"] == "abierta":
-            pts = max(0, min(p["pts"], int(abierta_pts or 0)))
+            pts = max(0, min(p["pts"], num(abierta_pts or 0)))
             detalle.append((p, None, None, pts))
         else:
             r = normal_resp(p, respuestas.get(str(p["n"])))
             ok = r == correcta(p)
             pts = p["pts"] if ok else 0
             if str(p["n"]) in manual:
-                pts = max(0, min(p["pts"], int(manual[str(p["n"])])))
+                pts = max(0, min(p["pts"], num(manual[str(p["n"])])))
             detalle.append((p, r, ok, pts))
         total += pts
-    return total, detalle
+    return num(total), detalle
 
 
 # ---------- motor ----------
@@ -225,10 +275,10 @@ ESQUEMA = {
                        "description": "pregunta (1..9) -> 'V'/'F', una letra, o letras separadas por coma; '?' si no se lee"},
         "dudosas": {"type": "array", "items": {"type": "integer"}},
         "abierta_transcripcion": {"type": "string"},
-        "abierta_puntaje": {"type": "integer", "minimum": 0, "maximum": 3},
+        "abierta_puntaje": {"type": "number", "minimum": 0},
         "abierta_comentario": {"type": "string"},
         "nombre_escrito": {"type": "string"},
-        "grupo_impreso": {"type": "string", "description": "lo que dice 'Grupo:' en el encabezado impreso"},
+        "grupo_impreso": {"type": "string", "description": f"lo que dice '{IMPRESO}:' en el encabezado impreso"},
         "observaciones": {"type": "string"},
     },
     "required": ["respuestas", "dudosas", "abierta_transcripcion", "abierta_puntaje", "abierta_comentario"],
@@ -247,18 +297,21 @@ def prompt_motor(meta, preguntas, fotos):
             ops = "\n".join(f"   {LETRAS[i]}) {t}" for i, (t, _) in enumerate(p["opciones"]))
             partes.append(f"{p['n']}. ({como}) {p['texto']}\n{ops}")
     lista = "\n".join(f"- {f}" for f in fotos)
+    abierta = next(p for p in preguntas if p["tipo"] == "abierta")
+    escala = f"de 0 a {abierta['pts']}" + (" (podés usar medio punto: 0,5)" if ITI else "")
+    cual = f"Versión {meta['version']}" if ITI else f"Grupo: {meta['grupo']}"
     return f"""Corregís un cuestionario impreso que un estudiante completó a mano. Leé con Read estas fotos (carillas del examen):
 {lista}
 
-Grupo: {meta['grupo']}. Estas son las preguntas tal como están impresas (mismas letras):
+{cual}. Estas son las preguntas tal como están impresas (mismas letras):
 
 {chr(10).join(partes)}
 
 Para cada pregunta 1 a 9 informá SOLO lo que el estudiante marcó (no lo que sería correcto): "V" o "F"; una letra; o varias letras separadas por coma.
 - Vale cualquier marca clara (cruz, tilde, círculo relleno o rodeado). Si tachó una y aclaró otra, vale la aclarada.
 - Si no marcó nada, o no se puede leer con seguridad, poné "?" y agregá el número a "dudosas". Si dudás entre dos lecturas, poné la más probable y agregala a "dudosas".
-Pregunta 10: transcribí lo que escribió, puntuala de 0 a 3 con el criterio del docente y escribí un comentario de 1 o 2 oraciones para el estudiante, en voseo rioplatense: qué estuvo bien y qué le faltó. Si está en blanco, 0 y decilo.
-"nombre_escrito": el nombre que figura en la hoja, si se lee. "grupo_impreso": lo que dice "Grupo:" en el encabezado impreso de la hoja. "observaciones": algo raro de la foto (borrosa, falta una carilla, es de otro grupo), o vacío."""
+Pregunta 10: transcribí lo que escribió, puntuala {escala} con el criterio del docente y escribí un comentario de 1 o 2 oraciones para el estudiante, en voseo rioplatense: qué estuvo bien y qué le faltó. Si está en blanco, 0 y decilo.
+"nombre_escrito": el nombre que figura en la hoja, si se lee. "grupo_impreso": lo que dice "{IMPRESO}:" en el encabezado impreso de la hoja. "observaciones": algo raro de la foto (borrosa, falta una carilla, es de otro {IMPRESO.lower()}), o vacío."""
 
 
 def preparar_foto(origen, destino):
@@ -269,7 +322,7 @@ def preparar_foto(origen, destino):
 
 
 def correr_motor(com, gid, sid):
-    meta, preguntas = banco(com, gid)
+    meta, preguntas = banco(com, gid, sid)
     d = carpeta(com, gid, sid)
     fotos = [str(f) for f in sorted(d.glob("foto-*.jpg"))]
     try:
@@ -289,7 +342,7 @@ def correr_motor(com, gid, sid):
                   for p in preguntas if p["tipo"] != "abierta"}
     guardar_estado(com, gid, sid, {
         "estado": "revisar", "deteccion": det, "respuestas": respuestas,
-        "abierta_pts": det.get("abierta_puntaje", 0), "abierta_comentario": det.get("abierta_comentario", ""),
+        "abierta_pts": num(det.get("abierta_puntaje", 0)), "abierta_comentario": det.get("abierta_comentario", ""),
         "costo_usd": salida.get("total_cost_usd"), "error": "",
     })
 
@@ -387,7 +440,7 @@ def login():
         error = '<p class="err">PIN incorrecto.</p>'
     else:
         error = ""
-    return pagina("Parcial — ingreso", f"""<h1>Parcial B — corrección</h1>{error}
+    return pagina("Parcial — ingreso", f"""<h1>{TITULO} — corrección</h1>{error}
 <form method="post"><label>PIN</label><input type="text" name="pin" inputmode="numeric" autofocus>
 <button>Entrar</button></form>""")
 
@@ -399,9 +452,9 @@ def chip(est, nota=None, otro=False):
     if otro:
         return '<span class="chip error">¿fotos de otro?</span>'
     if estado == "confirmado":
-        return f'<span class="chip confirmado">{est.get("nota", "")}/30</span>'
+        return f'<span class="chip confirmado">{est.get("nota", "")}/{TOTAL}</span>'
     if estado == "revisar" and nota is not None:
-        return f'<span class="chip revisar">{nota}/30 · revisar</span>'
+        return f'<span class="chip revisar">{nota}/{TOTAL} · revisar</span>'
     texto = {"corrigiendo": "corrigiendo…", "revisar": "para revisar", "error": "error"}[estado]
     return f'<span class="chip {estado}">{texto}</span>'
 
@@ -416,7 +469,7 @@ def inicio():
                 total += 1
                 hechos += leer_estado(com, gid, sid).get("estado") == "confirmado"
         filas += f'<a class="fila" href="/{com}"><span>{ETIQUETAS[com]}</span><span class="mut">{hechos}/{total} confirmados</span></a>'
-    return pagina("Parcial B", f"<h1>Parcial B — Diseño de Sistemas Web</h1>{filas}")
+    return pagina(TITULO, f"<h1>{TITULO} — {MATERIA}</h1>{filas}")
 
 
 @app.route("/<com>")
@@ -428,12 +481,12 @@ def comision(com):
     pendientes = 0
     for gid in grupos(com):
         cuerpo += f'<section class="grupo"><h2>{e(gid)}</h2>'
-        _, preguntas = banco(com, gid)
         for sid, nombre in integrantes(com, gid):
             est = leer_estado(com, gid, sid)
             pendientes += est.get("estado") == "corrigiendo"
             nota = otro = None
             if est.get("estado") in ("revisar", "confirmado"):
+                _, preguntas = banco(com, gid, sid)
                 nota, _ = puntuar(preguntas, est.get("respuestas", {}), est.get("abierta_pts", 0), est.get("pts_manual"))
                 otro = bool(sospecha(com, gid, nombre, est)[0])
             cuerpo += f'<a class="fila" href="/{com}/{gid}/{sid}"><span>{e(nombre)}</span>{chip(est, nota, otro)}</a>'
@@ -497,7 +550,13 @@ def estudiante(com, gid, sid):
     galeria = ('<div class="fotos">' + "".join(
         f'<a href="/foto/{com}/{gid}/{sid}/{f.name}"><img src="/foto/{com}/{gid}/{sid}/{f.name}"></a>' for f in fotos)
         + "</div>") if fotos else ""
-    subir = f"""<form method="post" action="/{com}/{gid}/{sid}/fotos" enctype="multipart/form-data" class="card">
+    elegir_version = ""
+    if ITI:
+        actual = est.get("version")
+        elegir_version = '<label>Versión (arriba a la derecha de la hoja)</label><div class="res">' + "".join(
+            f'<label style="margin:0;font-weight:400"><input type="radio" name="version" value="{v}" required'
+            f'{" checked" if v == actual else ""}> {v}</label>' for v in generar.VERSIONES) + "</div>"
+    subir = f"""<form method="post" action="/{com}/{gid}/{sid}/fotos" enctype="multipart/form-data" class="card">{elegir_version}
 <label>Carilla 1</label><input type="file" name="foto1" accept="image/*" capture="environment" required>
 <label>Carilla 2</label><input type="file" name="foto2" accept="image/*" capture="environment">
 <button data-cargando="Subiendo fotos…">{'Reemplazar fotos y corregir de nuevo' if fotos else 'Subir y corregir'}</button></form>"""
@@ -540,7 +599,7 @@ document.currentScript.previousElementSibling.addEventListener("click", ev => {
 
 
 def revision(com, gid, sid, est):
-    _, preguntas = banco(com, gid)
+    _, preguntas = banco(com, gid, sid)
     det = est.get("deteccion", {})
     dudosas = set(det.get("dudosas", []))
     total, detalle = puntuar(preguntas, est.get("respuestas", {}), est.get("abierta_pts", 0), est.get("pts_manual"))
@@ -550,7 +609,7 @@ def revision(com, gid, sid, est):
             bloques += f"""<div class="preg"><div class="enun"><b>{p['n']}.</b> {e(p['texto'])}</div>
 <p class="mut"><i>Escribió:</i> {e(det.get('abierta_transcripcion', ''))}</p>
 <p class="mut"><i>Se espera:</i> {e(p['se_espera'])}</p>
-<div class="res"><span>Puntaje</span><input type="number" name="abierta_pts" min="0" max="{p['pts']}" value="{pts}" data-pts="{p['pts']}"></div>
+<div class="res"><span>Puntaje</span><input type="number" name="abierta_pts" min="0" max="{p['pts']}" step="0.5" value="{pts}" data-pts="{p['pts']}"></div>
 <label>Comentario para el estudiante</label><textarea name="abierta_comentario" rows="3">{e(est.get('abierta_comentario', ''))}</textarea></div>"""
             continue
         clase = "duda" if (p["n"] in dudosas or r == "?") else ("ok" if pts == p["pts"] else "parcial" if pts else "mal")
@@ -559,7 +618,7 @@ def revision(com, gid, sid, est):
         bloques += f"""<div class="preg {clase}" data-tipo="{p['tipo']}" data-correcta="{correcta(p)}" data-pts="{p['pts']}"><div class="enun"><b>{p['n']}.</b> {e(p['texto'][:140])}{'…' if len(p['texto']) > 140 else ''}</div>
 <div class="res"><span>Marcó</span><input type="text" name="r{p['n']}" value="{e(r)}" autocapitalize="off">
 <span><span class="marca">{marca}</span> correcta: <b>{correcta(p)}</b></span>
-<span>Puntaje <input type="number" name="p{p['n']}" class="pts" min="0" max="{p['pts']}" value="{pts}" style="width:64px">/{p['pts']}</span>{' <span class="chip revisar">dudosa</span>' if clase == 'duda' else ''}</div>
+<span>Puntaje <input type="number" name="p{p['n']}" class="pts" min="0" max="{p['pts']}" step="0.5" value="{pts}" style="width:64px">/{p['pts']}</span>{' <span class="chip revisar">dudosa</span>' if clase == 'duda' else ''}</div>
 <details{' open' if comentario else ''}><summary class="mut">Comentario</summary>
 <textarea name="c{p['n']}" rows="2" placeholder="Opcional, lo ve el estudiante">{e(comentario)}</textarea></details></div>"""
     obs = det.get("observaciones") or ""
@@ -583,8 +642,16 @@ def revision(com, gid, sid, est):
                   f'<button>Mover</button></form>'
                   f'<form method="post" action="/{com}/{gid}/{sid}/descartar"><button class="btn sec">'
                   f'Descartar (duplicado de algo ya cargado)</button></form></div>') + avisos
+    if ITI:
+        otra = version_impresa(est)
+        if otra:
+            avisos = (f'<div class="card" style="border-color:var(--mal)"><b class="err">⚠ La hoja dice versión {otra}, '
+                      f'cargada como {est.get("version") or "A"}.</b>'
+                      f'<form method="post" action="/{com}/{gid}/{sid}/version"><input type="hidden" name="version" value="{otra}">'
+                      f'<button>Corregir con la clave de la versión {otra}</button></form></div>') + avisos
+        avisos += f'<p class="mut">Versión {version_de(com, gid, sid)}</p>'
     confirmado = est.get("estado") == "confirmado"
-    return f"""<div class="card"><span class="nota"><span id="total">{total}</span>/30</span> {chip(est)}
+    return f"""<div class="card"><span class="nota"><span id="total">{total}</span>/{TOTAL}</span> {chip(est)}
 <span id="sin-guardar" class="chip revisar" hidden>sin guardar</span>{avisos}</div>
 <form method="post" action="/{com}/{gid}/{sid}/confirmar">{bloques}
 <button>{'Guardar cambios' if confirmado else 'Confirmar nota'}</button></form>
@@ -607,14 +674,14 @@ RECALCULO = """<script>
       const ok = normal(p.dataset.tipo, p.querySelector("input[type=text]").value) === p.dataset.correcta;
       const caja = p.querySelector("input.pts");
       if (cambio === p.querySelector("input[type=text]")) caja.value = ok ? p.dataset.pts : 0;  // nueva respuesta: vuelve al automático
-      const pts = Math.max(0, Math.min(+p.dataset.pts, parseInt(caja.value) || 0));
+      const pts = Math.max(0, Math.min(+p.dataset.pts, parseFloat(caja.value) || 0));
       p.classList.remove("ok", "mal", "duda", "parcial");
       p.classList.add(pts == p.dataset.pts ? "ok" : pts ? "parcial" : "mal");
       p.querySelector(".marca").textContent = ok ? "✓" : "✗";
       total += pts;
     }
     const abierta = form.querySelector("input[name=abierta_pts]");
-    if (abierta) total += Math.max(0, Math.min(+abierta.dataset.pts, parseInt(abierta.value) || 0));
+    if (abierta) total += Math.max(0, Math.min(+abierta.dataset.pts, parseFloat(abierta.value) || 0));
     document.getElementById("total").textContent = total;
     document.getElementById("sin-guardar").hidden = false;
   }
@@ -645,8 +712,11 @@ def subir_fotos(com, gid, sid):
         viejo.unlink()
     for i, a in enumerate(archivos, 1):
         preparar_foto(io.BytesIO(a.read()), d / f"foto-{i}.jpg")
-    guardar_estado(com, gid, sid, {"estado": "corrigiendo", "nombre": nombre_de(com, gid, sid),
-                                   "subido": datetime.now().isoformat(timespec="seconds"), "error": ""})
+    cambios = {"estado": "corrigiendo", "nombre": nombre_de(com, gid, sid),
+               "subido": datetime.now().isoformat(timespec="seconds"), "error": ""}
+    if ITI and request.form.get("version") in generar.VERSIONES:
+        cambios["version"] = request.form["version"]
+    guardar_estado(com, gid, sid, cambios)
     motor.submit(correr_motor, com, gid, sid)
     return redirect(f"/{com}")
 
@@ -709,6 +779,15 @@ def apartar(com, gid, sid):
             shutil.move(origen, destino)
 
 
+@app.route("/<com>/<gid>/<sid>/version", methods=["POST"])
+def cambiar_version(com, gid, sid):
+    """ITI: corrige con la clave de la otra versión. Las letras marcadas no cambian, así que no hace falta releer."""
+    carpeta(com, gid, sid)
+    if ITI and request.form.get("version") in generar.VERSIONES:
+        guardar_estado(com, gid, sid, {"version": request.form["version"]})
+    return redirect(f"/{com}/{gid}/{sid}")
+
+
 @app.route("/<com>/<gid>/<sid>/reintentar", methods=["POST"])
 def reintentar(com, gid, sid):
     carpeta(com, gid, sid)
@@ -720,20 +799,17 @@ def reintentar(com, gid, sid):
 @app.route("/<com>/<gid>/<sid>/confirmar", methods=["POST"])
 def confirmar(com, gid, sid):
     carpeta(com, gid, sid)
-    _, preguntas = banco(com, gid)
+    _, preguntas = banco(com, gid, sid)
     respuestas = {str(p["n"]): normal_resp(p, request.form.get(f"r{p['n']}"))
                   for p in preguntas if p["tipo"] != "abierta"}
-    try:
-        pts = int(request.form.get("abierta_pts") or 0)
-    except ValueError:
-        pts = 0
+    pts = num(request.form.get("abierta_pts") or 0)
     manual = {}
     for p in preguntas:
-        valor = request.form.get(f"p{p['n']}", "")
-        if p["tipo"] != "abierta" and valor.strip().isdigit():
+        valor = request.form.get(f"p{p['n']}", "").strip()
+        if p["tipo"] != "abierta" and re.fullmatch(r"\d+([.,]\d+)?", valor):
             auto = p["pts"] if respuestas[str(p["n"])] == correcta(p) else 0
-            if int(valor) != auto:
-                manual[str(p["n"])] = max(0, min(p["pts"], int(valor)))
+            if num(valor) != auto:
+                manual[str(p["n"])] = max(0, min(p["pts"], num(valor)))
     total, _ = puntuar(preguntas, respuestas, pts, manual)
     guardar_estado(com, gid, sid, {
         "estado": "confirmado", "respuestas": respuestas, "abierta_pts": pts, "pts_manual": manual,
@@ -751,7 +827,7 @@ def vista_alumno(com, gid, sid):
     est = leer_estado(com, gid, sid)
     if est.get("estado") not in ("revisar", "confirmado"):
         return redirect(f"/{com}/{gid}/{sid}")
-    _, preguntas = banco(com, gid)
+    _, preguntas = banco(com, gid, sid)
     total, detalle = puntuar(preguntas, est.get("respuestas", {}), est.get("abierta_pts", 0), est.get("pts_manual"))
     bloques = ""
     for p, r, ok, pts in detalle:
@@ -778,8 +854,9 @@ def vista_alumno(com, gid, sid):
         bloques += (f'<div class="preg {clase}"><div class="enun"><b>{p["n"]}.</b> {e(p["texto"])} '
                     f'<b>{marca}</b></div>{cuerpo}</div>')
     aviso = "" if est.get("estado") == "confirmado" else '<p class="err">Todavía sin confirmar por el docente.</p>'
-    return pagina("Tu resultado", f"""<h1>{e(nombre_de(com, gid, sid))}</h1><p class="mut">Cuestionario individual · {e(gid)}</p>
-<div class="card"><span class="nota">{total}/30</span>{aviso}</div>{bloques}
+    sub = f"{TITULO} · versión {version_de(com, gid, sid)}" if ITI else f"Cuestionario individual · {gid}"
+    return pagina("Tu resultado", f"""<h1>{e(nombre_de(com, gid, sid))}</h1><p class="mut">{e(sub)}</p>
+<div class="card"><span class="nota">{total}/{TOTAL}</span>{aviso}</div>{bloques}
 <a class="btn" href="/{com}/{gid}/{sid}/registro.pdf">PDF del examen (para el mail)</a>
 <a class="btn sec" href="/{com}/{gid}/{sid}">← volver a la revisión</a>{navegacion(com, gid, sid)}""")
 
@@ -809,7 +886,7 @@ code { font-family:ui-monospace, monospace; font-size:.9em; }
 def registro_html(com, gid, sid, carpeta_fotos):
     """HTML imprimible con todo el examen corregido + las fotos de las carillas (registro para el estudiante)."""
     est = leer_estado(com, gid, sid)
-    meta, preguntas = banco(com, gid)
+    meta, preguntas = banco(com, gid, sid)
     total, detalle = puntuar(preguntas, est.get("respuestas", {}), est.get("abierta_pts", 0), est.get("pts_manual"))
     comentarios = est.get("comentarios", {})
     det = est.get("deteccion", {})
@@ -844,9 +921,9 @@ def registro_html(com, gid, sid, carpeta_fotos):
     fotos = "".join(f'<img src="{f.as_uri()}">' for f in sorted(carpeta_fotos.glob("foto-*.jpg")))
     estado = "" if est.get("estado") == "confirmado" else '<div class="mut">(borrador: todavía sin confirmar)</div>'
     return f"""<!doctype html><html lang="es"><head><meta charset="utf-8"><style>{CSS_REGISTRO}</style></head><body>
-<div class="cab"><div><div class="mut">Parcial B · Diseño de Sistemas Web · {ETIQUETAS[com]} · Cuestionario individual</div>
-<h1>{e(nombre_de(com, gid, sid))}</h1><div class="mut">Grupo: {e(meta.get('sistema') or gid)} ({e(gid)})</div></div>
-<div><div class="nota">{total}/30</div>{estado}</div></div>
+<div class="cab"><div><div class="mut">{TITULO} · {MATERIA} · {ETIQUETAS[com]} · Cuestionario individual</div>
+<h1>{e(nombre_de(com, gid, sid))}</h1><div class="mut">{e(f"Versión {meta['version']}" if ITI else f"Grupo: {meta.get('sistema') or gid} ({gid})")}</div></div>
+<div><div class="nota">{total}/{TOTAL}</div>{estado}</div></div>
 {bloques}{f'<div class="anexo"><div class="mut">Anexo: tu examen escrito</div>{fotos}</div>' if fotos else ''}
 </body></html>"""
 
@@ -871,17 +948,17 @@ def registro_pdf(com, gid, sid):
     subprocess.run(["google-chrome", "--headless", "--disable-gpu", "--no-pdf-header-footer",
                     f"--print-to-pdf={pdf}", html_tmp.as_uri()], check=True, capture_output=True, timeout=120)
     shutil.rmtree(tmp)
-    return send_file(pdf, mimetype="application/pdf", download_name=f"parcial-b-{gid}-{sid}.pdf")
+    return send_file(pdf, mimetype="application/pdf", download_name=f"{slug(TITULO)}-{gid}-{sid}.pdf")
 
 
 def filas_tabla(com):
     filas = []
     for gid in grupos(com):
-        _, preguntas = banco(com, gid)
         for sid, nombre in integrantes(com, gid):
             est = leer_estado(com, gid, sid)
             nota = ""
             if est.get("estado") in ("revisar", "confirmado"):
+                _, preguntas = banco(com, gid, sid)
                 nota, _ = puntuar(preguntas, est.get("respuestas", {}), est.get("abierta_pts", 0), est.get("pts_manual"))
             filas.append({"grupo": gid, "estudiante": nombre, "estado": est.get("estado", "sin foto"), "nota": nota,
                           "abierta": est.get("abierta_pts", "") if est.get("estado") else ""})
@@ -896,7 +973,7 @@ def tabla(com):
     cuerpo = "".join(f"<tr><td>{e(f['estudiante'])}<br><span class='mut'>{e(f['grupo'])}</span></td>"
                      f"<td>{e(f['estado'])}</td><td><b>{e(f['nota'])}</b></td></tr>" for f in filas)
     return pagina("Tabla", f"""<p><a href="/{com}">← {ETIQUETAS[com]}</a></p><h1>Notas {ETIQUETAS[com]}</h1>
-<table><tr><th>Estudiante</th><th>Estado</th><th>/30</th></tr>{cuerpo}</table>
+<table><tr><th>Estudiante</th><th>Estado</th><th>/{TOTAL}</th></tr>{cuerpo}</table>
 <a class="btn sec" href="/{com}/tabla.csv">Descargar CSV</a>""")
 
 
@@ -909,7 +986,7 @@ def tabla_csv(com):
     w.writeheader()
     w.writerows(filas_tabla(com))
     return Response(out.getvalue(), mimetype="text/csv",
-                    headers={"Content-Disposition": f"attachment; filename=parcial-b-{com}.csv"})
+                    headers={"Content-Disposition": f"attachment; filename={slug(TITULO)}-{com}.csv"})
 
 
 def ips_locales():
@@ -925,7 +1002,7 @@ def ips_locales():
 
 def main():
     puerto = int(sys.argv[sys.argv.index("--puerto") + 1]) if "--puerto" in sys.argv else 8421
-    print(f"\nParcial B — PIN: {PIN}")
+    print(f"\n{TITULO} — PIN: {PIN}")
     for placa, ip in ips_locales():
         print(f"  http://{ip}:{puerto}   ({placa})")
     print()
