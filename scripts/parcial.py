@@ -4,7 +4,7 @@
 A diferencia de dashboard.py, este SÍ escucha en la red (0.0.0.0) para que el docente entre
 desde el celular a la IP de la notebook; por eso pide un PIN y no expone nada más que esto.
 
-Flujo: elegir comisión → grupo → estudiante, sacar foto de las 2 carillas, el motor (`claude`
+Flujo: elegir comisión → grupo → estudiante, sacar foto de las carillas (hasta 6), el motor (`claude`
 de la terminal) lee las marcas y propone el puntaje de la abierta en segundo plano; el
 docente revisa al lado de la foto, corrige si hace falta y confirma. Queda una vista para
 mostrarle al estudiante y una tabla/CSV por comisión.
@@ -62,6 +62,7 @@ RESP_DIR = PARCIAL_DIR / "respuestas"
 PIN = os.environ.get("PARCIAL_PIN") or f"{random.randint(0, 9999):04d}"
 COOKIE = "parcial_pin"
 LETRAS = "abcdefgh"
+MAX_CARILLAS = 6  # el nombre foto-N.jpg asume un solo dígito
 MODELO = os.environ.get("PARCIAL_MODELO", "sonnet")  # sonnet gasta bastante menos cuota que opus y alcanza para leer marcas
 
 app = Flask(__name__)
@@ -285,17 +286,24 @@ ESQUEMA = {
 }
 
 
+PROMPT_VERSION = "v2-sin-opciones"  # v1 (hasta el Parcial B 2c-2026): mandaba el texto completo de cada opción
+COSTOS = PARCIAL_DIR / "costos.jsonl"  # una línea por corrida del motor, reintentos incluidos (el estado guarda solo la última)
+
+
+def recorte(texto, largo=70):
+    return texto if len(texto) <= largo else texto[:largo].rsplit(" ", 1)[0] + "…"
+
+
 def prompt_motor(meta, preguntas, fotos):
     partes = []
     for p in preguntas:
         if p["tipo"] == "abierta":
             partes.append(f"{p['n']}. (ABIERTA) {p['texto']}\n   Criterio del docente: {p['se_espera']}")
         elif p["tipo"] == "vf":
-            partes.append(f"{p['n']}. (V/F, círculos) {p['texto']}")
-        else:
+            partes.append(f"{p['n']}. (V/F, círculos) {recorte(p['texto'])}")
+        else:  # solo hace falta leer la marca: el inicio del enunciado para ubicarla y las letras, no el texto de cada opción
             como = "una sola, círculos" if p["tipo"] == "una" else "varias, cuadrados"
-            ops = "\n".join(f"   {LETRAS[i]}) {t}" for i, (t, _) in enumerate(p["opciones"]))
-            partes.append(f"{p['n']}. ({como}) {p['texto']}\n{ops}")
+            partes.append(f"{p['n']}. ({como}, opciones a–{LETRAS[len(p['opciones']) - 1]}) {recorte(p['texto'])}")
     lista = "\n".join(f"- {f}" for f in fotos)
     abierta = next(p for p in preguntas if p["tipo"] == "abierta")
     escala = f"de 0 a {abierta['pts']}" + (" (podés usar medio punto: 0,5)" if ITI else "")
@@ -332,6 +340,7 @@ def correr_motor(com, gid, sid):
              "--no-session-persistence"],
             capture_output=True, text=True, timeout=300, cwd=d)
         salida = json.loads(r.stdout)
+        anotar_costo(com, gid, sid, len(fotos), salida)
         det = salida.get("structured_output")
         if salida.get("is_error") or not det:
             raise RuntimeError(salida.get("result") or r.stderr[-500:])
@@ -344,7 +353,16 @@ def correr_motor(com, gid, sid):
         "estado": "revisar", "deteccion": det, "respuestas": respuestas,
         "abierta_pts": num(det.get("abierta_puntaje", 0)), "abierta_comentario": det.get("abierta_comentario", ""),
         "costo_usd": salida.get("total_cost_usd"), "error": "",
+        "motor": {"prompt": PROMPT_VERSION, "modelo": MODELO, "usage": salida.get("usage"), "duracion_ms": salida.get("duration_ms")},
     })
+
+
+def anotar_costo(com, gid, sid, fotos, salida):
+    linea = {"fecha": datetime.now().isoformat(timespec="seconds"), "com": com, "grupo": gid, "estudiante": sid,
+             "prompt": PROMPT_VERSION, "modelo": MODELO, "fotos": fotos, "costo_usd": salida.get("total_cost_usd"),
+             "usage": salida.get("usage"), "duracion_ms": salida.get("duration_ms"), "error": bool(salida.get("is_error"))}
+    with candado, COSTOS.open("a") as f:
+        f.write(json.dumps(linea, ensure_ascii=False) + "\n")
 
 
 # ---------- páginas ----------
@@ -404,7 +422,7 @@ def pagina(titulo, cuerpo, refrescar=False):
 # Al mandar un formulario: botón deshabilitado (evita doble envío) con spinner hasta que cargue la página siguiente.
 CARGANDO = """<script>
 document.addEventListener("submit", ev => {
-  const b = ev.target.querySelector("button");
+  const b = ev.target.querySelector("button:not([type=button])");
   if (!b || ev.defaultPrevented) return;
   b.disabled = true;
   b.innerHTML = '<span class="spin"></span>' + (b.dataset.cargando || "Guardando…");
@@ -556,9 +574,13 @@ def estudiante(com, gid, sid):
         elegir_version = '<label>Versión (arriba a la derecha de la hoja)</label><div class="res">' + "".join(
             f'<label style="margin:0;font-weight:400"><input type="radio" name="version" value="{v}" required'
             f'{" checked" if v == actual else ""}> {v}</label>' for v in generar.VERSIONES) + "</div>"
+    carillas = "".join(
+        f'<div class="carilla"{" hidden" if i > 2 else ""}><label>Carilla {i}</label><input type="file" name="foto{i}" '
+        f'accept="image/*" capture="environment"{" required" if i == 1 else ""}></div>' for i in range(1, MAX_CARILLAS + 1))
     subir = f"""<form method="post" action="/{com}/{gid}/{sid}/fotos" enctype="multipart/form-data" class="card">{elegir_version}
-<label>Carilla 1</label><input type="file" name="foto1" accept="image/*" capture="environment" required>
-<label>Carilla 2</label><input type="file" name="foto2" accept="image/*" capture="environment">
+{carillas}
+<button type="button" class="btn sec" onclick="const c = this.form.querySelector('.carilla[hidden]'); if (c) c.hidden = false;
+  if (!this.form.querySelector('.carilla[hidden]')) this.hidden = true;">+ Otra carilla</button>
 <button data-cargando="Subiendo fotos…">{'Reemplazar fotos y corregir de nuevo' if fotos else 'Subir y corregir'}</button></form>"""
     estado = est.get("estado")
     nav = navegacion(com, gid, sid)
@@ -703,7 +725,7 @@ def foto(com, gid, sid, nombre):
 @app.route("/<com>/<gid>/<sid>/fotos", methods=["POST"])
 def subir_fotos(com, gid, sid):
     d = carpeta(com, gid, sid)
-    archivos = [request.files.get(k) for k in ("foto1", "foto2")]
+    archivos = [request.files.get(k) for k in (f"foto{i}" for i in range(1, MAX_CARILLAS + 1))]
     archivos = [a for a in archivos if a and a.filename]
     if not archivos:
         return redirect(f"/{com}/{gid}/{sid}")
