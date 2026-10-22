@@ -504,11 +504,14 @@ def revision(com, gid, sid, est):
 <label>Comentario para el estudiante</label><textarea name="abierta_comentario" rows="3">{e(est.get('abierta_comentario', ''))}</textarea></div>"""
             continue
         clase = "duda" if (p["n"] in dudosas or r == "?") else ("ok" if pts == p["pts"] else "parcial" if pts else "mal")
+        comentario = est.get("comentarios", {}).get(str(p["n"]), "")
         marca = "✓" if ok else "✗"
         bloques += f"""<div class="preg {clase}" data-tipo="{p['tipo']}" data-correcta="{correcta(p)}" data-pts="{p['pts']}"><div class="enun"><b>{p['n']}.</b> {e(p['texto'][:140])}{'…' if len(p['texto']) > 140 else ''}</div>
 <div class="res"><span>Marcó</span><input type="text" name="r{p['n']}" value="{e(r)}" autocapitalize="off">
 <span><span class="marca">{marca}</span> correcta: <b>{correcta(p)}</b></span>
-<span>Puntaje <input type="number" name="p{p['n']}" class="pts" min="0" max="{p['pts']}" value="{pts}" style="width:64px">/{p['pts']}</span>{' <span class="chip revisar">dudosa</span>' if clase == 'duda' else ''}</div></div>"""
+<span>Puntaje <input type="number" name="p{p['n']}" class="pts" min="0" max="{p['pts']}" value="{pts}" style="width:64px">/{p['pts']}</span>{' <span class="chip revisar">dudosa</span>' if clase == 'duda' else ''}</div>
+<details{' open' if comentario else ''}><summary class="mut">Comentario</summary>
+<textarea name="c{p['n']}" rows="2" placeholder="Opcional, lo ve el estudiante">{e(comentario)}</textarea></details></div>"""
     obs = det.get("observaciones") or ""
     escrito = det.get("nombre_escrito") or ""
     avisos = ""
@@ -565,7 +568,7 @@ RECALCULO = """<script>
     document.getElementById("total").textContent = total;
     document.getElementById("sin-guardar").hidden = false;
   }
-  form.addEventListener("input", e => { if (e.target.matches("input")) recalcular(e.target); });
+  form.addEventListener("input", e => { if (e.target.matches("input")) recalcular(e.target); else document.getElementById("sin-guardar").hidden = false; });
 })();
 </script>"""
 
@@ -684,6 +687,8 @@ def confirmar(com, gid, sid):
     total, _ = puntuar(preguntas, respuestas, pts, manual)
     guardar_estado(com, gid, sid, {
         "estado": "confirmado", "respuestas": respuestas, "abierta_pts": pts, "pts_manual": manual,
+        "comentarios": {str(p["n"]): request.form[f"c{p['n']}"].strip() for p in preguntas
+                        if request.form.get(f"c{p['n']}", "").strip()},
         "abierta_comentario": request.form.get("abierta_comentario", "").strip(), "nota": total,
         "confirmado": datetime.now().isoformat(timespec="seconds"),
     })
@@ -717,6 +722,8 @@ def vista_alumno(com, gid, sid):
             cuerpo += f'<p>Correcta: <b>{e(txt(correcta(p)))}</b></p><p class="mut">{e(p["por_que"])}</p>'
         if pts and not ok:
             cuerpo += f'<p><b>Parcialmente correcta: {pts}/{p["pts"]}</b></p>'
+        if est.get("comentarios", {}).get(str(p["n"])):
+            cuerpo += f'<p><i>Comentario del profe:</i> {e(est["comentarios"][str(p["n"])])}</p>'
         clase, marca = ("ok", "✓") if pts == p["pts"] else ("parcial", "◐") if pts else ("mal", "✗")
         bloques += (f'<div class="preg {clase}"><div class="enun"><b>{p["n"]}.</b> {e(p["texto"])} '
                     f'<b>{marca}</b></div>{cuerpo}</div>')
