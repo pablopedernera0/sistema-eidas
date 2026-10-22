@@ -46,6 +46,7 @@ ETIQUETAS = {"c31": "3.° 1.ª", "c32": "3.° 2.ª"}
 PIN = os.environ.get("PARCIAL_PIN") or f"{random.randint(0, 9999):04d}"
 COOKIE = "parcial_pin"
 LETRAS = "abcdefgh"
+MODELO = os.environ.get("PARCIAL_MODELO", "sonnet")  # sonnet gasta bastante menos cuota que opus y alcanza para leer marcas
 
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 60 * 1024 * 1024
@@ -263,7 +264,7 @@ Pregunta 10: transcribí lo que escribió, puntuala de 0 a 3 con el criterio del
 def preparar_foto(origen, destino):
     from PIL import Image, ImageOps
     img = ImageOps.exif_transpose(Image.open(origen)).convert("RGB")
-    img.thumbnail((2200, 2200))
+    img.thumbnail((1600, 1600))  # menos píxeles = menos tokens por foto
     img.save(destino, "JPEG", quality=85)
 
 
@@ -273,7 +274,7 @@ def correr_motor(com, gid, sid):
     fotos = [str(f) for f in sorted(d.glob("foto-*.jpg"))]
     try:
         r = subprocess.run(
-            ["claude", "-p", prompt_motor(meta, preguntas, fotos), "--output-format", "json",
+            ["claude", "-p", prompt_motor(meta, preguntas, fotos), "--output-format", "json", "--model", MODELO,
              "--json-schema", json.dumps(ESQUEMA), "--allowedTools", "Read", "--add-dir", str(d),
              "--no-session-persistence"],
             capture_output=True, text=True, timeout=300, cwd=d)
@@ -779,7 +780,98 @@ def vista_alumno(com, gid, sid):
     aviso = "" if est.get("estado") == "confirmado" else '<p class="err">Todavía sin confirmar por el docente.</p>'
     return pagina("Tu resultado", f"""<h1>{e(nombre_de(com, gid, sid))}</h1><p class="mut">Cuestionario individual · {e(gid)}</p>
 <div class="card"><span class="nota">{total}/30</span>{aviso}</div>{bloques}
+<a class="btn" href="/{com}/{gid}/{sid}/registro.pdf">PDF del examen (para el mail)</a>
 <a class="btn sec" href="/{com}/{gid}/{sid}">← volver a la revisión</a>{navegacion(com, gid, sid)}""")
+
+
+REGISTROS = PARCIAL_DIR / "salida" / "registros"
+
+CSS_REGISTRO = """
+@page { size:A4; margin:16mm 15mm; }
+body { font:10.5pt/1.4 system-ui, sans-serif; color:#111; margin:0; }
+h1 { font-size:15pt; margin:0 0 2mm; } .mut { color:#555; font-size:9pt; }
+.cab { border-bottom:1.5px solid #111; padding-bottom:3mm; margin-bottom:4mm; display:flex; justify-content:space-between; align-items:end; }
+.nota { font-size:20pt; font-weight:700; white-space:nowrap; }
+.preg { break-inside:avoid; border-left:3px solid #bbb; padding:1mm 0 1mm 3mm; margin:0 0 4mm; }
+.preg.ok { border-color:#1d7a3a; } .preg.mal { border-color:#b3261e; } .preg.parcial { border-color:#a86400; }
+.enun { font-weight:600; display:flex; justify-content:space-between; gap:4mm; } .pts { font-weight:700; white-space:nowrap; }
+ul { list-style:none; padding:0; margin:1.5mm 0; } li { padding:.6mm 0 .6mm 6mm; position:relative; }
+li .m { position:absolute; left:0; } li.marcada { font-weight:600; }
+.tag { font-size:8.5pt; border:1px solid #999; border-radius:3px; padding:0 4px; margin-left:4px; font-weight:400; }
+.tag.ok { border-color:#1d7a3a; color:#1d7a3a; } .tag.tuya { border-color:#24527a; color:#24527a; }
+.expl { font-size:9.5pt; color:#333; margin:1mm 0; } .com { font-size:9.5pt; background:#f3f1ea; padding:1.5mm 2.5mm; margin:1mm 0; }
+.trans { font-style:italic; background:#f6f6f6; padding:1.5mm 2.5mm; }
+.anexo { break-before:page; } .anexo img { width:100%; max-height:250mm; object-fit:contain; display:block; margin:0 auto 4mm; break-inside:avoid; }
+code { font-family:ui-monospace, monospace; font-size:.9em; }
+"""
+
+
+def registro_html(com, gid, sid, carpeta_fotos):
+    """HTML imprimible con todo el examen corregido + las fotos de las carillas (registro para el estudiante)."""
+    est = leer_estado(com, gid, sid)
+    meta, preguntas = banco(com, gid)
+    total, detalle = puntuar(preguntas, est.get("respuestas", {}), est.get("abierta_pts", 0), est.get("pts_manual"))
+    comentarios = est.get("comentarios", {})
+    det = est.get("deteccion", {})
+    bloques = ""
+    for p, r, ok, pts in detalle:
+        clase = "ok" if pts == p["pts"] else "parcial" if pts else "mal"
+        cab = f'<div class="enun"><span>{p["n"]}. {e(p["texto"])}</span><span class="pts">{pts}/{p["pts"]}</span></div>'
+        if p["tipo"] == "abierta":
+            cuerpo = (f'<p class="mut">Lo que escribiste (transcripción de la hoja):</p>'
+                      f'<p class="trans">{e(det.get("abierta_transcripcion") or "—")}</p>'
+                      f'<p class="expl"><b>Qué se esperaba:</b> {e(p["se_espera"])}</p>')
+            if est.get("abierta_comentario"):
+                cuerpo += f'<p class="com"><b>Comentario del profe:</b> {e(est["abierta_comentario"])}</p>'
+            bloques += f'<div class="preg {clase}">{cab}{cuerpo}</div>'
+            continue
+        marcadas = set(r.split(",")) if r and r != "?" else set()
+        buenas = set(correcta(p).split(","))
+        items = ""
+        for i, (texto, _) in enumerate(p["opciones"]):
+            clave = ("V" if i == 0 else "F") if p["tipo"] == "vf" else LETRAS[i]
+            rotulo = texto if p["tipo"] == "vf" else f"{LETRAS[i]}) {e(texto)}"
+            tuya, buena = clave in marcadas, clave in buenas
+            marca = "☒" if tuya else "☐"
+            tags = (' <span class="tag tuya">tu respuesta</span>' if tuya else "") + (' <span class="tag ok">correcta</span>' if buena else "")
+            items += f'<li class="{"marcada" if tuya else ""}"><span class="m">{marca}</span>{rotulo}{tags}</li>'
+        cuerpo = f"<ul>{items}</ul>" + ("" if marcadas else '<p class="expl">Sin respuesta.</p>')
+        if pts < p["pts"]:
+            cuerpo += f'<p class="expl"><b>Por qué:</b> {e(p["por_que"])}</p>'
+        if comentarios.get(str(p["n"])):
+            cuerpo += f'<p class="com"><b>Comentario del profe:</b> {e(comentarios[str(p["n"])])}</p>'
+        bloques += f'<div class="preg {clase}">{cab}{cuerpo}</div>'
+    fotos = "".join(f'<img src="{f.as_uri()}">' for f in sorted(carpeta_fotos.glob("foto-*.jpg")))
+    estado = "" if est.get("estado") == "confirmado" else '<div class="mut">(borrador: todavía sin confirmar)</div>'
+    return f"""<!doctype html><html lang="es"><head><meta charset="utf-8"><style>{CSS_REGISTRO}</style></head><body>
+<div class="cab"><div><div class="mut">Parcial B · Diseño de Sistemas Web · {ETIQUETAS[com]} · Cuestionario individual</div>
+<h1>{e(nombre_de(com, gid, sid))}</h1><div class="mut">Grupo: {e(meta.get('sistema') or gid)} ({e(gid)})</div></div>
+<div><div class="nota">{total}/30</div>{estado}</div></div>
+{bloques}{f'<div class="anexo"><div class="mut">Anexo: tu examen escrito</div>{fotos}</div>' if fotos else ''}
+</body></html>"""
+
+
+@app.route("/<com>/<gid>/<sid>/registro.pdf")
+def registro_pdf(com, gid, sid):
+    d = carpeta(com, gid, sid)
+    if leer_estado(com, gid, sid).get("estado") not in ("revisar", "confirmado"):
+        abort(404)
+    destino = REGISTROS / com / gid
+    destino.mkdir(parents=True, exist_ok=True)
+    tmp = destino / f".{sid}"
+    tmp.mkdir(exist_ok=True)
+    from PIL import Image
+    for f in d.glob("foto-*.jpg"):  # fotos achicadas para que el PDF entre cómodo en un mail
+        img = Image.open(f)
+        img.thumbnail((1400, 1400))
+        img.save(tmp / f.name, "JPEG", quality=70)
+    html_tmp = tmp / "registro.html"
+    html_tmp.write_text(registro_html(com, gid, sid, tmp))
+    pdf = destino / f"{sid}.pdf"
+    subprocess.run(["google-chrome", "--headless", "--disable-gpu", "--no-pdf-header-footer",
+                    f"--print-to-pdf={pdf}", html_tmp.as_uri()], check=True, capture_output=True, timeout=120)
+    shutil.rmtree(tmp)
+    return send_file(pdf, mimetype="application/pdf", download_name=f"parcial-b-{gid}-{sid}.pdf")
 
 
 def filas_tabla(com):
