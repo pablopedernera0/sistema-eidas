@@ -19,6 +19,10 @@ Con --parcial iti corrige el parcial de Infraestructura de Redes II (cuestionari
 un solo banco en dos versiones (A/B, mismas preguntas con otro orden de opciones). Hay un único
 "grupo" con la lista del curso (cierre-2c-2026.csv de ITI); la versión se elige al subir las fotos y
 queda en el estado de cada estudiante. La abierta admite medio punto.
+
+Con --parcial redes corrige el parcial de Redes y Comunicaciones 3.° 1.ª (cuestionarios/parcial-redes31-2c-2026/):
+un banco por grupo (bancos/<grupo>.md, mismo formato que el parcial B), integrantes desde la nómina
+notas-finales-2c-2026.csv (la misma de las copias impresas con nombre). Total 10, la abierta admite medio punto.
 """
 import csv
 import hashlib
@@ -45,7 +49,8 @@ from flask import Flask, Response, abort, redirect, request, send_file
 ROOT = Path(__file__).resolve().parent.parent
 MATERIAS_DIR = ROOT / "materias"
 DATOS_DIR = ROOT.parent / "sistema-eidas-datos"
-ITI = "--parcial" in sys.argv and sys.argv[sys.argv.index("--parcial") + 1] == "iti"
+MODO = sys.argv[sys.argv.index("--parcial") + 1] if "--parcial" in sys.argv else "b"
+ITI, REDES = MODO == "iti", MODO == "redes"
 if ITI:
     PARCIAL_DIR = DATOS_DIR / "cuestionarios" / "parcial-iti21-2c-2026"
     COMISIONES = {"iti": "iti-infra-redes-21"}
@@ -53,6 +58,12 @@ if ITI:
     TITULO, MATERIA, TOTAL, IMPRESO = "Parcial ITI-21", "Infraestructura de Redes II", 10, "Versión"
     ROSTER_ITI = DATOS_DIR / "iti-infra-redes-21" / "cierre-2c-2026.csv"
     GRUPO_ITI = "iti21"
+elif REDES:
+    PARCIAL_DIR = DATOS_DIR / "cuestionarios" / "parcial-redes31-2c-2026"
+    COMISIONES = {"c31": "af-redes-31"}
+    ETIQUETAS = {"c31": "3.° 1.ª"}
+    TITULO, MATERIA, TOTAL, IMPRESO = "Parcial Redes", "Redes y Comunicaciones", 10, "Grupo"
+    NOMINA_REDES = DATOS_DIR / "af-diseno-sistemas-web-31" / "notas-finales-2c-2026.csv"
 else:
     PARCIAL_DIR = DATOS_DIR / "cuestionarios" / "parcial-b-2c-2026"
     COMISIONES = {"c31": "af-diseno-sistemas-web-31", "c32": "af-diseno-sistemas-web-32"}
@@ -70,7 +81,9 @@ app.config["MAX_CONTENT_LENGTH"] = 60 * 1024 * 1024
 motor = ThreadPoolExecutor(max_workers=3)
 candado = threading.Lock()
 
-_spec = importlib.util.spec_from_file_location("generar_parcial", PARCIAL_DIR / "generar.py")
+# Redes usa el lector y la mezcla del parcial B (su generar.py los toma de ahí): mismas letras que lo impreso
+_spec = importlib.util.spec_from_file_location(
+    "generar_parcial", (DATOS_DIR / "cuestionarios" / "parcial-b-2c-2026" if REDES else PARCIAL_DIR) / "generar.py")
 generar = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(generar)
 
@@ -90,7 +103,7 @@ def banco(com, gid, sid=None):
     En ITI depende de la versión (A/B) que tiene cargada el estudiante."""
     if ITI:
         return generar.version(version_de(com, gid, sid))
-    ruta = PARCIAL_DIR / "bancos" / f"{com}-{gid}.md"
+    ruta = PARCIAL_DIR / "bancos" / (f"{gid}.md" if REDES else f"{com}-{gid}.md")
     if not ruta.exists():
         abort(404)
     meta, preguntas = generar.leer_banco(ruta)
@@ -106,6 +119,8 @@ def version_de(com, gid, sid):
 def grupos(com):
     if ITI:
         return [GRUPO_ITI]
+    if REDES:
+        return [r.stem for r in sorted(PARCIAL_DIR.glob("bancos/*.md"), key=lambda r: r.name.lower())]
     return [r.name[len(com) + 1:-3] for r in sorted(PARCIAL_DIR.glob(f"bancos/{com}-*.md"), key=lambda r: r.name.lower())]
 
 
@@ -163,6 +178,12 @@ def integrantes(com, gid):
             for fila in csv.DictReader(f):
                 nombre = fila["Alumno"].strip().title()
                 if nombre:
+                    lista.append((slug(nombre), nombre))
+    elif REDES:
+        with open(NOMINA_REDES, newline="", encoding="utf-8") as f:
+            for fila in csv.DictReader(f):
+                nombre = fila["Alumno"].strip().title()
+                if nombre and fila["Grupo"] == gid:
                     lista.append((slug(nombre), nombre))
     else:
         ruta = MATERIAS_DIR / COMISIONES[com] / "grupos" / gid / "integrantes.md"
@@ -306,7 +327,7 @@ def prompt_motor(meta, preguntas, fotos):
             partes.append(f"{p['n']}. ({como}, opciones a–{LETRAS[len(p['opciones']) - 1]}) {recorte(p['texto'])}")
     lista = "\n".join(f"- {f}" for f in fotos)
     abierta = next(p for p in preguntas if p["tipo"] == "abierta")
-    escala = f"de 0 a {abierta['pts']}" + (" (podés usar medio punto: 0,5)" if ITI else "")
+    escala = f"de 0 a {abierta['pts']}" + (" (podés usar medio punto: 0,5)" if ITI or REDES else "")
     cual = f"Versión {meta['version']}" if ITI else f"Grupo: {meta['grupo']}"
     return f"""Corregís un cuestionario impreso que un estudiante completó a mano. Leé con Read estas fotos (carillas del examen):
 {lista}
